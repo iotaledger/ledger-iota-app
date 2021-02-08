@@ -12,7 +12,6 @@ function error {
 [[ "$1" != "DOCKER" ]] && {
     error "don't run the script outside of the docker build!"
 }
-exit 1
 
 [[ "$DEVICE" != "nanos" && "$DEVICE" != "nanox" ]] && {
     error "unknown device"
