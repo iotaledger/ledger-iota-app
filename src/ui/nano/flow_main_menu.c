@@ -20,39 +20,40 @@
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 
-
+// clang-format off
 UX_STEP_NOCB(
-	ux_idle_flow_1_step, pb,
-	{
-		&C_icon_iota,
-		"IOTA",
-	}
+    ux_idle_flow_1_step, pb,
+    {
+        &C_icon_iota,
+        "IOTA",
+    }
 );
 
 UX_STEP_NOCB(
-	ux_idle_flow_2_step,
-	bn,
-	{
-		"Version",
-		APPVERSION,
-	}
+    ux_idle_flow_2_step,
+    bn,
+    {
+    "Version",
+    APPVERSION,
+    }
 );
 
 UX_STEP_CB(
-	ux_idle_flow_3_step,
-	pb,
-	os_sched_exit(-1),
-	{
-		&C_x_icon_dash, "Quit",
-	}
+    ux_idle_flow_3_step,
+    pb,
+    os_sched_exit(-1),
+    {
+        &C_x_icon_dash, "Quit",
+    }
 );
 
 UX_FLOW(ux_main_menu,
-	&ux_idle_flow_1_step,
-	&ux_idle_flow_2_step,
-	&ux_idle_flow_3_step,
-	FLOW_LOOP
+    &ux_idle_flow_1_step,
+    &ux_idle_flow_2_step,
+    &ux_idle_flow_3_step,
+    FLOW_LOOP
 );
+// clang-format on
 
 void flow_main_menu() {
 	// reserve a display stack slot if none yet
@@ -61,4 +62,3 @@ void flow_main_menu() {
 	}
 	ux_flow_init(0, ux_main_menu, NULL);
 }
-

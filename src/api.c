@@ -23,99 +23,99 @@ API_CTX api;
 
 void api_initialize()
 {
-	// wipe all data
-	explicit_bzero(&api, sizeof(api));
+    // wipe all data
+    explicit_bzero(&api, sizeof(api));
 
-	api.bip32_path[0] = 0x8000002c;
+    api.bip32_path[0] = 0x8000002c;
 #ifdef APP_DEBUG
-	api.bip32_path[1] = 0x80000001;
+    api.bip32_path[1] = 0x80000001;
 #else
-	api.bip32_path[1] = 0x8000107a;
+    api.bip32_path[1] = 0x8000107a;
 #endif
-	api.bip32_path[BIP32_ACCOUNT_INDEX] = 0;
-	api.bip32_path[BIP32_CHANGE_INDEX] = 0;
-	api.bip32_path[BIP32_ADDRESS_INDEX] = 0;
+    api.bip32_path[BIP32_ACCOUNT_INDEX] = 0;
+    api.bip32_path[BIP32_CHANGE_INDEX] = 0;
+    api.bip32_path[BIP32_ADDRESS_INDEX] = 0;
 }
 
 void api_clear_data()
 {
-	// the only thing we shouldn't clear out is the account index
-	uint32_t tmp_bip32_account = api.bip32_path[BIP32_ACCOUNT_INDEX];
+    // the only thing we shouldn't clear out is the account index
+    uint32_t tmp_bip32_account = api.bip32_path[BIP32_ACCOUNT_INDEX];
 
 #ifdef APP_DEBUG
-	uint8_t tmp_non_interactive = api.non_interactive_mode;
+    uint8_t tmp_non_interactive = api.non_interactive_mode;
 #endif
 
-	api_initialize();
+    api_initialize();
 
-	// set saved account index and network
-	api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+    // set saved account index and network
+    api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
 
 #ifdef APP_DEBUG
-	api.non_interactive_mode = tmp_non_interactive;
+    api.non_interactive_mode = tmp_non_interactive;
 #endif
 }
 
-uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data, uint32_t len)
+uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
+                              uint32_t len)
 {
-	// only allow write on empty buffer
-	if (api.data.type != EMPTY) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
-	// only accept payload with exactly data_block_size length
-	if (len != DATA_BLOCK_SIZE) {
-		THROW(SW_INCORRECT_LENGTH);
-	}
+    // only allow write on empty buffer
+    if (api.data.type != EMPTY) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+    // only accept payload with exactly data_block_size length
+    if (len != DATA_BLOCK_SIZE) {
+        THROW(SW_INCORRECT_LENGTH);
+    }
 
-	// check if chunk-number [0..MAX_NUM_DATA_BLOCKS)
-	if (block_number >= DATA_BLOCK_COUNT) {
-		THROW(SW_INCORRECT_P1P2);
-	}
+    // check if chunk-number [0..MAX_NUM_DATA_BLOCKS)
+    if (block_number >= DATA_BLOCK_COUNT) {
+        THROW(SW_INCORRECT_P1P2);
+    }
 
-	os_memcpy(&api.data.buffer[block_number * DATA_BLOCK_SIZE], input_data, DATA_BLOCK_SIZE);
+    os_memcpy(&api.data.buffer[block_number * DATA_BLOCK_SIZE], input_data,
+              DATA_BLOCK_SIZE);
 
-	io_send(NULL, 0, SW_OK);
+    io_send(NULL, 0, SW_OK);
 
-	return 0;
+    return 0;
 }
 
 uint32_t api_read_data_block(uint8_t block_number)
 {
-	if (
-		api.data.type != GENERATED_ADDRESSES &&
-		api.data.type != SIGNATURES
-	) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+    if (api.data.type != GENERATED_ADDRESSES && api.data.type != SIGNATURES) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// check if chunk-number [0..MAX_NUM_DATA_BLOCKS)
-	if (block_number >= DATA_BLOCK_COUNT) {
-		THROW(SW_INCORRECT_P1P2);
-	}
+    // check if chunk-number [0..MAX_NUM_DATA_BLOCKS)
+    if (block_number >= DATA_BLOCK_COUNT) {
+        THROW(SW_INCORRECT_P1P2);
+    }
 
-	io_send(&api.data.buffer[block_number * DATA_BLOCK_SIZE], DATA_BLOCK_SIZE, SW_OK);
+    io_send(&api.data.buffer[block_number * DATA_BLOCK_SIZE], DATA_BLOCK_SIZE,
+            SW_OK);
 
-	return 0;
+    return 0;
 }
 
 uint32_t api_get_data_buffer_state()
 {
-	API_GET_DATA_BUFFER_STATE_RESPONSE resp;
-	resp.data_length = 			api.data.length;
-	resp.data_type = (uint8_t) 	api.data.type;
-	resp.data_block_count = 	DATA_BLOCK_COUNT;
-	resp.data_block_size = 		DATA_BLOCK_SIZE;
+    API_GET_DATA_BUFFER_STATE_RESPONSE resp;
+    resp.data_length = api.data.length;
+    resp.data_type = (uint8_t)api.data.type;
+    resp.data_block_count = DATA_BLOCK_COUNT;
+    resp.data_block_size = DATA_BLOCK_SIZE;
 
-	io_send(&resp, sizeof(resp), SW_OK);
-	return 0;
+    io_send(&resp, sizeof(resp), SW_OK);
+    return 0;
 }
 uint32_t api_clear_data_buffer()
 {
-	// wipe all including other api-flags
-	api_clear_data();
+    // wipe all including other api-flags
+    api_clear_data();
 
-	io_send(NULL, 0, SW_OK);
-	return 0;
+    io_send(NULL, 0, SW_OK);
+    return 0;
 }
 
 // get application configuration (flags and version)
@@ -142,9 +142,10 @@ uint32_t api_get_app_config()
     return 0;
 }
 
-uint32_t api_reset() {
-	// also resets the account index
-	api_initialize();
+uint32_t api_reset()
+{
+    // also resets the account index
+    api_initialize();
 
     ui_reset();
 
@@ -152,35 +153,37 @@ uint32_t api_reset() {
     return 0;
 }
 
-uint32_t api_show_flow(uint8_t flow) {
-	if (!ui_show(flow)) {
-		THROW(SW_INCORRECT_P1P2);
-	}
+uint32_t api_show_flow(uint8_t flow)
+{
+    if (!ui_show(flow)) {
+        THROW(SW_INCORRECT_P1P2);
+    }
 
     io_send(NULL, 0, SW_OK);
     return 0;
 }
 
-uint32_t api_set_account(const uint8_t *data, uint32_t len) {
-	// check if a uint32_t was sent as data
-	if (len != sizeof(uint32_t)) {
-		THROW(SW_INCORRECT_LENGTH);
-	}
+uint32_t api_set_account(const uint8_t *data, uint32_t len)
+{
+    // check if a uint32_t was sent as data
+    if (len != sizeof(uint32_t)) {
+        THROW(SW_INCORRECT_LENGTH);
+    }
 
 
-	uint32_t tmp_bip32_account;
-	os_memcpy(&tmp_bip32_account, data, sizeof(uint32_t));
+    uint32_t tmp_bip32_account;
+    os_memcpy(&tmp_bip32_account, data, sizeof(uint32_t));
 
-	// valid bip32_account? MSB must be set
-	if (!(tmp_bip32_account & 0x80000000)) {
-		THROW(SW_COMMAND_INVALID_DATA);
-	}
+    // valid bip32_account? MSB must be set
+    if (!(tmp_bip32_account & 0x80000000)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
 
-	// delete all data
-	api_initialize();
+    // delete all data
+    api_initialize();
 
-	// set account index
-	api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+    // set account index
+    api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
 
     io_send(NULL, 0, SW_OK);
 
@@ -188,316 +191,335 @@ uint32_t api_set_account(const uint8_t *data, uint32_t len) {
 }
 
 // callback for accept transaction
-void api_generate_address_accepted() {
-	// in interactive flows set data_type here
-	api.data.type = GENERATED_ADDRESSES;
-	api.user_confirm_result = 1;	// send SW_OK
+void api_generate_address_accepted()
+{
+    // in interactive flows set data_type here
+    api.data.type = GENERATED_ADDRESSES;
+    api.user_confirm_result = 1; // send SW_OK
 }
 
 // callback for timeout
-void api_generate_address_timeout() {
-	api_clear_data();
-	api.user_confirm_result = 3;	// send SW_TIMEOUT
+void api_generate_address_timeout()
+{
+    api_clear_data();
+    api.user_confirm_result = 3; // send SW_TIMEOUT
 }
 
-uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data, uint32_t len) {
-	// don't allow command if an interactive flow already is running
-	if (api.user_confirm_result) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
-	// was account selected?
-	if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
-		THROW(SW_ACCOUNT_NOT_VALID);
-	}
+uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
+                              uint32_t len)
+{
+    // don't allow command if an interactive flow already is running
+    if (api.user_confirm_result) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+    // was account selected?
+    if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
 
-	// if buffer contains data throw exception
-	if (api.data.type != EMPTY) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+    // if buffer contains data throw exception
+    if (api.data.type != EMPTY) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// disable write access before doing anything else
-	api.data.type = LOCKED;
+    // disable write access before doing anything else
+    api.data.type = LOCKED;
 
-	if (len != sizeof(API_GENERATE_ADDRESS_REQUEST)) {
-		THROW(SW_INCORRECT_LENGTH);
-	}
+    if (len != sizeof(API_GENERATE_ADDRESS_REQUEST)) {
+        THROW(SW_INCORRECT_LENGTH);
+    }
 
-	API_GENERATE_ADDRESS_REQUEST req;
-	os_memcpy(&req, data, sizeof(req));
+    API_GENERATE_ADDRESS_REQUEST req;
+    os_memcpy(&req, data, sizeof(req));
 
-	// check if too many addresses to generate
-	if (req.count > API_GENERATE_ADDRESSES_MAX_COUNT) {
-		THROW(SW_COMMAND_INVALID_DATA);
-	}
+    // check if too many addresses to generate
+    if (req.count > API_GENERATE_ADDRESSES_MAX_COUNT) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
 
-	// if new address will be shown in a flow, only allow a single address
-	// this mode is used for generating new remainder addresses and show
-	// it to the user to review
-	if (show_on_screen && req.count != 1) {
-		THROW(SW_COMMAND_INVALID_DATA);
-	}
+    // if new address will be shown in a flow, only allow a single address
+    // this mode is used for generating new remainder addresses and show
+    // it to the user to review
+    if (show_on_screen && req.count != 1) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
 
-	// check if MSBs set
-	if (!(req.bip32_index & 0x80000000) || !(req.bip32_change & 0x80000000)) {
-		THROW(SW_COMMAND_INVALID_DATA);
-	}
+    // check if MSBs set
+    if (!(req.bip32_index & 0x80000000) || !(req.bip32_change & 0x80000000)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
 
-	// check if there would be an overflow when generating addresses
-	if (!((req.bip32_index + req.count) & 0x80000000)) {
-		THROW(SW_COMMAND_INVALID_DATA);
-	}
+    // check if there would be an overflow when generating addresses
+    if (!((req.bip32_index + req.count) & 0x80000000)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
 
-	api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
-	api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
+    api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
+    api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
 
-	// wipe all data before buffer is used again
-	os_memset(api.data.buffer, 0, API_BUFFER_SIZE_BYTES);
-	for (uint32_t i=0;i<req.count;i++) {
-		// with address_type
-		uint8_t ret = address_generate(api.bip32_path, BIP32_PATH_LEN, &api.data.buffer[i * ADDRESS_WITH_TYPE_SIZE_BYTES]);
-//		debug_print_hex(&api.data.buffer[i * ADDRESS_WITH_TYPE_SIZE_BYTES], ADDRESS_WITH_TYPE_SIZE_BYTES, 16);
-		if (!ret) {
-			THROW(SW_UNKNOWN);
-		}
-		// generate next address
-		api.bip32_path[BIP32_ADDRESS_INDEX]++;
-	}
+    // wipe all data before buffer is used again
+    os_memset(api.data.buffer, 0, API_BUFFER_SIZE_BYTES);
+    for (uint32_t i = 0; i < req.count; i++) {
+        // with address_type
+        uint8_t ret = address_generate(
+            api.bip32_path, BIP32_PATH_LEN,
+            &api.data.buffer[i * ADDRESS_WITH_TYPE_SIZE_BYTES]);
+        //		debug_print_hex(&api.data.buffer[i *
+        //ADDRESS_WITH_TYPE_SIZE_BYTES], ADDRESS_WITH_TYPE_SIZE_BYTES, 16);
+        if (!ret) {
+            THROW(SW_UNKNOWN);
+        }
+        // generate next address
+        api.bip32_path[BIP32_ADDRESS_INDEX]++;
+    }
 
-	api.data.length = req.count * ADDRESS_WITH_TYPE_SIZE_BYTES;
+    api.data.length = req.count * ADDRESS_WITH_TYPE_SIZE_BYTES;
 
-	if (!show_on_screen ||
+    if (!show_on_screen ||
 #ifdef APP_DEBUG
-		api.non_interactive_mode
+        api.non_interactive_mode
 #else
-		false
+        false
 #endif
-	) {
-		api.data.type = GENERATED_ADDRESSES;
-		api.user_confirm_result = 0;	// don't send additional OK
-		io_send(NULL, 0, SW_OK);
-		return 0;
-	}
+    ) {
+        api.data.type = GENERATED_ADDRESSES;
+        api.user_confirm_result = 0; // don't send additional OK
+        io_send(NULL, 0, SW_OK);
+        return 0;
+    }
 
-	// use api buffer and essence to show new address on the screen
-	// buffer is free after index 32
-	// writing to the buffer is not allowed, so data can't be changed after
-	// the flow is started
-	SIG_LOCKED_SINGLE_OUTPUT* tmp = (SIG_LOCKED_SINGLE_OUTPUT*) &api.data.buffer[64];
-	os_memcpy(&tmp->address_type, api.data.buffer, ADDRESS_WITH_TYPE_SIZE_BYTES);
+    // use api buffer and essence to show new address on the screen
+    // buffer is free after index 32
+    // writing to the buffer is not allowed, so data can't be changed after
+    // the flow is started
+    SIG_LOCKED_SINGLE_OUTPUT *tmp =
+        (SIG_LOCKED_SINGLE_OUTPUT *)&api.data.buffer[64];
+    os_memcpy(&tmp->address_type, api.data.buffer,
+              ADDRESS_WITH_TYPE_SIZE_BYTES);
 
-	api.essence.outputs_count = 1;
-	api.essence.outputs = tmp;
-	api.essence.remainder_bip32.bip32_index = req.bip32_index;
-	api.essence.remainder_bip32.bip32_change = req.bip32_change;
-	api.essence.remainder_index = 0;
+    api.essence.outputs_count = 1;
+    api.essence.outputs = tmp;
+    api.essence.remainder_bip32.bip32_index = req.bip32_index;
+    api.essence.remainder_bip32.bip32_change = req.bip32_change;
+    api.essence.remainder_index = 0;
 
-	// if remainder address has to be shown on the UI, reset the address index to the
-	// original value
-	api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
-	api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
+    // if remainder address has to be shown on the UI, reset the address index
+    // to the original value
+    api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
+    api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
 
-	api.user_confirm_result = -1;	// mark flow running
+    api.user_confirm_result = -1; // mark flow running
 
-	flow_start_new_address(&api, api_generate_address_accepted, api_generate_address_timeout, api.bip32_path);
-	return IO_ASYNCH_REPLY;
+    flow_start_new_address(&api, api_generate_address_accepted,
+                           api_generate_address_timeout, api.bip32_path);
+    return IO_ASYNCH_REPLY;
 }
 
-uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder, const uint8_t *data, uint32_t len) {
-	// when calling validation the buffer still is marked as empty
-	if (api.data.type != EMPTY) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
+                             const uint8_t *data, uint32_t len)
+{
+    // when calling validation the buffer still is marked as empty
+    if (api.data.type != EMPTY) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// disable write access before doing anything else
-	api.data.type = LOCKED;
+    // disable write access before doing anything else
+    api.data.type = LOCKED;
 
-	// was network and account selected?
-	if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
-		THROW(SW_ACCOUNT_NOT_VALID);
-	}
+    // was network and account selected?
+    if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
 
-	if (len != sizeof(API_PREPARE_SIGNING_REQUEST)) {
-		THROW(SW_INCORRECT_LENGTH);
-	}
+    if (len != sizeof(API_PREPARE_SIGNING_REQUEST)) {
+        THROW(SW_INCORRECT_LENGTH);
+    }
 
-	if (!!has_remainder) {
-		API_PREPARE_SIGNING_REQUEST req;
-		os_memcpy(&req, data, sizeof(req));
+    if (!!has_remainder) {
+        API_PREPARE_SIGNING_REQUEST req;
+        os_memcpy(&req, data, sizeof(req));
 
-		if (!(req.remainder_bip32_change & 0x80000000) || !(req.remainder_bip32_index & 0x80000000) || req.remainder_index >= OUTPUTS_MAX_COUNT) {
-			THROW(SW_COMMAND_INVALID_DATA);
-		}
+        if (!(req.remainder_bip32_change & 0x80000000) ||
+            !(req.remainder_bip32_index & 0x80000000) ||
+            req.remainder_index >= OUTPUTS_MAX_COUNT) {
+            THROW(SW_COMMAND_INVALID_DATA);
+        }
 
-		api.essence.has_remainder = 1;
-		api.essence.remainder_index = req.remainder_index;
-		api.essence.remainder_bip32.bip32_index = req.remainder_bip32_index;
-		api.essence.remainder_bip32.bip32_change = req.remainder_bip32_change;
-	} else {
-		api.essence.has_remainder = 0;
-	}
+        api.essence.has_remainder = 1;
+        api.essence.remainder_index = req.remainder_index;
+        api.essence.remainder_bip32.bip32_index = req.remainder_bip32_index;
+        api.essence.remainder_bip32.bip32_change = req.remainder_bip32_change;
+    }
+    else {
+        api.essence.has_remainder = 0;
+    }
 
-	// save into variable if single-sign mode will be used
-	api.essence.single_sign_mode = !!single_sign;
+    // save into variable if single-sign mode will be used
+    api.essence.single_sign_mode = !!single_sign;
 
-	if (!essence_parse_and_validate(&api)) {
-		THROW(SW_COMMAND_INVALID_DATA);
-	}
+    if (!essence_parse_and_validate(&api)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
 
-	api.data.type = VALIDATED_ESSENCE;
+    api.data.type = VALIDATED_ESSENCE;
 
-	io_send(NULL, 0, SW_OK);
-	return 0;
+    io_send(NULL, 0, SW_OK);
+    return 0;
 }
 
 // callback for accept transaction
-void api_user_confirm_essence_accepted() {
-	api.data.type = USER_CONFIRMED_ESSENCE;
-	api.user_confirm_result = 1;
+void api_user_confirm_essence_accepted()
+{
+    api.data.type = USER_CONFIRMED_ESSENCE;
+    api.user_confirm_result = 1;
 }
 
 // callback for accept transaction
-void api_user_confirm_essence_rejected() {
-	api_clear_data();
-	api.user_confirm_result = 2;
+void api_user_confirm_essence_rejected()
+{
+    api_clear_data();
+    api.user_confirm_result = 2;
 }
 
 // callback for timeout
-void api_user_confirm_essence_timeout() {
-	api_clear_data();
-	api.user_confirm_result = 3;
+void api_user_confirm_essence_timeout()
+{
+    api_clear_data();
+    api.user_confirm_result = 3;
 }
 
-uint32_t api_user_confirm_essence() {
-	// don't allow command if an interactive flow already is running
-	if (api.user_confirm_result) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+uint32_t api_user_confirm_essence()
+{
+    // don't allow command if an interactive flow already is running
+    if (api.user_confirm_result) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	if (api.data.type != VALIDATED_ESSENCE) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+    if (api.data.type != VALIDATED_ESSENCE) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// was account selected?
-	if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
-		THROW(SW_ACCOUNT_NOT_VALID);
-	}
+    // was account selected?
+    if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
 
-	// some basic checks - actually data should be 100% validated already
-	if (
-		api.data.length >= API_BUFFER_SIZE_BYTES ||
-		api.essence.length >= API_BUFFER_SIZE_BYTES ||
-		api.data.length < api.essence.length ||
-		api.essence.inputs_count < INPUTS_MIN_COUNT ||
-		api.essence.inputs_count > INPUTS_MAX_COUNT
-	) {
-		THROW(SW_UNKNOWN);
-	}
+    // some basic checks - actually data should be 100% validated already
+    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
+        api.essence.length >= API_BUFFER_SIZE_BYTES ||
+        api.data.length < api.essence.length ||
+        api.essence.inputs_count < INPUTS_MIN_COUNT ||
+        api.essence.inputs_count > INPUTS_MAX_COUNT) {
+        THROW(SW_UNKNOWN);
+    }
 
-	// set correct bip32 path for showing the remainder address on the UI
-	api.bip32_path[BIP32_ADDRESS_INDEX] = api.essence.remainder_bip32.bip32_index;
-	api.bip32_path[BIP32_CHANGE_INDEX] = api.essence.remainder_bip32.bip32_change;
+    // set correct bip32 path for showing the remainder address on the UI
+    api.bip32_path[BIP32_ADDRESS_INDEX] =
+        api.essence.remainder_bip32.bip32_index;
+    api.bip32_path[BIP32_CHANGE_INDEX] =
+        api.essence.remainder_bip32.bip32_change;
 
 #ifdef APP_DEBUG
-	if (api.non_interactive_mode) {
-		api.user_confirm_result = 0;
-		api.data.type = USER_CONFIRMED_ESSENCE;
+    if (api.non_interactive_mode) {
+        api.user_confirm_result = 0;
+        api.data.type = USER_CONFIRMED_ESSENCE;
 
-		io_send(NULL, 0, SW_OK);
-		return 0;
-	}
+        io_send(NULL, 0, SW_OK);
+        return 0;
+    }
 #endif
-	flow_start_user_confirm(&api, &api_user_confirm_essence_accepted, &api_user_confirm_essence_rejected,
-			&api_user_confirm_essence_timeout, api.bip32_path);
+    flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
+                            &api_user_confirm_essence_rejected,
+                            &api_user_confirm_essence_timeout, api.bip32_path);
 
-	api.user_confirm_result = -1;	// mark flow running
-	return IO_ASYNCH_REPLY;
+    api.user_confirm_result = -1; // mark flow running
+    return IO_ASYNCH_REPLY;
 }
 
 // prefered signing methond on the nano-x
 // uses additional memory on in the buffer but only
 // needs a single call to the signing method
-uint32_t api_sign() {
-	if (api.data.type != USER_CONFIRMED_ESSENCE) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+uint32_t api_sign()
+{
+    if (api.data.type != USER_CONFIRMED_ESSENCE) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// was not validated in single sign mode?
-	if (api.essence.single_sign_mode) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+    // was not validated in single sign mode?
+    if (api.essence.single_sign_mode) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// some basic checks - actually data should be 100% validated already
-	if (
-		api.data.length >= API_BUFFER_SIZE_BYTES ||
-		api.essence.length >= API_BUFFER_SIZE_BYTES ||
-		api.data.length < api.essence.length ||
-		api.essence.inputs_count < INPUTS_MIN_COUNT ||
-		api.essence.inputs_count > INPUTS_MAX_COUNT
-	) {
-		THROW(SW_UNKNOWN);
-	}
+    // some basic checks - actually data should be 100% validated already
+    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
+        api.essence.length >= API_BUFFER_SIZE_BYTES ||
+        api.data.length < api.essence.length ||
+        api.essence.inputs_count < INPUTS_MIN_COUNT ||
+        api.essence.inputs_count > INPUTS_MAX_COUNT) {
+        THROW(SW_UNKNOWN);
+    }
 
-	uint8_t ret = essence_sign(&api);
-	if (!ret) {
-		THROW(SW_UNKNOWN);
-	}
+    uint8_t ret = essence_sign(&api);
+    if (!ret) {
+        THROW(SW_UNKNOWN);
+    }
 
-	api.data.type = SIGNATURES;
+    api.data.type = SIGNATURES;
 
-	io_send(NULL, 0, SW_OK);
+    io_send(NULL, 0, SW_OK);
 
-	return 0;
+    return 0;
 }
 
 // prefered signing methond on the nano-s
 // it needs as many calls as there are inputs but needs
 // no additional memory in the buffer for signatures
-uint32_t api_sign_single(uint8_t p1) {
-	if (api.data.type != USER_CONFIRMED_ESSENCE) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+uint32_t api_sign_single(uint8_t p1)
+{
+    if (api.data.type != USER_CONFIRMED_ESSENCE) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// this check actually wouldn't be needed because
-	// if validation passed without single-flag, sign_single would be
-	// okay but not the other way around!
-	// but if validation without single-flag passes, you could use the
-	// sign-api-call right away.
-	//
-	// so this check only is here to prevent mixing validation and signing
-	// modes because it doesn't make sense and could lead to client problems.
+    // this check actually wouldn't be needed because
+    // if validation passed without single-flag, sign_single would be
+    // okay but not the other way around!
+    // but if validation without single-flag passes, you could use the
+    // sign-api-call right away.
+    //
+    // so this check only is here to prevent mixing validation and signing
+    // modes because it doesn't make sense and could lead to client problems.
 
-	// was validated in single sign mode?
-	if (!api.essence.single_sign_mode) {
-		THROW(SW_COMMAND_NOT_ALLOWED);
-	}
+    // was validated in single sign mode?
+    if (!api.essence.single_sign_mode) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
 
-	// some basic checks - actually data is 100% validated already
-	if (
-		api.data.length >= API_BUFFER_SIZE_BYTES ||
-		api.essence.length >= API_BUFFER_SIZE_BYTES ||
-		api.data.length < api.essence.length ||
-		api.essence.inputs_count < INPUTS_MIN_COUNT ||
-		api.essence.inputs_count > INPUTS_MAX_COUNT
-	) {
-		THROW(SW_UNKNOWN);
-	}
+    // some basic checks - actually data is 100% validated already
+    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
+        api.essence.length >= API_BUFFER_SIZE_BYTES ||
+        api.data.length < api.essence.length ||
+        api.essence.inputs_count < INPUTS_MIN_COUNT ||
+        api.essence.inputs_count > INPUTS_MAX_COUNT) {
+        THROW(SW_UNKNOWN);
+    }
 
-	if (p1 >= api.essence.inputs_count) {
-		THROW(SW_INCORRECT_P1P2);
-	}
+    if (p1 >= api.essence.inputs_count) {
+        THROW(SW_INCORRECT_P1P2);
+    }
 
-	uint32_t signature_idx = p1;
+    uint32_t signature_idx = p1;
 
-	uint8_t* output = io_get_buffer();
-	uint16_t signature_size_bytes = essence_sign_single(&api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
+    uint8_t *output = io_get_buffer();
+    uint16_t signature_size_bytes = essence_sign_single(
+        &api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
 
-	if (!signature_size_bytes) {
-		THROW(SW_UNKNOWN);
-	}
+    if (!signature_size_bytes) {
+        THROW(SW_UNKNOWN);
+    }
 
-	io_send(output, signature_size_bytes, SW_OK);
+    io_send(output, signature_size_bytes, SW_OK);
 
-	return 0;
+    return 0;
 }
 
 #ifdef APP_DEBUG
@@ -507,25 +529,27 @@ uint32_t api_sign_single(uint8_t p1) {
 // the bss section is left. RAM is initialized by BOLOS with 0xa5. So
 // it's easy to see what memory never was written to
 // DON'T enable it in production
-uint32_t api_dump_memory(uint8_t pagenr) {
+uint32_t api_dump_memory(uint8_t pagenr)
+{
 #ifdef TARGET_NANOX
-	uint32_t* p = (uint32_t*) (0xda7a0000 + pagenr * 128);
+    uint32_t *p = (uint32_t *)(0xda7a0000 + pagenr * 128);
 #else
-	uint32_t* p = (uint32_t*) (0x20001800 + pagenr * 128);
+    uint32_t *p = (uint32_t *)(0x20001800 + pagenr * 128);
 #endif
-	io_send(p, 128, SW_OK);
-	return 0;
+    io_send(p, 128, SW_OK);
+    return 0;
 }
 
 // set non-interactive-mode for automatic testing via speculos
-uint32_t api_set_non_interactive_mode(uint8_t mode) {
-	if (mode > 1) {
-		THROW(SW_INCORRECT_P1P2);
-	}
-	api.non_interactive_mode = mode;
+uint32_t api_set_non_interactive_mode(uint8_t mode)
+{
+    if (mode > 1) {
+        THROW(SW_INCORRECT_P1P2);
+    }
+    api.non_interactive_mode = mode;
 
-	io_send(NULL, 0, SW_OK);
-	return 0;
+    io_send(NULL, 0, SW_OK);
+    return 0;
 }
 
 #endif
@@ -533,39 +557,40 @@ uint32_t api_set_non_interactive_mode(uint8_t mode) {
 // send status code for interactive flows
 // calling io_send from the UX is problematic for the stack,
 // so do it here.
-void api_timer_event() {
-	// this flag is needed to prevent recursively calling the io_send method!
-	if (api.timer_cb_active) {
-		return;
-	}
-	api.timer_cb_active = 1;
-	switch (api.user_confirm_result) {
-		case 0:	// nothing in progress
-			// NOP
-			break;
-		case 1:
-			io_send(NULL, 0, SW_OK);
-			api.user_confirm_result = 0;
-			break;
-		case 2:
-			io_send(NULL, 0, SW_DENIED_BY_USER);
-			api.user_confirm_result = 0;
-			break;
-		case 3:	// idle timeout happened
-			io_send(NULL, 0, SW_COMMAND_TIMEOUT);
-			api.user_confirm_result = 0;
-			break;
-		case -1:	// in progress - don't allow to start another interactive flow
-			// NOP
-			break;
-		default:
-			// NOP
-			break;
-	}
-	api.timer_cb_active=0;
+void api_timer_event()
+{
+    // this flag is needed to prevent recursively calling the io_send method!
+    if (api.timer_cb_active) {
+        return;
+    }
+    api.timer_cb_active = 1;
+    switch (api.user_confirm_result) {
+    case 0: // nothing in progress
+        // NOP
+        break;
+    case 1:
+        io_send(NULL, 0, SW_OK);
+        api.user_confirm_result = 0;
+        break;
+    case 2:
+        io_send(NULL, 0, SW_DENIED_BY_USER);
+        api.user_confirm_result = 0;
+        break;
+    case 3: // idle timeout happened
+        io_send(NULL, 0, SW_COMMAND_TIMEOUT);
+        api.user_confirm_result = 0;
+        break;
+    case -1: // in progress - don't allow to start another interactive flow
+        // NOP
+        break;
+    default:
+        // NOP
+        break;
+    }
+    api.timer_cb_active = 0;
 }
 
-void io_timeout_reset() {
-	api.user_confirm_result = 0;
+void io_timeout_reset()
+{
+    api.user_confirm_result = 0;
 }
-

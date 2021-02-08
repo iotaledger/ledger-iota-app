@@ -14,24 +14,25 @@
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 
+// clang-format off
 UX_STEP_NOCB(
-	ux_signed_successfully,
-	pbb,
-	{
-		&C_x_icon_check,
-		"Signed",
-		"Successfully"
-	}
+    ux_signed_successfully,
+    pbb,
+    {
+    &C_x_icon_check,
+    "Signed",
+    "Successfully"
+    }
 );
 
 UX_FLOW(
-	ux_flow_signed_successfully,
-	&ux_signed_successfully,
-	FLOW_END_STEP
-
+    ux_flow_signed_successfully,
+    &ux_signed_successfully,
+    FLOW_END_STEP
 );
+// clang-format on
 
-void flow_signed_successfully() {
-	ux_flow_init(0, ux_flow_signed_successfully, NULL);
+void flow_signed_successfully()
+{
+    ux_flow_init(0, ux_flow_signed_successfully, NULL);
 }
-

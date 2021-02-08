@@ -4,12 +4,12 @@
 #include <stdint.h>
 
 enum {
-	FLOW_MAIN_MENU = 0,
-	FLOW_GENERATING_ADDRESSES = 1,
-	FLOW_GENERIC_ERROR = 2,
-	FLOW_REJECTED = 3,
-	FLOW_SIGNED_SUCCESSFULLY = 4,
-	FLOW_SIGNING = 5,
+    FLOW_MAIN_MENU = 0,
+    FLOW_GENERATING_ADDRESSES = 1,
+    FLOW_GENERIC_ERROR = 2,
+    FLOW_REJECTED = 3,
+    FLOW_SIGNED_SUCCESSFULLY = 4,
+    FLOW_SIGNING = 5,
 };
 
 // the following implementation are different for Blue and Nano

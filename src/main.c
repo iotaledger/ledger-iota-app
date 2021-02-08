@@ -40,7 +40,7 @@ static bool device_is_unlocked(void)
 {
 // speculos doesn't support locking
 #ifdef SPECULOS
-	return true;
+    return true;
 #else
 #if CX_APILEVEL >= 9
     return os_global_pin_is_validated() == BOLOS_UX_OK;
@@ -98,7 +98,8 @@ static void IOTA_main()
                 // expected errors start with 0x6
                 if ((e & 0xF000) == 0x6000) {
                     sw = e;
-                } else {
+                }
+                else {
                     sw = SW_UNKNOWN | (e & 0x0FF);
                 }
 
@@ -163,7 +164,7 @@ void io_seproxyhal_display(const bagl_element_t *element)
 
 unsigned char io_event(unsigned char channel)
 {
-	UNUSED(channel);
+    UNUSED(channel);
     // nothing done with the event, throw an error on the transport layer if
     // needed
 
@@ -185,8 +186,8 @@ unsigned char io_event(unsigned char channel)
         UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {});
 
         timer_events++;
-    	api_timer_event();
-    	ui_timer_event();
+        api_timer_event();
+        ui_timer_event();
         break;
 
     default:
@@ -226,7 +227,7 @@ __attribute__((section(".boot"))) int main(void)
     // ensure exception will work as planned
     os_boot();
 
-//    debug_print_sp();
+    //    debug_print_sp();
 
     for (;;) {
         UX_INIT();

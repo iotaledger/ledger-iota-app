@@ -8,7 +8,7 @@
 #define VALIDATE(cond, error)                                                  \
     {                                                                          \
         if (!(cond)) {                                                         \
-            THROW(error);							                           \
+            THROW(error);                                                      \
         }                                                                      \
     }
 
