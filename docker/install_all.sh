@@ -43,7 +43,7 @@ cd -
 
 cd git
 
-git clone --recurse-submodules https://gitlab.com/ledger-iota-chrysalis/ledger-iota-app && \
+git clone --recurse-submodules https://github.com/iotaledger/ledger-iota-app && \
 git clone https://github.com/LedgerHQ/speculos && \
 git clone https://github.com/LedgerHQ/blue-loader-python || error "cloning repositories"
 
