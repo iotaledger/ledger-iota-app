@@ -140,7 +140,7 @@ You either can
 - run the app in a Ledger Nano S/X simulator or
 - load the app on your read Ledger Nano S
 
-In both cases, you find instructions here: [Ledger-IOTA-App-Docker Repository](https://github.com/iotaledger/ledger-iota-app/docker)
+In both cases, you find instructions here: [Ledger-IOTA-App-Docker Repository](docker)
 
 ### Preparing development environment
 
