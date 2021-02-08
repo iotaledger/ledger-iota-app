@@ -46,6 +46,7 @@ QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY -v /t
 "source env_${device}.sh;"\
 "make clean;"\
 "git pull;"\
+"git submodule update --recursive --remote;"\
 "SPECULOS=1 make;"\
 "cd /root/git/speculos;"\
 "python3 speculos.py -m \$( cat ../ledger-iota-app/device.txt )  ../ledger-iota-app/bin/app.elf"
