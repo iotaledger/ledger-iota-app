@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "GDB",
+            "type": "gdb",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "target": "${workspaceRoot}/bin/app.elf",
+            "gdbpath": "gdb-multiarch",
+            "autorun": [
+                "target remote 127.0.0.1:1234",
+                "source \"${workspaceRoot}/tools/gdbinit\"",
+                "set architecture arm",
+                "handle SIGILL nostop pass noprint",
+                "add-symbol-file \"/home/thomas/git/ledger/speculos/tools/../build/src/launcher\" 0x000101c0",
+                "add-symbol-file \"${workspaceRoot}/bin/app.elf\" 0x40000000",
+                "b *0x40000000",
+                "show"
+            ]
+        },
+   ]
+}
