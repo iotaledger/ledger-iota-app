@@ -11,9 +11,11 @@
 #include "api.h"
 #include "constants.h"
 
-uint8_t address_encode_bech32(const uint8_t* addr, char* bech32, uint32_t bech32_max_length);
+uint8_t address_encode_bech32(const uint8_t *addr, char *bech32,
+                              uint32_t bech32_max_length);
 
-uint8_t address_generate(uint32_t* bip32_path, uint32_t bip32_path_length, uint8_t* addr);
+uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
+                         uint8_t *addr);
 
 
 #endif /* SRC_IOTA_ADDRESS_H_ */

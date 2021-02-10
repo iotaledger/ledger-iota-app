@@ -21,8 +21,12 @@ void flow_main_menu();
 
 void flow_init();
 
-void flow_start_user_confirm(const API_CTX *api, accept_cb_t accept_cb, reject_cb_t reject_cb, timeout_cb_t timeout_cb, const uint32_t bip32[BIP32_PATH_LEN]);
-void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb, timeout_cb_t timeout_cb, const uint32_t bip32[BIP32_PATH_LEN]);
+void flow_start_user_confirm(const API_CTX *api, accept_cb_t accept_cb,
+                             reject_cb_t reject_cb, timeout_cb_t timeout_cb,
+                             const uint32_t bip32[BIP32_PATH_LEN]);
+void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
+                            timeout_cb_t timeout_cb,
+                            const uint32_t bip32[BIP32_PATH_LEN]);
 
 void flow_stop();
 

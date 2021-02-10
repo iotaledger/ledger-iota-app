@@ -19,12 +19,12 @@
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 
-#define MUST(c)	\
-{	\
-	if (!(c)) {	\
-		return 0;	\
-	}	\
-}
+#define MUST(c)                                                                \
+    {                                                                          \
+        if (!(c)) {                                                            \
+            return 0;                                                          \
+        }                                                                      \
+    }
 
 
 /// the largest power of 10 that still fits into int32
@@ -34,7 +34,8 @@
 #define MAX_IOTA_UNIT 6
 
 /// the different IOTA units
-static const char IOTA_UNITS[MAX_IOTA_UNIT][3] = {"i", "Ki", "Mi", "Gi", "Ti", "Pi"};
+static const char IOTA_UNITS[MAX_IOTA_UNIT][3] = {"i",  "Ki", "Mi",
+                                                  "Gi", "Ti", "Pi"};
 
 /// Groups the string by adding a comma every 3 chars from the right.
 static size_t str_add_commas(char *dst, const char *src, size_t num_len)
@@ -70,7 +71,7 @@ static size_t format_s64(char *s, const size_t n, const uint64_t val)
     }
 
     if (val < MAX_INT_DEC) {
-        snprintf(s, n, "%u", (uint32_t) val);
+        snprintf(s, n, "%u", (uint32_t)val);
     }
     else {
         // emulate printing of integers larger than 32 bit
@@ -117,10 +118,11 @@ void format_value_short(char *s, const unsigned int n, uint64_t val)
              IOTA_UNITS[base]);
 }
 
-#define LINELENGTH  16
+#define LINELENGTH 16
 
 // returns the length of hex string
-int hex_len(uint32_t v) {
+int hex_len(uint32_t v)
+{
     int len = 8;
     while (v) {
         if ((v & 0xf0000000)) {
@@ -135,32 +137,37 @@ int hex_len(uint32_t v) {
 // format bip path to string
 // doesn't use a local buffer but generates the string
 // fitting in LINE_WIDTH characters directly
-int format_bip32(const uint32_t* b32, int linenr, char* out, uint32_t out_max_len) {
-    int len[BIP32_PATH_LEN]={0};
-    for (int i=0;i<BIP32_PATH_LEN;i++) {
+int format_bip32(const uint32_t *b32, int linenr, char *out,
+                 uint32_t out_max_len)
+{
+    int len[BIP32_PATH_LEN] = {0};
+    for (int i = 0; i < BIP32_PATH_LEN; i++) {
         len[i] = hex_len(b32[i] & 0x7fffffff);
-        if (i != BIP32_PATH_LEN-1) {
-            len[i] += 2;	// gets added: '/
-        } else {
-            len[i] += 1;	// gets added: '
+        if (i != BIP32_PATH_LEN - 1) {
+            len[i] += 2; // gets added: '/
+        }
+        else {
+            len[i] += 1; // gets added: '
         }
     }
 
-    int ofs=0;
-    int curlen=0;
-    int lines=0;
+    int ofs = 0;
+    int curlen = 0;
+    int lines = 0;
 
     if (out) {
-    	out[0] = 0;
+        out[0] = 0;
     }
-    for (int i=0;i<BIP32_PATH_LEN;i++) {
+    for (int i = 0; i < BIP32_PATH_LEN; i++) {
         if (curlen + len[i] > LINELENGTH) {
-            curlen=0;
+            curlen = 0;
             lines++;
         }
         if (lines == linenr) {
             if (out) {
-                snprintf(&out[ofs], out_max_len, (i != BIP32_PATH_LEN-1) ? "%x'/" : "%x'", b32[i] & 0x7fffffff);
+                snprintf(&out[ofs], out_max_len,
+                         (i != BIP32_PATH_LEN - 1) ? "%x'/" : "%x'",
+                         b32[i] & 0x7fffffff);
             }
             ofs += len[i];
             out_max_len -= len[i];

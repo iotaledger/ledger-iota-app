@@ -140,7 +140,7 @@ You either can
 - run the app in a Ledger Nano S/X simulator or
 - load the app on your read Ledger Nano S
 
-In both cases, you find instructions here: [Ledger-IOTA-App-Docker Repository](https://gitlab.com/ledger-iota-chrysalis/ledger-iota-app-docker)
+In both cases, you find instructions here: [Ledger-IOTA-App-Docker Repository](docker)
 
 ### Preparing development environment
 
@@ -149,7 +149,7 @@ For active development it might be easier to install the development environment
 - Clone this repo
 - Ensure that all git submodules are initialized
     ```
-    git submodule update --init --recursive
+    $ git submodule update --init --recursive
     ```
 - Set up your development environment according to [Ledger Documentation - Getting Started](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).
 
@@ -161,7 +161,7 @@ After the development environment has been installed, the app can be build and i
 - To load the app, be sure that the dashboard is opened in the Ledger
 - Run the following commands to compile the app from source and load it
     ```
-    make load
+    $ make load
     ```
 - Accept all the messages on the Ledger
 

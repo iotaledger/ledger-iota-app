@@ -403,7 +403,7 @@ Resets API and data buffer completly (also resets account and non-interactive fl
 
 **Preconditions**: \-
 
-**After**: ``EMPTY`
+**After**: `EMPTY`
 
 **Parameters**: \-
 
@@ -411,4 +411,57 @@ Resets API and data buffer completly (also resets account and non-interactive fl
 
 **Response**: \-
  
+**Errors**: \-
+
+
+### Additional API Commands in Debug Mode
+
+---
+#### 0x66 - Dump Memory
+
+Dumps a 128 byte memory page. The Nano S has 4kB, the Nano X has 32kB of internal RAM. Only is available in Debug-Mode. 
+
+This command can be useful to verify how much stack in the device is used.
+
+**Preconditions**: \-
+
+**After**: unchanged
+
+**Parameters**: 
+
+| Parameter | Description |
+|-------|-------------|
+|`p0` | Number of page to dump
+
+**Request**: \-
+
+**Response**: 
+
+| Field | Bytes | Description |
+|-------------------|---|---|
+| `data` | 128 | One memory page |  
+
+**Errors**: \-
+
+---
+#### 0x67 - Set Non-Interactive Mode
+
+For automatic testing, the `non-interactive` flag can be set. Generating a new remainder address and confirming an essence is accepted automatically.
+
+This command only is available in debug mode.
+
+**Preconditions**: \-
+
+**After**: unchanged
+
+**Parameters**: 
+
+| Parameter | Description |
+|-------|-------------|
+|`p0` | 0: Non-Interactive Mode disabled <br/>1: Non-Interactive Mode enabled
+
+**Request**: \-
+
+**Response**: \-
+
 **Errors**: \-

@@ -25,6 +25,7 @@ void format_value_full(char *s, unsigned int n, uint64_t val);
  */
 void format_value_short(char *s, unsigned int n, uint64_t val);
 
-int format_bip32(const uint32_t* b32, int linenr, char* out, uint32_t out_max_len);
+int format_bip32(const uint32_t *b32, int linenr, char *out,
+                 uint32_t out_max_len);
 
 #endif // UI_COMMON_H
