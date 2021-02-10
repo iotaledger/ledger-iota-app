@@ -1,6 +1,6 @@
 #!/bin/bash
 
-	
+REPOSITORY="$( cat /root/repository.url )"
 
 export DEBIAN_FRONTEND='noninteractive'
 
@@ -23,7 +23,6 @@ mkdir Downloads
 apt update
 
 apt -y install vim curl git wget
-
 apt -y install python3 python3-pip libusb-dev libusb-1.0-0-dev libudev-dev cmake  qemu-user-static python3-pyqt5 python3-construct python3-jsonschema python3-mnemonic python3-pyelftools gcc-arm-linux-gnueabihf libc6-dev-armhf-cross gdb-multiarch pkg-config  libssl-dev protobuf-compiler || error "installing packages"
 
 cd Downloads
@@ -43,23 +42,17 @@ cd -
 
 cd git
 
-git clone --recurse-submodules https://github.com/iotaledger/ledger-iota-app && \
-git clone https://github.com/LedgerHQ/speculos && \
-git clone https://github.com/LedgerHQ/blue-loader-python || error "cloning repositories"
-
-
-
-
+git clone --recurse-submodules "$REPOSITORY" || error "cloning repositories"
 
 # build blue loader python
 pip3 install Pillow || error "Pillow not found"
 
-cd blue-loader-python
+cd ledger-iota-app/dev/blue-loader-python
 python3 setup.py install || error 
 cd -
 
 
-cd speculos
+cd ledger-iota-app/dev/speculos
 cmake -Bbuild -H. && make -C build/ || error "building speculos"
 cd -
 
@@ -89,12 +82,7 @@ source env_$DEVICE.sh
 #make || error "building iota ledger app"
 cd -
 
-
-
 echo
 echo "build successfully"
-echo
-echo "start speculos with ./run.sh"
-
 
 exit 0
