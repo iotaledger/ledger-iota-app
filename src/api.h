@@ -137,6 +137,8 @@ typedef struct {
     // flag that signals if essence has a remainder
     uint8_t has_remainder;
 
+    // hash of the essence
+    uint8_t hash[BLAKE2B_SIZE_BYTES];
 } ESSENCE;
 
 typedef struct {

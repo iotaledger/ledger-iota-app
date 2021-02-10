@@ -40,5 +40,11 @@
             "type": "shell",
             "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanox-secure-sdk;export SPECULOS=1; make clean && make; python3 ./dev/speculos/speculos.py --ontop -d ./bin/app.elf -m nanox"
         },
+        {
+            "label": "Load IOTA App onto Nano S (Debug)",
+            "type": "shell",
+            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk; export DEBUG=1; make clean && make && make load"
+        },
+
     ]
 }
