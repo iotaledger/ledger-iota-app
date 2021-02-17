@@ -372,7 +372,7 @@ static uint8_t essence_verify_remainder_address(
     MUST(address_generate(bip32_path, BIP32_PATH_LEN, &tmp.address_type));
 
     //	debug_print_hex((const uint8_t*) outputs[remainder_index].address, 32,
-    // 16); 	debug_print_hex((const uint8_t*) tmp.address, 32, 16);
+    //16); 	debug_print_hex((const uint8_t*) tmp.address, 32, 16);
 
     // verify, the address is the same
     // relies on packed struct
@@ -380,14 +380,6 @@ static uint8_t essence_verify_remainder_address(
                     ADDRESS_WITH_TYPE_SIZE_BYTES));
 
     return 1;
-}
-
-static void essence_hash(API_CTX *api)
-{
-    cx_blake2b_t blake2b;
-    cx_blake2b_init(&blake2b, BLAKE2B_SIZE_BYTES * 8);
-    cx_hash(&blake2b.header, CX_LAST, api->data.buffer, api->essence.length,
-            api->essence.hash, ADDRESS_SIZE_BYTES);
 }
 
 uint8_t essence_parse_and_validate(API_CTX *api)
@@ -451,16 +443,13 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     MUST(validate_outputs_lexical_order(api->essence.outputs,
                                         api->essence.outputs_count));
 
-    // everything fine - calculate the hash
-    essence_hash(api);
-
     return 1;
 }
 
 
 static uint16_t essence_sign_signature_unlock_block(
     SIGNATURE_UNLOCK_BLOCK *pBlock, uint16_t output_max_len,
-    const uint8_t *essence_hash, uint32_t *bip32_path,
+    const uint8_t *essence, uint16_t essence_length, uint32_t *bip32_path,
     API_INPUT_BIP32_INDEX *input_bip32_index)
 {
 
@@ -480,8 +469,8 @@ static uint16_t essence_sign_signature_unlock_block(
     MUST(ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub));
 
     uint32_t signature_length;
-    // sign essence hash
-    MUST(ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES, pBlock->signature,
+    // sign essence
+    MUST(ed25519_sign(&pk, essence, essence_length, pBlock->signature,
                       &signature_length));
 
     // priv key not needed anymore - delete from stack
@@ -507,8 +496,8 @@ essence_sign_reference_unlock_block(REFERENCE_UNLOCK_BLOCK *pBlock,
 
 static uint16_t
 essence_sign_single_int(uint8_t *output, uint16_t output_max_len,
-                        uint8_t *essence_hash, uint32_t *bip32_path,
-                        uint8_t signature_type,
+                        uint8_t *essence, uint16_t essence_length,
+                        uint32_t *bip32_path, uint8_t signature_type,
                         API_INPUT_BIP32_INDEX *input_bip32_index)
 {
 
@@ -516,8 +505,8 @@ essence_sign_single_int(uint8_t *output, uint16_t output_max_len,
     // if MSB is set, it's a signature unlock block
     if (signature_type & 0x80) {
         return essence_sign_signature_unlock_block(
-            (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, essence_hash,
-            bip32_path, input_bip32_index);
+            (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, essence,
+            essence_length, bip32_path, input_bip32_index);
     }
     else {
         return essence_sign_reference_unlock_block(
@@ -539,8 +528,9 @@ uint16_t essence_sign_single(API_CTX *api, uint8_t *output,
               sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
     uint16_t signature_size = essence_sign_single_int(
-        output, output_max_len, api->essence.hash, api->bip32_path,
-        api->essence.signature_types[signature_index], &input_bip32_index);
+        output, output_max_len, api->data.buffer, api->essence.length,
+        api->bip32_path, api->essence.signature_types[signature_index],
+        &input_bip32_index);
 
     MUST(signature_size);
 
@@ -571,8 +561,9 @@ uint8_t essence_sign(API_CTX *api)
                   sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
         uint16_t signature_size = essence_sign_single_int(
-            output, output_max_len, api->essence.hash, api->bip32_path,
-            api->essence.signature_types[i], &input_bip32_index);
+            output, output_max_len, api->data.buffer, api->essence.length,
+            api->bip32_path, api->essence.signature_types[i],
+            &input_bip32_index);
 
         MUST(signature_size);
 
