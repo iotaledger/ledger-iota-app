@@ -148,8 +148,8 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         // Output Type must be 0, denoting a SigLockedSingleOutput.
         MUST(tmp.output_type == 0);
 
-        // Address Type must be 1, denoting a Ed25519 address .
-        MUST(tmp.address_type == 1); // address_type
+        // Address Type must denote a Ed25519 address .
+        MUST(tmp.address_type == ADDRESS_TYPE_ED25519); // address_type
 
         // Amount must be > 0.
         MUST(tmp.amount > 0);

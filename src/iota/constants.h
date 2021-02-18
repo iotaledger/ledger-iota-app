@@ -71,6 +71,9 @@
 // size of hash
 #define BLAKE2B_SIZE_BYTES 32
 
+// address type of ED25519 addresses
+#define ADDRESS_TYPE_ED25519    0
+
 
 // following constants are valid with bech32 encoding (address_type included)
 #define ADDRESS_SIZE_BASE32 ((ADDRESS_WITH_TYPE_SIZE_BYTES * 8 + 4) / 5)
