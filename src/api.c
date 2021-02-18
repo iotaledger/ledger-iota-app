@@ -249,6 +249,11 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
+    // bip32 change can be 0x80000000 or 0x80000001
+    if (req.bip32_change & 0x7ffffffe) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
     // check if there would be an overflow when generating addresses
     if (!((req.bip32_index + req.count) & 0x80000000)) {
         THROW(SW_COMMAND_INVALID_DATA);

@@ -415,23 +415,27 @@ static unsigned int new_address_prev_cb(const bagl_element_t *e)
 #define NEW_ADDRESS 1
 #define REMAINDER 2
 #define OUTPUT 3
+#define NEW_REMAINDER 4
+
+// clang-format off
 
 /*
 Render data to the UI
-
-"  New Address   "    "   Remainder    "    "     Send To    "
-"iota1q9u552alqq0"    "iota1q9u552alqq0"    "iota1q9u552alqq0"
-"swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"
-"9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"
-"y7v8tej4gqzadmcs"    "y7v8tej4gqzadmcs"    "y7v8tej4gqzadmcs"
-------------------    "     Amount     "    "     Amount     "
-------------------    "     2.050 Gi   "    "     2.050 Gi   "
-"   BIP32 Path   "    "   BIP32 Path   "    ------------------
-"   2c'/107a'/   "    "   2c'/107a'/   "    ------------------
-"   3d5b0a0a'/   "    "   3d5b0a0a'/   "    ------------------
-"   7e5faa72'    "  "   7e5faa72'    "    ------------------
-
+   
+"  New Address   "  "  New Remainder "    "   Remainder    "    "     Send To    "
+"iota1q9u552alqq0"  "iota1q9u552alqq0"    "iota1q9u552alqq0"    "iota1q9u552alqq0"
+"swuaqc0m3qytkm3q"  "swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"
+"9k6j0cujh4ha78ax"  "9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"
+"y7v8tej4gqzadmcs"  "y7v8tej4gqzadmcs"    "y7v8tej4gqzadmcs"    "y7v8tej4gqzadmcs"
+------------------  ------------------    "     Amount     "    "     Amount     "
+------------------  ------------------    "     2.050 Gi   "    "     2.050 Gi   "
+"   BIP32 Path   "  "   BIP32 Path   "    "   BIP32 Path   "    ------------------
+"   2c'/107a'/   "  "   2c'/107a'/   "    "   2c'/107a'/   "    ------------------
+"   3d5b0a0a'/   "  "   3d5b0a0a'/   "    "   3d5b0a0a'/   "    ------------------
+"   7e5faa72'    "  "   7e5faa72'    "    "   7e5faa72'    "    ------------------
 */
+// clang-format on
+
 static void populate_data()
 {
     // default is normal output
@@ -444,7 +448,12 @@ static void populate_data()
 
     // find out type to show and switch indices if needed
     if (flow_data.flow_mode == FLOW_NEW_ADDRESS) {
-        type = NEW_ADDRESS;
+        if (flow_data.flow_bip32[BIP32_CHANGE_INDEX] == 0x80000001) {
+            type = NEW_REMAINDER;
+        }
+        else {
+            type = NEW_ADDRESS;
+        }
     }
     else { // FLOW_USER_CONFIRM
         // does essence contain a remainder?
@@ -488,6 +497,7 @@ static void populate_data()
     // there are three types of displays with different number of lines
     switch (type) {
     case NEW_ADDRESS:
+    case NEW_REMAINDER:
         flow_data.number_of_lines = 7;
         break;
     case REMAINDER:
@@ -502,7 +512,7 @@ static void populate_data()
     }
 
     // figure out, how many lines we need for a nice formatted bip32 path
-    if (type == NEW_ADDRESS || type == REMAINDER) {
+    if (type == NEW_ADDRESS || type == NEW_REMAINDER || type == REMAINDER) {
         for (int i = 1; i < 3; i++) {
             // with *0 no memory is changed
             if (format_bip32(flow_data.flow_bip32, i, (char *)0, 0)) {
@@ -543,7 +553,7 @@ static void populate_data()
         }
 
         // new address flow doesn't show amount
-        if (type == NEW_ADDRESS) {
+        if (type == NEW_ADDRESS || type == NEW_REMAINDER) {
             // skip amount
             if (cy >= 5) {
                 cy += 2;
@@ -554,7 +564,12 @@ static void populate_data()
         case 0:
             switch (type) {
             case NEW_ADDRESS:
+                // new address
                 strcpy(flow_data.flow_lines[i], "New Address");
+                break;
+            case NEW_REMAINDER:
+                // new remaider
+                strcpy(flow_data.flow_lines[i], "New Remainder");
                 break;
             case REMAINDER:
                 strcpy(flow_data.flow_lines[i], "Remainder");
