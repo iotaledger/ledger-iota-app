@@ -565,14 +565,14 @@ static void populate_data()
             switch (type) {
             case NEW_ADDRESS:
                 // new address
-                strcpy(flow_data.flow_lines[i], "New Address");
+                strncpy(flow_data.flow_lines[i], LINE_WIDTH, "New Address");
                 break;
             case NEW_REMAINDER:
                 // new remaider
-                strcpy(flow_data.flow_lines[i], "New Remainder");
+                strncpy(flow_data.flow_lines[i], LINE_WIDTH, "New Remainder");
                 break;
             case REMAINDER:
-                strcpy(flow_data.flow_lines[i], "Remainder");
+                strncpy(flow_data.flow_lines[i], LINE_WIDTH, "Remainder");
                 break;
             case OUTPUT: {
                 // how many non-remainder outputs are there?
@@ -591,7 +591,7 @@ static void populate_data()
                              flow_data.flow_outputs_index_current + 1);
                 }
                 else {
-                    strcpy(flow_data.flow_lines[i], "Send To");
+                    strncpy(flow_data.flow_lines[i], LINE_WIDTH, "Send To");
                 }
                 break;
             }
@@ -614,7 +614,7 @@ static void populate_data()
                    LINE_WIDTH);
             break;
         case 5:
-            strcpy(flow_data.flow_lines[i], "Amount");
+            strncpy(flow_data.flow_lines[i], LINE_WIDTH, "Amount");
             break;
         case 6: {
             uint64_t amount;
@@ -640,7 +640,7 @@ static void populate_data()
             break;
         }
         case 7:
-            strcpy(flow_data.flow_lines[i], "BIP32 Path");
+            strncpy(flow_data.flow_lines[i], LINE_WIDTH, "BIP32 Path");
             break;
 
         case 8:  // bip32 first line
