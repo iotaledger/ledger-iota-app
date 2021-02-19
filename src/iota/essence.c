@@ -474,7 +474,7 @@ static uint16_t essence_sign_signature_unlock_block(
     bip32_path[BIP32_CHANGE_INDEX] = input_bip32_index->bip32_change;
 
     pBlock->unlock_type = 0;    // signature
-    pBlock->signature_type = 1; // ED25519
+    pBlock->signature_type = 0; // ED25519
 
     // create key pair and conver pub key to bytes
     MUST(ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub));
