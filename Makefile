@@ -102,7 +102,7 @@ endif
 ifeq ($(DEBUG),1)
     # Development flags
     APP_LOAD_PARAMS += --path "44'/01'"
-    DEFINES += HAVE_BOLOS_APP_STACK_CANARY
+#    DEFINES += HAVE_BOLOS_APP_STACK_CANARY
     DEFINES += APP_DEBUG
 
     # we don't need printf
