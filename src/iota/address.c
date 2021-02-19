@@ -78,7 +78,7 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     //	debug_print_hex(pubkey_bytes, 32, 16);
 
     // set ed25519 address_type
-    addr[0] = 1;
+    addr[0] = ADDRESS_TYPE_ED25519;
 
     cx_blake2b_t blake2b;
     cx_blake2b_init(&blake2b, BLAKE2B_SIZE_BYTES * 8);
