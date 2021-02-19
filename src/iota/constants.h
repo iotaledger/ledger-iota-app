@@ -74,6 +74,11 @@
 // address type of ED25519 addresses
 #define ADDRESS_TYPE_ED25519    0
 
+#define SIGNATURE_TYPE_ED25519  0
+
+#define UNLOCK_TYPE_SIGNATURE   0
+#define UNLOCK_TYPE_REFERENCE   1
+
 
 // following constants are valid with bech32 encoding (address_type included)
 #define ADDRESS_SIZE_BASE32 ((ADDRESS_WITH_TYPE_SIZE_BYTES * 8 + 4) / 5)
