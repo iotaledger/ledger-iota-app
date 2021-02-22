@@ -38,7 +38,7 @@ IOTA is an unique cryptocurrency with specific design considerations that must b
 
 *Seed:* A single secret key from that all private keys are derived (aka "*24 words*", [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)).
 
-*Private Key:* Private keys are derived from the seed ([BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) with ED25519 curve, [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki]). The private key is used to generate a public key. It is also used to prove you own said public key by means of creating a signature for a specific transaction.
+*Private Key:* Private keys are derived from the seed ([BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) with ED25519 curve, [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki). The private key is used to generate a public key. It is also used to prove you own said public key by means of creating a signature for a specific transaction.
 
 *Public Key:* The public part of a private/public key pair.
 
