@@ -43,6 +43,7 @@ void api_clear_data()
     uint32_t tmp_bip32_account = api.bip32_path[BIP32_ACCOUNT_INDEX];
 
 #ifdef APP_DEBUG
+    // and the non-interactive flag if compiled in DEBUG mode
     uint8_t tmp_non_interactive = api.non_interactive_mode;
 #endif
 
@@ -379,7 +380,7 @@ void api_user_confirm_essence_accepted()
     api.user_confirm_result = 1;
 }
 
-// callback for accept transaction
+// callback for rejected transaction
 void api_user_confirm_essence_rejected()
 {
     api_clear_data();

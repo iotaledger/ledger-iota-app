@@ -74,10 +74,18 @@
 // address type of ED25519 addresses
 #define ADDRESS_TYPE_ED25519    0
 
+// signature type of ED25519 signature
 #define SIGNATURE_TYPE_ED25519  0
 
+// unlock-block types
 #define UNLOCK_TYPE_SIGNATURE   0
 #define UNLOCK_TYPE_REFERENCE   1
+
+// input types
+#define INPUT_TYPE_UTXO         0
+
+// output types
+#define OUTPUT_TYPE_SIGLOCKEDSINGLEOUTPUT   0
 
 
 // following constants are valid with bech32 encoding (address_type included)

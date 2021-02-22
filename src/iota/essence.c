@@ -80,7 +80,7 @@ static inline uint8_t get_uint8(const uint8_t *data, uint32_t *idx, uint8_t *v)
 {
     MUST(*idx + sizeof(uint8_t) < API_BUFFER_SIZE_BYTES);
     *v = data[*idx];
-    *idx += *idx + sizeof(uint8_t);
+    *idx = *idx + sizeof(uint8_t);
     return 1;
 }
 
@@ -109,7 +109,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
         //		debug_print_hex((uint8_t*) &tmp, sizeof(tmp), 16);
 
         // Input Type value must be 0, denoting an UTXO Input.
-        MUST(tmp.input_type == 0);
+        MUST(tmp.input_type == INPUT_TYPE_UTXO);
 
         // Transaction Output Index must be 0 ≤ x < 127.
         MUST(tmp.transaction_output_id >= 0 && tmp.transaction_output_id < 127);
@@ -146,7 +146,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         //		debug_print_hex((uint8_t*) &tmp, sizeof(tmp), 16);
 
         // Output Type must be 0, denoting a SigLockedSingleOutput.
-        MUST(tmp.output_type == 0);
+        MUST(tmp.output_type == OUTPUT_TYPE_SIGLOCKEDSINGLEOUTPUT);
 
         // Address Type must denote a Ed25519 address .
         MUST(tmp.address_type == ADDRESS_TYPE_ED25519); // address_type
