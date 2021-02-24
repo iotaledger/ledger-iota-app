@@ -39,9 +39,7 @@ done
 echo "device $device selected"
 
 xhost +local:docker
-QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix ledger_iota bash -c \
-"cd /root/git/${device}-secure-sdk;"\
-"git pull;"\
+QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix build-app bash -c \
 "cd /root/git/ledger-iota-app/;"\
 "source env_${device}.sh;"\
 "make clean;"\

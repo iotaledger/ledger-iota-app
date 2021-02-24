@@ -44,12 +44,10 @@ echo "device $device selected"
 }
 
 
-docker run --privileged -v /dev/bus/usb:/dev/bus/usb  -it -v /tmp/.X11-unix:/tmp/.X11-unix ledger_iota bash -c \
-"cd /root/git/${device}-secure-sdk;"\
+docker run --privileged -v /dev/bus/usb:/dev/bus/usb  -it -v /tmp/.X11-unix:/tmp/.X11-unix build-app bash -c \
+"cd /root/git/ledger-iota-app;"\
 "git pull;"\
 "git submodule update --recursive --remote;"\
-"cd /root/git/ledger-iota-app/;"\
 "source env_${device}.sh;"\
 "make clean;"\
-"git pull;"\
 "DEBUG=1 make load"\
