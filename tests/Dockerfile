@@ -44,7 +44,7 @@ RUN gcc tests.c -o tests
 
 # temporary until it is in the git repository
 #COPY test_headless.sh .
-RUN chmod a+x test_headless.sh
+#RUN chmod a+x test_headless.sh
 
 
 #EXPOSE 9999
