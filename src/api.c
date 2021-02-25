@@ -8,7 +8,6 @@
 #include "iota/constants.h"
 #include "iota/essence.h"
 
-#include "debugprintf.h"
 #include "ui/nano/flow_user_confirm.h"
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
@@ -192,10 +191,11 @@ uint32_t api_set_account(const uint8_t *data, uint32_t len)
     return 0;
 }
 
-// callback for accept transaction
+// callback for acknowledging a new (remainder) address
 void api_generate_address_accepted()
 {
-    // in interactive flows set data_type here
+    // in interactive flows set data_type here, so data is not readable
+    // before acknowleding
     api.data.type = GENERATED_ADDRESSES;
     io_send(NULL, 0, SW_OK);
 }
@@ -219,12 +219,12 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         THROW(SW_ACCOUNT_NOT_VALID);
     }
 
-    // if buffer contains data throw exception
+    // if buffer contains data, throw exception
     if (api.data.type != EMPTY) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
-    // disable write access before doing anything else
+    // disable external read and write access before doing anything else
     api.data.type = LOCKED;
 
     if (len != sizeof(API_GENERATE_ADDRESS_REQUEST)) {
@@ -271,8 +271,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         uint8_t ret = address_generate(
             api.bip32_path, BIP32_PATH_LEN,
             &api.data.buffer[i * ADDRESS_WITH_TYPE_SIZE_BYTES]);
-        //		debug_print_hex(&api.data.buffer[i *
-        //ADDRESS_WITH_TYPE_SIZE_BYTES], ADDRESS_WITH_TYPE_SIZE_BYTES, 16);
+
         if (!ret) {
             THROW(SW_UNKNOWN);
         }
@@ -296,8 +295,8 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
 
     // use api buffer and essence to show new address on the screen
     // buffer is free after index 32
-    // writing to the buffer is not allowed, so data can't be changed after
-    // the flow is started
+    // writing to the buffer from external is not allowed, so data 
+    // can't be changed after the flow is started
     SIG_LOCKED_SINGLE_OUTPUT *tmp =
         (SIG_LOCKED_SINGLE_OUTPUT *)&api.data.buffer[64];
     os_memcpy(&tmp->address_type, api.data.buffer,
@@ -309,8 +308,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     api.essence.remainder_bip32.bip32_change = req.bip32_change;
     api.essence.remainder_index = 0;
 
-    // if remainder address has to be shown on the UI, reset the address index
-    // to the original value
+    // reset the address index to the original value
     api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
     api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
 
@@ -329,10 +327,10 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
-    // disable write access before doing anything else
+    // disable external read and write access before doing anything else
     api.data.type = LOCKED;
 
-    // was network and account selected?
+    // was account selected?
     if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
         THROW(SW_ACCOUNT_NOT_VALID);
     }
@@ -341,6 +339,7 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
         THROW(SW_INCORRECT_LENGTH);
     }
 
+    // if essence has an remainder, store the information about
     if (!!has_remainder) {
         API_PREPARE_SIGNING_REQUEST req;
         os_memcpy(&req, data, sizeof(req));
@@ -538,8 +537,14 @@ uint32_t api_sign_single(uint8_t p1)
 uint32_t api_dump_memory(uint8_t pagenr)
 {
 #ifdef TARGET_NANOX
+    if (pagenr >= 30 * 1024 / 128) {
+        THROW(SW_INCORRECT_P1P2);
+    }
     uint32_t *p = (uint32_t *)(0xda7a0000 + pagenr * 128);
 #else
+    if (pagenr >= 4 * 1024 / 128) {
+        THROW(SW_INCORRECT_P1P2);
+    }
     uint32_t *p = (uint32_t *)(0x20001800 + pagenr * 128);
 #endif
     io_send(p, 128, SW_OK);

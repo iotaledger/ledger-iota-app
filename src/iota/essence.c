@@ -16,8 +16,6 @@
 #include "iota_io.h"
 #include "iota/ed25519.h"
 
-#include "debugprintf.h"
-
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
 #pragma GCC diagnostic error "-Wpedantic"
@@ -106,8 +104,6 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
         os_memcpy(&tmp, &data[*idx],
                   sizeof(UTXO_INPUT)); // copy to avoid unaligned access
 
-        //		debug_print_hex((uint8_t*) &tmp, sizeof(tmp), 16);
-
         // Input Type value must be 0, denoting an UTXO Input.
         MUST(tmp.input_type == INPUT_TYPE_UTXO);
 
@@ -142,8 +138,6 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         os_memcpy(
             &tmp, &data[*idx],
             sizeof(SIG_LOCKED_SINGLE_OUTPUT)); // copy to avoid unaligned access
-
-        //		debug_print_hex((uint8_t*) &tmp, sizeof(tmp), 16);
 
         // Output Type must be 0, denoting a SigLockedSingleOutput.
         MUST(tmp.output_type == OUTPUT_TYPE_SIGLOCKEDSINGLEOUTPUT);
@@ -199,8 +193,6 @@ uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
         os_memcpy(
             &tmp, &data[*idx],
             sizeof(API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
-
-        //		debug_print_hex((uint8_t*) &tmp, sizeof(tmp), 16);
 
         // check is MSBs set
         MUST(tmp.bip32_index & 0x80000000);
@@ -370,9 +362,6 @@ static uint8_t essence_verify_remainder_address(
 
     // address generate generates with address
     MUST(address_generate(bip32_path, BIP32_PATH_LEN, &tmp.address_type));
-
-    //	debug_print_hex((const uint8_t*) outputs[remainder_index].address, 32,
-    // 16); 	debug_print_hex((const uint8_t*) tmp.address, 32, 16);
 
     // verify, the address is the same
     // relies on packed struct
