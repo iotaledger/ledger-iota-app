@@ -15,12 +15,6 @@ uint8_t *io_get_buffer();
 unsigned int iota_dispatch(uint8_t ins, uint8_t p1, uint8_t p2, uint8_t len,
                            const unsigned char *input_data, uint8_t is_locked);
 
-/// Sets the IO timeout to the given ms.
-void io_timeout_set(unsigned int ms);
-/// Resets and stops the IO timeout.
-void io_timeout_reset(void);
-// Callback to be called on timeout.
-void io_timeout_callback(bool ux_allowed);
 
 /* ---  CLA  --- */
 

@@ -65,13 +65,32 @@ uint32_t be2le(uint32_t v)
 void dump(uint8_t *data, size_t len)
 {
     for (size_t i = 0; i < len; i++) {
-        if (!(i % 16)) {
+        if (!(i % 16) && i != 0) {
             printf("\n");
         }
         printf("%02x ", data[i]);
     }
     printf("\n");
 }
+
+// patch the version in the reference bin files
+// this is done to be able to use older testfiles with newer compilations to 
+// find degradations in the code. When generating new testfiles after compiling, 
+// testfiles could be wrong and this possibly wouldn't be noticed.
+void patch_app_version(uint8_t *command, uint8_t command_len, uint8_t *answer, uint8_t answer_len, uint8_t* buffer) {
+    const uint8_t cmd_get_app_config[5] = {0x7b, 0x10, 0x00, 0x00, 0x00};
+ 
+    if (command_len == 5 && answer_len == 8) {
+        if (!memcmp(command, cmd_get_app_config, command_len)) {
+            // accept any app version
+            buffer[0] = answer[0];
+            buffer[1] = answer[1];
+            buffer[2] = answer[2];
+            buffer[3] = answer[3] = 0;  // flags that is unused; was uninitialized before app 0.6.3
+        }
+    }
+}
+
 void replay(int sockfd, uint8_t *data, size_t data_len)
 {
     int lastperc = 0;
@@ -117,19 +136,17 @@ void replay(int sockfd, uint8_t *data, size_t data_len)
 
         //        dump((uint8_t*) buffer, answer_len);
 
+        patch_app_version(command_buffer, command_len, answer_buffer, answer_len, buffer);
+
         if (memcmp(buffer, answer_buffer, answer_len)) {
             printf("data mismatch!\n");
+            printf("request:  "); dump((uint8_t*) command_buffer, command_len);
+            printf("response: "); dump((uint8_t*) answer_buffer, answer_len);
+            printf("is:       "); dump((uint8_t*) buffer, answer_len);
+
             exit(1);
         }
-        /*
-                for (int i=0;i<answer_len;i++) {
-                    printf("%d %02x %02x\n", i, buffer[i], answer_buffer[i]);
-                    if (buffer[i] != answer_buffer[i]) {
-                        printf("mismatch!\n");
-                        exit(1);
-                    }
-                }
-        */
+
         float perc = (float)data_stream.read_index /
                      (float)data_stream.data_len * 100.0f;
         if ((int)perc != lastperc) {

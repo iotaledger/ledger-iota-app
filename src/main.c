@@ -112,7 +112,6 @@ static void IOTA_main()
                     // reset states and UI
                     api_initialize();
                     ui_reset();
-                    io_timeout_reset();
                 }
 
                 // send the error code
@@ -186,7 +185,6 @@ unsigned char io_event(unsigned char channel)
         UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {});
 
         timer_events++;
-        api_timer_event();
         ui_timer_event();
         break;
 

@@ -126,6 +126,7 @@ uint32_t api_get_app_config()
     resp.app_version_major = APPVERSION_MAJOR;
     resp.app_version_minor = APPVERSION_MINOR;
     resp.app_version_patch = APPVERSION_PATCH;
+    resp.app_flags = 0x00;  // avoid uninitialized data
 
 #ifdef TARGET_NANOX
     resp.device = 1;
@@ -196,21 +197,21 @@ void api_generate_address_accepted()
 {
     // in interactive flows set data_type here
     api.data.type = GENERATED_ADDRESSES;
-    api.user_confirm_result = 1; // send SW_OK
+    io_send(NULL, 0, SW_OK);
 }
 
 // callback for timeout
 void api_generate_address_timeout()
 {
     api_clear_data();
-    api.user_confirm_result = 3; // send SW_TIMEOUT
+    io_send(NULL, 0, SW_COMMAND_TIMEOUT);
 }
 
 uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
                               uint32_t len)
 {
     // don't allow command if an interactive flow already is running
-    if (api.user_confirm_result) {
+    if (api.flow_locked) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
     // was account selected?
@@ -289,7 +290,6 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
 #endif
     ) {
         api.data.type = GENERATED_ADDRESSES;
-        api.user_confirm_result = 0; // don't send additional OK
         io_send(NULL, 0, SW_OK);
         return 0;
     }
@@ -314,7 +314,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
     api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
 
-    api.user_confirm_result = -1; // mark flow running
+    api.flow_locked = 1; // mark flow locked
 
     flow_start_new_address(&api, api_generate_address_accepted,
                            api_generate_address_timeout, api.bip32_path);
@@ -377,27 +377,27 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
 void api_user_confirm_essence_accepted()
 {
     api.data.type = USER_CONFIRMED_ESSENCE;
-    api.user_confirm_result = 1;
+    io_send(NULL, 0, SW_OK);
 }
 
 // callback for rejected transaction
 void api_user_confirm_essence_rejected()
 {
     api_clear_data();
-    api.user_confirm_result = 2;
+    io_send(NULL, 0, SW_DENIED_BY_USER);
 }
 
 // callback for timeout
 void api_user_confirm_essence_timeout()
 {
     api_clear_data();
-    api.user_confirm_result = 3;
+    io_send(NULL, 0, SW_COMMAND_TIMEOUT);
 }
 
 uint32_t api_user_confirm_essence()
 {
     // don't allow command if an interactive flow already is running
-    if (api.user_confirm_result) {
+    if (api.flow_locked) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
@@ -427,18 +427,18 @@ uint32_t api_user_confirm_essence()
 
 #ifdef APP_DEBUG
     if (api.non_interactive_mode) {
-        api.user_confirm_result = 0;
         api.data.type = USER_CONFIRMED_ESSENCE;
 
         io_send(NULL, 0, SW_OK);
         return 0;
     }
 #endif
+    api.flow_locked = 1; // mark flow locked
+
     flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
                             &api_user_confirm_essence_rejected,
                             &api_user_confirm_essence_timeout, api.bip32_path);
 
-    api.user_confirm_result = -1; // mark flow running
     return IO_ASYNCH_REPLY;
 }
 
@@ -560,43 +560,3 @@ uint32_t api_set_non_interactive_mode(uint8_t mode)
 
 #endif
 
-// send status code for interactive flows
-// calling io_send from the UX is problematic for the stack,
-// so do it here.
-void api_timer_event()
-{
-    // this flag is needed to prevent recursively calling the io_send method!
-    if (api.timer_cb_active) {
-        return;
-    }
-    api.timer_cb_active = 1;
-    switch (api.user_confirm_result) {
-    case 0: // nothing in progress
-        // NOP
-        break;
-    case 1:
-        io_send(NULL, 0, SW_OK);
-        api.user_confirm_result = 0;
-        break;
-    case 2:
-        io_send(NULL, 0, SW_DENIED_BY_USER);
-        api.user_confirm_result = 0;
-        break;
-    case 3: // idle timeout happened
-        io_send(NULL, 0, SW_COMMAND_TIMEOUT);
-        api.user_confirm_result = 0;
-        break;
-    case -1: // in progress - don't allow to start another interactive flow
-        // NOP
-        break;
-    default:
-        // NOP
-        break;
-    }
-    api.timer_cb_active = 0;
-}
-
-void io_timeout_reset()
-{
-    api.user_confirm_result = 0;
-}

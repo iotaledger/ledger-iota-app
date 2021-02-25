@@ -162,14 +162,11 @@ typedef struct {
     // parsed essence
     ESSENCE essence;
 
-    // -1 = running
-    //  0 = nop
-    //  1 = accepted
-    //  2 = rejected
-    //  3 = timeout
-    int8_t user_confirm_result;
-
-    uint8_t timer_cb_active;
+    //  0 = interactive flows may be started
+    //  1 = flows may not be started until reset
+    // flag gets set when starting a flow and reset when the databuffer
+    // is cleared
+    int8_t flow_locked;
 
 #ifdef APP_DEBUG
     uint8_t non_interactive_mode;
@@ -182,8 +179,6 @@ typedef struct {
 
 /** @brief Clear and initialize the entire API context. */
 void api_initialize(void);
-
-void api_timer_event();
 
 // get application configuration (flags and version)
 uint32_t api_get_app_config();
