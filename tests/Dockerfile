@@ -1,4 +1,4 @@
-FROM wollac/ledger-bolos AS build-app
+FROM wollac/ledger-bolos AS test-app
 
 ENV DEVICE=nanos
 
@@ -9,11 +9,10 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        git libusb-dev libusb-1.0-0-dev libudev-dev cmake  qemu-user-static python3-pyqt5 \
+        git cmake qemu-user-static \
         python3-construct python3-jsonschema python3-mnemonic python3-pyelftools \
         gcc-arm-linux-gnueabihf libc6-dev-armhf-cross gdb-multiarch pkg-config \
         libssl-dev protobuf-compiler lld-7
-
 
 RUN mkdir git
 
@@ -23,8 +22,8 @@ COPY repository.url .
 RUN git clone --recurse-submodules "$( cat repository.url )"
 
 # build blue loader
-WORKDIR /root/git/ledger-iota-app/dev/blue-loader-python
-RUN python3 setup.py install
+#WORKDIR /root/git/ledger-iota-app/dev/blue-loader-python
+#RUN python3 setup.py install
 
 # build speculos simulator
 WORKDIR /root/git/ledger-iota-app/dev/speculos
@@ -40,5 +39,12 @@ RUN echo    "#!/bin/bash\n" \
 
 RUN sed 's|nanos|nanox|g' env_nanos.sh > env_nanox.sh
 
+WORKDIR /root/git/ledger-iota-app/tests
+RUN gcc tests.c -o tests
 
-EXPOSE 9999
+# temporary until it is in the git repository
+#COPY test_headless.sh .
+RUN chmod a+x test_headless.sh
+
+
+#EXPOSE 9999
