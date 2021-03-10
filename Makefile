@@ -21,7 +21,7 @@ $(error Environment variable BOLOS_SDK is not set)
 endif
 include $(BOLOS_SDK)/Makefile.defines
 
-APPNAME = "IOTA 1.5"
+APPNAME = "IOTA"
 APPVERSION_MAJOR = 0
 APPVERSION_MINOR = 6
 APPVERSION_PATCH = 3
