@@ -462,19 +462,39 @@ static uint16_t essence_sign_signature_unlock_block(
     bip32_path[BIP32_ADDRESS_INDEX] = input_bip32_index->bip32_index;
     bip32_path[BIP32_CHANGE_INDEX] = input_bip32_index->bip32_change;
 
-    pBlock->unlock_type = UNLOCK_TYPE_SIGNATURE;    // signature
+    pBlock->unlock_type = UNLOCK_TYPE_SIGNATURE;     // signature
     pBlock->signature_type = SIGNATURE_TYPE_ED25519; // ED25519
 
-    // create key pair and conver pub key to bytes
-    MUST(ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub));
+    uint32_t signature_length = 0;
 
-    uint32_t signature_length;
-    // sign essence hash
-    MUST(ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES, pBlock->signature,
-                      &signature_length));
+    uint8_t ret = 0;
+    BEGIN_TRY
+    {
+        TRY
+        {
+            // create key pair and convert pub key to bytes
+            ret = ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub);
 
-    // priv key not needed anymore - delete from stack
-    explicit_bzero(&pk, sizeof(pk));
+            ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
+                                      pBlock->signature, &signature_length);
+        }
+        CATCH_OTHER(e)
+        {
+            THROW(e);
+        }
+        FINALLY
+        {
+            // always delete from stack
+            explicit_bzero(&pk, sizeof(pk));
+        }
+    }
+    END_TRY;
+
+    // ed25519_get_key_pair and ed25519_sign must succeed
+    MUST(ret);
+
+    // length of signature must not be 0
+    MUST(signature_length);
 
     MUST(ed25519_public_key_to_bytes(&pub, pBlock->public_key));
 
