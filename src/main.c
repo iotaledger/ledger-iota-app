@@ -8,6 +8,7 @@
 #include "os_apilevel.h"
 #include "os_io_seproxyhal.h"
 #include "seproxyhal_protocol.h"
+#include "ux.h"
 #include "ui/ui.h"
 #include "debugprintf.h"
 #include "ui/nano/flow_user_confirm.h"

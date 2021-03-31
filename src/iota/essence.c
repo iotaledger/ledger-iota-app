@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "os.h"
+#include "cx.h"
 #include "api.h"
 #include "iota_io.h"
 #include "iota/ed25519.h"
