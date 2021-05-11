@@ -12,7 +12,8 @@ RUN apt-get update && \
         git libusb-dev libusb-1.0-0-dev libudev-dev cmake  qemu-user-static python3-pyqt5 \
         python3-construct python3-jsonschema python3-mnemonic python3-pyelftools \
         gcc-arm-linux-gnueabihf libc6-dev-armhf-cross gdb-multiarch pkg-config \
-        libssl-dev protobuf-compiler lld-7
+        libssl-dev protobuf-compiler lld-7 && \
+    rm -rf /var/lib/apt/lists/*
 
 
 RUN mkdir git
