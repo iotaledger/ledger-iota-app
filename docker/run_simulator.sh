@@ -38,8 +38,15 @@ done
         
 echo "device $device selected"
 
-xhost +local:docker
-QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix build-app bash -c \
+if [ $(uname) == "Darwin" ]; then
+    VOLUME_MOUNT_ARG=""
+    xhost + 127.0.0.1
+    DISPLAY="host.docker.internal:0"
+else
+    VOLUME_MOUNT_ARG="-v /tmp/.X11-unix:/tmp/.X11-unix"
+    xhost +local:docker
+fi
+QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY $VOLUME_MOUNT_ARG build-app bash -c \
 "cd /root/git/ledger-iota-app/;"\
 "source env_${device}.sh;"\
 "make clean;"\
