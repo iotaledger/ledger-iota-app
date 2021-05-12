@@ -12,6 +12,7 @@ function usage {
 
 # default
 device="nanos"
+sdk=""
 
 FLAGS=""
 while (($# > 0))
@@ -35,7 +36,15 @@ done
 [[ "$device" != "nanos" && "$device" != "nanox" ]] && {
     error "unknown device"
 }
-        
+
+[[ "$device" == "nanos" ]] && {
+    sdk="2.0"
+}
+
+[[ "$device" == "nanox" ]] && {
+    sdk="1.2"
+}
+
 echo "device $device selected"
 
 if [ $(uname) == "Darwin" ]; then
@@ -52,4 +61,4 @@ QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY $VOLU
 "make clean;"\
 "SPECULOS=1 make;"\
 "cd /root/git/ledger-iota-app/dev/speculos;"\
-"python3 speculos.py -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"
+"python3 speculos.py --sdk $sdk -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"

@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "os.h"
+#include "cx.h"
 #include "api.h"
 #include "iota_io.h"
 #include "iota/ed25519.h"
@@ -59,7 +60,7 @@ static inline uint8_t get_uint32(const uint8_t *data, uint32_t *idx,
                                  uint32_t *v)
 {
     MUST(*idx + sizeof(uint32_t) < API_BUFFER_SIZE_BYTES);
-    os_memcpy(v, &data[*idx],
+    memcpy(v, &data[*idx],
               sizeof(uint32_t)); // copy to avoid unaligned access
     *idx = *idx + sizeof(uint32_t);
     return 1;
@@ -68,7 +69,7 @@ static inline uint8_t get_uint16(const uint8_t *data, uint32_t *idx,
                                  uint16_t *v)
 {
     MUST(*idx + sizeof(uint16_t) < API_BUFFER_SIZE_BYTES);
-    os_memcpy(v, &data[*idx],
+    memcpy(v, &data[*idx],
               sizeof(uint16_t)); // copy to avoid unaligned access
     *idx = *idx + sizeof(uint16_t);
     return 1;
@@ -101,7 +102,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
         MUST(*idx + sizeof(UTXO_INPUT) < API_BUFFER_SIZE_BYTES);
 
         UTXO_INPUT tmp;
-        os_memcpy(&tmp, &data[*idx],
+        memcpy(&tmp, &data[*idx],
                   sizeof(UTXO_INPUT)); // copy to avoid unaligned access
 
         // Input Type value must be 0, denoting an UTXO Input.
@@ -135,7 +136,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         MUST(*idx + sizeof(SIG_LOCKED_SINGLE_OUTPUT) < API_BUFFER_SIZE_BYTES);
 
         SIG_LOCKED_SINGLE_OUTPUT tmp;
-        os_memcpy(
+        memcpy(
             &tmp, &data[*idx],
             sizeof(SIG_LOCKED_SINGLE_OUTPUT)); // copy to avoid unaligned access
 
@@ -190,7 +191,7 @@ uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
         MUST(*idx + sizeof(API_INPUT_BIP32_INDEX) < API_BUFFER_SIZE_BYTES);
 
         API_INPUT_BIP32_INDEX tmp;
-        os_memcpy(
+        memcpy(
             &tmp, &data[*idx],
             sizeof(API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
 
@@ -212,12 +213,12 @@ uint8_t validate_count_signature_types(
     uint32_t count_reference_unlock_blocks = 0;
 
     // MSB can be used as markings because MAX_INPUTS always is below 128
-    os_memset(sig_types, 0xff, INPUTS_MAX_COUNT);
+    memset(sig_types, 0xff, INPUTS_MAX_COUNT);
 
     // count signature and reference unlock blocks by comparing and marking
     for (uint32_t i = 0; i < inputs_count; i++) {
         API_INPUT_BIP32_INDEX tmp_i;
-        os_memcpy(
+        memcpy(
             &tmp_i, &inputs_bip32_indices[i],
             sizeof(API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
 
@@ -233,7 +234,7 @@ uint8_t validate_count_signature_types(
         for (uint32_t j = i + 1; j < inputs_count; j++) {
             // two bip32-paths the same?
             API_INPUT_BIP32_INDEX tmp_j;
-            os_memcpy(
+            memcpy(
                 &tmp_j, &inputs_bip32_indices[j],
                 sizeof(
                     API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
@@ -243,7 +244,7 @@ uint8_t validate_count_signature_types(
                 continue;
             }
             // key indices equal?
-            if (!os_memcmp(&tmp_i, &tmp_j, sizeof(API_INPUT_BIP32_INDEX))) {
+            if (!memcmp(&tmp_i, &tmp_j, sizeof(API_INPUT_BIP32_INDEX))) {
                 // yes, it becomes a reference unlock block
                 sig_types[j] = i; // reference
                 count_reference_unlock_blocks++;
@@ -275,7 +276,7 @@ static uint8_t validate_inputs_duplicates(const UTXO_INPUT *inputs,
         for (uint32_t j = i + 1; j < inputs_count; j++) {
             // we can check all bytes because first is the input_type that must
             // always be 0
-            if (!os_memcmp(&inputs[i], &inputs[j], sizeof(UTXO_INPUT))) {
+            if (!memcmp(&inputs[i], &inputs[j], sizeof(UTXO_INPUT))) {
                 return 0;
             }
         }
@@ -292,7 +293,7 @@ validate_outputs_duplicates(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
     for (uint32_t i = 0; i < outputs_count; i++) {
         for (uint32_t j = i + 1; j < outputs_count; j++) {
             // check address (+1 for output_type, +1 for address_type)
-            if (!os_memcmp(&outputs[i], &outputs[j],
+            if (!memcmp(&outputs[i], &outputs[j],
                            sizeof(1 + 1 + ADDRESS_SIZE_BYTES))) {
                 return 0;
             }
@@ -365,7 +366,7 @@ static uint8_t essence_verify_remainder_address(
 
     // verify, the address is the same
     // relies on packed struct
-    MUST(!os_memcmp(&outputs[remainder_index].address_type, &tmp.address_type,
+    MUST(!memcmp(&outputs[remainder_index].address_type, &tmp.address_type,
                     ADDRESS_WITH_TYPE_SIZE_BYTES));
 
     return 1;
@@ -543,7 +544,7 @@ uint16_t essence_sign_single(API_CTX *api, uint8_t *output,
     MUST(signature_index < api->essence.inputs_count);
 
     API_INPUT_BIP32_INDEX input_bip32_index;
-    os_memcpy(&input_bip32_index,
+    memcpy(&input_bip32_index,
               &api->essence.inputs_bip32_index[signature_index],
               sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
@@ -576,7 +577,7 @@ uint8_t essence_sign(API_CTX *api)
         MUST(output_max_len < API_BUFFER_SIZE_BYTES);
 
         API_INPUT_BIP32_INDEX input_bip32_index;
-        os_memcpy(&input_bip32_index, &api->essence.inputs_bip32_index[i],
+        memcpy(&input_bip32_index, &api->essence.inputs_bip32_index[i],
                   sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
         uint16_t signature_size = essence_sign_single_int(
@@ -589,7 +590,7 @@ uint8_t essence_sign(API_CTX *api)
     }
 
     // copy unlock blocks to start of data
-    os_memcpy(api->data.buffer, &api->data.buffer[signature_start_ofs],
+    memcpy(api->data.buffer, &api->data.buffer[signature_start_ofs],
               signature_ofs - signature_start_ofs);
 
     // and set new length
@@ -598,7 +599,7 @@ uint8_t essence_sign(API_CTX *api)
     // clear remaining buffer
     if (api->data.length < API_BUFFER_SIZE_BYTES &&
         API_BUFFER_SIZE_BYTES - api->data.length) {
-        os_memset(&api->data.buffer[api->data.length], 0,
+        memset(&api->data.buffer[api->data.length], 0,
                   API_BUFFER_SIZE_BYTES - api->data.length);
     }
 

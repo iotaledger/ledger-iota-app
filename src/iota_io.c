@@ -2,7 +2,8 @@
 #include "api.h"
 #include "macros.h"
 #include "os.h"
-#include "os_io_seproxyhal.h"
+//#include "io_seproxyhal.h"
+#include <string.h>
 
 #include "api.h"
 
@@ -18,7 +19,7 @@ extern unsigned char G_io_apdu_buffer[IO_APDU_BUFFER_SIZE];
 
 void io_initialize()
 {
-    os_memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
+    memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
     api_initialize();
 }
 
@@ -29,7 +30,7 @@ void io_send(const void *ptr, unsigned int length, unsigned short sw)
     }
 
     if ((uint32_t)G_io_apdu_buffer != (uint32_t)ptr) {
-        os_memcpy(G_io_apdu_buffer, ptr, length);
+        memcpy(G_io_apdu_buffer, ptr, length);
     }
 
     G_io_apdu_buffer[length++] = sw >> 8;

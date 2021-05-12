@@ -15,6 +15,11 @@ RUN apt-get update && \
 
 COPY . /root/git/ledger-iota-app/
 
+# temporary until base image was updated
+WORKDIR /opt/bolos
+RUN curl -L https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 --output gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2
+RUN tar -xf gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2
+
 WORKDIR /root/git/ledger-iota-app
 
 # build blue loader
@@ -30,7 +35,9 @@ WORKDIR /root/git/ledger-iota-app
 RUN echo    "#!/bin/bash\n" \
     "export DEVICE=nanos\n" \
     "export BOLOS_SDK=/root/git/ledger-iota-app/dev/sdk/nanos-secure-sdk\n" \
-    "export ENV BOLOS_ENV=/opt/bolos\n" \
+    "unset BOLOS_ENV\n" \
+    "export CLANGPATH=/opt/bolos/clang-arm-fropi/bin/\n" \
+    "export GCCPATH=/opt/bolos/gcc-arm-none-eabi-7-2017-q4-major/bin/\n" \
     "echo nanos > device.txt\n" > env_nanos.sh
 
 RUN sed 's|nanos|nanox|g' env_nanos.sh > env_nanox.sh

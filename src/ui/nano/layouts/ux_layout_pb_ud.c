@@ -65,7 +65,7 @@ const bagl_element_t *ux_layout_pb_ud_prepro(const bagl_element_t *element)
         (const ux_layout_pb_params_t *)ux_stack_get_current_step_params();
 
     // copy element before any mod
-    os_memmove(&G_ux.tmp_element, element, sizeof(bagl_element_t));
+    memmove(&G_ux.tmp_element, element, sizeof(bagl_element_t));
 
     // for dashboard, setup the current application's name
     switch (element->component.userid) {
