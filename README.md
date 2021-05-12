@@ -151,7 +151,7 @@ For active development it might be easier to install the development environment
     ```
     $ git submodule update --init --recursive
     ```
-- Set up your development environment according to [Ledger Documentation - Getting Started](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).
+- Set up your development environment according to [Ledger Documentation - Getting Started](https://ledger.readthedocs.io/en/latest/userspace/setup.html).
 
 ### Compile and load the IOTA Ledger app
 
@@ -168,4 +168,3 @@ After the development environment has been installed, the app can be build and i
 ## Specification
 
 See: [APDU API Specification](docs/specification_chrysalis.md)
-
