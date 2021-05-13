@@ -37,6 +37,15 @@ done
     error "unknown device"
 }
         
+[[ "$device" == "nanos" ]] && {
+    sdk="2.0"
+}
+
+[[ "$device" == "nanox" ]] && {
+    sdk="1.2"
+}
+
+
 echo "device $device selected"
 
 cd $realpath
@@ -45,18 +54,16 @@ cd $realpath
 cd ..
 source env_${device}.sh
 make clean
-git pull
-git submodule update --recursive --remote
 SPECULOS=1 make
 
 # start speculos in headless mode in the background
 cd ./dev/speculos
-python3 speculos.py --display headless -m ${device}  ../../bin/app.elf &>/dev/null &
+python3.8 speculos.py --sdk $sdk --display headless -m ${device}  ../../bin/app.elf &>/dev/null &
 speculos_pid=$!
 cd -
 
 # wait for speculos to be ready
-sleep 5
+sleep 10
 #netstat -nlp
 
 # now compile test code and run test

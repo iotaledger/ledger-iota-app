@@ -61,4 +61,4 @@ QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY $VOLU
 "make clean;"\
 "SPECULOS=1 make;"\
 "cd /root/git/ledger-iota-app/dev/speculos;"\
-"python3 speculos.py --sdk $sdk -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"
+"python3.8 speculos.py --sdk $sdk -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"
