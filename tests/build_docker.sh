@@ -7,5 +7,4 @@ else
     DOCKERFILE_PATH="Dockerfile"
     CONTEXT_PATH=".."
 fi
-git config --get remote.origin.url | tr -d '\n' > repository.url
 docker build -t test-app $CONTEXT_PATH -f $DOCKERFILE_PATH
