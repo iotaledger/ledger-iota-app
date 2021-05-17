@@ -25,7 +25,8 @@ void io_initialize()
 
 void io_send(const void *ptr, unsigned int length, unsigned short sw)
 {
-    if (length + 2 > IO_APDU_BUFFER_SIZE) {
+    
+    if (length > IO_APDU_BUFFER_SIZE - 2) {
         THROW(SW_UNKNOWN);
     }
 

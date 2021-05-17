@@ -293,8 +293,7 @@ validate_outputs_duplicates(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
     for (uint32_t i = 0; i < outputs_count; i++) {
         for (uint32_t j = i + 1; j < outputs_count; j++) {
             // check address (+1 for output_type, +1 for address_type)
-            if (!memcmp(&outputs[i], &outputs[j],
-                           sizeof(1 + 1 + ADDRESS_SIZE_BYTES))) {
+            if (!memcmp(&outputs[i], &outputs[j], 1 + 1 + ADDRESS_SIZE_BYTES)) {
                 return 0;
             }
         }
