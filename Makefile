@@ -168,7 +168,8 @@ ifeq ($(TARGET_NAME),TARGET_NANOX)
 endif
 
 load: all
-	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	echo python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	#python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
 	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
