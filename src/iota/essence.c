@@ -14,8 +14,11 @@
 #include "os.h"
 #include "cx.h"
 #include "api.h"
-#include "iota_io.h"
-#include "iota/ed25519.h"
+
+#ifndef FUZZING
+ #include "iota_io.h"
+ #include "iota/ed25519.h"
+#endif
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
@@ -360,6 +363,8 @@ static uint8_t essence_verify_remainder_address(
     bip32_path[BIP32_ADDRESS_INDEX] = remainder_bip32->bip32_index;
     bip32_path[BIP32_CHANGE_INDEX] = remainder_bip32->bip32_change;
 
+    // Block below cannot be fuzzed without going through crypto APIs
+#ifndef FUZZING
     // address generate generates with address
     MUST(address_generate(bip32_path, BIP32_PATH_LEN, &tmp.address_type));
 
@@ -367,16 +372,23 @@ static uint8_t essence_verify_remainder_address(
     // relies on packed struct
     MUST(!memcmp(&outputs[remainder_index].address_type, &tmp.address_type,
                     ADDRESS_WITH_TYPE_SIZE_BYTES));
-
+#else
+    (void)outputs;
+#endif
     return 1;
 }
 
 static void essence_hash(API_CTX *api)
 {
+    // Block below cannot be fuzzed without going through crypto APIs
+#ifndef FUZZING
     cx_blake2b_t blake2b;
     cx_blake2b_init(&blake2b, BLAKE2B_SIZE_BYTES * 8);
     cx_hash(&blake2b.header, CX_LAST, api->data.buffer, api->essence.length,
             api->essence.hash, ADDRESS_SIZE_BYTES);
+#else
+    (void)api;
+#endif
 }
 
 uint8_t essence_parse_and_validate(API_CTX *api)
@@ -446,7 +458,7 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     return 1;
 }
 
-
+#ifndef FUZZING
 static uint16_t essence_sign_signature_unlock_block(
     SIGNATURE_UNLOCK_BLOCK *pBlock, uint16_t output_max_len,
     const uint8_t *essence_hash, uint32_t *bip32_path,
@@ -604,3 +616,4 @@ uint8_t essence_sign(API_CTX *api)
 
     return 1;
 }
+#endif // FUZZING
