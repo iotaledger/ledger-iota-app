@@ -73,7 +73,7 @@ uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
         THROW(SW_INCORRECT_P1P2);
     }
 
-    os_memcpy(&api.data.buffer[block_number * DATA_BLOCK_SIZE], input_data,
+    memcpy(&api.data.buffer[block_number * DATA_BLOCK_SIZE], input_data,
               DATA_BLOCK_SIZE);
 
     io_send(NULL, 0, SW_OK);
@@ -173,7 +173,7 @@ uint32_t api_set_account(const uint8_t *data, uint32_t len)
 
 
     uint32_t tmp_bip32_account;
-    os_memcpy(&tmp_bip32_account, data, sizeof(uint32_t));
+    memcpy(&tmp_bip32_account, data, sizeof(uint32_t));
 
     // valid bip32_account? MSB must be set
     if (!(tmp_bip32_account & 0x80000000)) {
@@ -232,7 +232,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     }
 
     API_GENERATE_ADDRESS_REQUEST req;
-    os_memcpy(&req, data, sizeof(req));
+    memcpy(&req, data, sizeof(req));
 
     // check if too many addresses to generate
     if (req.count > API_GENERATE_ADDRESSES_MAX_COUNT) {
@@ -265,7 +265,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
 
     // wipe all data before buffer is used again
-    os_memset(api.data.buffer, 0, API_BUFFER_SIZE_BYTES);
+    memset(api.data.buffer, 0, API_BUFFER_SIZE_BYTES);
     for (uint32_t i = 0; i < req.count; i++) {
         // with address_type
         uint8_t ret = address_generate(
@@ -299,7 +299,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     // can't be changed after the flow is started
     SIG_LOCKED_SINGLE_OUTPUT *tmp =
         (SIG_LOCKED_SINGLE_OUTPUT *)&api.data.buffer[64];
-    os_memcpy(&tmp->address_type, api.data.buffer,
+    memcpy(&tmp->address_type, api.data.buffer,
               ADDRESS_WITH_TYPE_SIZE_BYTES);
 
     api.essence.outputs_count = 1;
@@ -342,7 +342,7 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
     // if essence has an remainder, store the information about
     if (!!has_remainder) {
         API_PREPARE_SIGNING_REQUEST req;
-        os_memcpy(&req, data, sizeof(req));
+        memcpy(&req, data, sizeof(req));
 
         if (!(req.remainder_bip32_change & 0x80000000) ||
             !(req.remainder_bip32_index & 0x80000000) ||
@@ -542,10 +542,11 @@ uint32_t api_dump_memory(uint8_t pagenr)
     }
     uint32_t *p = (uint32_t *)(0xda7a0000 + pagenr * 128);
 #else
-    if (pagenr >= 4 * 1024 / 128) {
+    // works for firmware 2.0.0
+    if (pagenr >= (4096 + 512) / 128) {
         THROW(SW_INCORRECT_P1P2);
     }
-    uint32_t *p = (uint32_t *)(0x20001800 + pagenr * 128);
+    uint32_t *p = (uint32_t *)(0x20000200 + pagenr * 128);
 #endif
     io_send(p, 128, SW_OK);
     return 0;

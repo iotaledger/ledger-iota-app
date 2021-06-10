@@ -63,7 +63,7 @@ static void *fnGetSP(void)
 void debug_print_sp()
 {
     uint32_t sp = (uint32_t)fnGetSP();
-    os_memset(G_debug_print_buf, 0, sizeof(G_debug_print_buf));
+    memset(G_debug_print_buf, 0, sizeof(G_debug_print_buf));
     _bin2hex(sp, G_debug_print_buf, 8);
     debug_write(G_debug_print_buf);
 }
@@ -76,7 +76,7 @@ void debug_print_hex(const uint8_t *data, int size, int b)
     }
     for (int i = 0; i < chunks; i++) {
         int idx = 0;
-        os_memset(G_debug_print_buf, 0, sizeof(G_debug_print_buf));
+        memset(G_debug_print_buf, 0, sizeof(G_debug_print_buf));
 
         int chunk = min(size, b);
         for (int j = 0; j < chunk; j++) {

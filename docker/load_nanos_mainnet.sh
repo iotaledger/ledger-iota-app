@@ -48,4 +48,4 @@ docker run --privileged -v /dev/bus/usb:/dev/bus/usb  -it -v /tmp/.X11-unix:/tmp
 "cd /root/git/ledger-iota-app;"\
 "source env_${device}.sh;"\
 "make clean;"\
-"DEBUG=1 make load"\
+"make load"\

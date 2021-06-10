@@ -23,8 +23,8 @@ include $(BOLOS_SDK)/Makefile.defines
 
 APPNAME = "IOTA"
 APPVERSION_MAJOR = 0
-APPVERSION_MINOR = 6
-APPVERSION_PATCH = 3
+APPVERSION_MINOR = 7
+APPVERSION_PATCH = 0
 APPVERSION = $(APPVERSION_MAJOR).$(APPVERSION_MINOR).$(APPVERSION_PATCH)
 APP_LOAD_PARAMS = --path "44'/4218'" --curve ed25519 --appFlags 0x240 $(COMMON_LOAD_PARAMS)
 
@@ -102,7 +102,7 @@ endif
 ifeq ($(DEBUG),1)
     # Development flags
     APP_LOAD_PARAMS += --path "44'/01'"
-#    DEFINES += HAVE_BOLOS_APP_STACK_CANARY
+    DEFINES += HAVE_BOLOS_APP_STACK_CANARY
     DEFINES += APP_DEBUG
 
     # we don't need printf
@@ -168,7 +168,8 @@ ifeq ($(TARGET_NAME),TARGET_NANOX)
 endif
 
 load: all
-	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	echo python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	#python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
 	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)

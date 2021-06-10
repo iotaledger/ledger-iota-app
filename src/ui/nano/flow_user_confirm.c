@@ -486,7 +486,7 @@ static void populate_data()
         sizeof(tmp_bech32));
 
     // reset all lines to display
-    os_memset(flow_data.flow_lines, 0, sizeof(flow_data.flow_lines));
+    memset(flow_data.flow_lines, 0, sizeof(flow_data.flow_lines));
 
     // there are three types of displays with different number of lines
     switch (type) {
@@ -607,7 +607,7 @@ static void populate_data()
         case 6: {
             uint64_t amount;
             // avoid unaligned access
-            os_memcpy(&amount,
+            memcpy(&amount,
                       &flow_data.api->essence.outputs[read_index].amount,
                       sizeof(uint64_t));
 
@@ -670,8 +670,8 @@ static void flow_start_int(const API_CTX *api, uint8_t mode,
                            timeout_cb_t timeout_cb,
                            const uint32_t bip32[BIP32_PATH_LEN])
 {
-    os_memset(&flow_data, 0, sizeof(flow_data));
-    os_memcpy(flow_data.flow_bip32, bip32, sizeof(flow_data.flow_bip32));
+    memset(&flow_data, 0, sizeof(flow_data));
+    memcpy(flow_data.flow_bip32, bip32, sizeof(flow_data.flow_bip32));
 
     flow_data.api = api;
 
@@ -721,7 +721,7 @@ void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
 
 void flow_init()
 {
-    os_memset(&flow_data, 0, sizeof(flow_data));
+    memset(&flow_data, 0, sizeof(flow_data));
 }
 
 void flow_stop()

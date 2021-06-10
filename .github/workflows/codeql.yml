@@ -1,0 +1,51 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  CodeQL-Build:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      packages: read
+    container:
+      image: docker.pkg.github.com/iotaledger/ledger-iota-app/build-app:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Install git
+        run: apt-get update && apt-get install -y git
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      
+      - name: Set env vars
+        run: |
+          echo "DEVICE=nanos" >> $GITHUB_ENV
+          echo "BOLOS_SDK=/root/git/ledger-iota-app/dev/sdk/nanos-secure-sdk" >> $GITHUB_ENV
+          echo "CLANGPATH=/usr/bin/" >> $GITHUB_ENV
+          echo "GCCPATH=/usr/bin/" >> $GITHUB_ENV
+
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: cpp
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v1
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1

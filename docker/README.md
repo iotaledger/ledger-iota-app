@@ -35,7 +35,7 @@ After building the Docker container, the app can be run using following script:
 $ sudo ./run_simulator.sh [-m (nanos*|nanox)]
 ```
 
-**The script always pulls the latest app version from the Git repository before it is compiled** and started within the simulator. The `-m` argument can be used to switch between Nano S and Nano X. The default is `nanos`.
+The `-m` argument can be used to switch between Nano S and Nano X. The default is `nanos`.
 
 After starting, the simulator listens on port 9999 and can be used without restrictions with the `ledger-iota.rs` library.
 
@@ -48,4 +48,3 @@ To compile and load the IOTA app on a real Ledger Nano S use the following scrip
 $ sudo ./load_nanos.sh
 ```
 
-**The script always pulls the latest app version from the Git repository before it is compiled** and loaded onto the Nano S.
