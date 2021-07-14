@@ -61,4 +61,4 @@ QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY $VOLU
 "make clean;"\
 "SPECULOS=1 make;"\
 "cd /root/git/ledger-iota-app/dev/speculos;"\
-"python3.8 speculos.py --seed 'glory promote mansion idle axis finger extra february uncover one trip resource lawn turtle enact monster seven myth punch hobby comfort wild raise skin' --sdk $sdk -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"
+"SPECULOS_APPNAME=IOTA:0.7.0 python3.8 speculos.py --seed 'glory promote mansion idle axis finger extra february uncover one trip resource lawn turtle enact monster seven myth punch hobby comfort wild raise skin' --sdk $sdk -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"
