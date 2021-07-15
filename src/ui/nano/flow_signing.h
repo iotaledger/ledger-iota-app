@@ -9,7 +9,7 @@
 #define SRC_UI_NANO_FLOW_SIGNING_H_
 
 
-void flow_signing();
+void flow_signing(void);
 
 
 #endif /* SRC_UI_NANO_FLOW_SIGNING_H_ */

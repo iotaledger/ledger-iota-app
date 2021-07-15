@@ -17,7 +17,7 @@ void ui_init(void);
 void ui_reset(void);
 void ui_user_confirm_essence();
 
-void ui_timer_event();
+void ui_timer_event(void);
 
 uint8_t ui_show(uint8_t flow);
 

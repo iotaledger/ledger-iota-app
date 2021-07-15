@@ -181,13 +181,13 @@ typedef struct {
 void api_initialize(void);
 
 // get application configuration (flags and version)
-uint32_t api_get_app_config();
+uint32_t api_get_app_config(uint8_t is_locked);
 
 // set account index
 uint32_t api_set_account(const uint8_t *data, uint32_t len);
 
 // reset api
-uint32_t api_reset();
+uint32_t api_reset(void);
 
 uint32_t api_show_flow(uint8_t flow);
 
@@ -199,17 +199,20 @@ uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
 uint32_t api_read_data_block(uint8_t block_number);
 
 // get the state of the data buffeer
-uint32_t api_get_data_buffer_state();
+uint32_t api_get_data_buffer_state(void);
+
+// clear data
+void api_clear_data(void);
 
 // clear data buffer;
-uint32_t api_clear_data_buffer();
+uint32_t api_clear_data_buffer(void);
 
 uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
                              const uint8_t *data, uint32_t len);
 
-uint32_t api_user_confirm_essence();
+uint32_t api_user_confirm_essence(void);
 
-uint32_t api_sign();
+uint32_t api_sign(void);
 
 uint32_t api_sign_single(uint8_t p1);
 

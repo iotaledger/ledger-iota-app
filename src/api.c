@@ -15,6 +15,13 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
+
+void api_generate_address_accepted(void);
+void api_generate_address_timeout(void);
+void api_user_confirm_essence_accepted(void);
+void api_user_confirm_essence_rejected(void);
+void api_user_confirm_essence_timeout(void);
 
 
 /// global variable storing all data needed across multiple api calls
@@ -119,13 +126,13 @@ uint32_t api_clear_data_buffer()
 }
 
 // get application configuration (flags and version)
-uint32_t api_get_app_config()
+uint32_t api_get_app_config(uint8_t is_locked)
 {
     API_GET_APP_CONFIG_RESPONSE resp;
     resp.app_version_major = APPVERSION_MAJOR;
     resp.app_version_minor = APPVERSION_MINOR;
     resp.app_version_patch = APPVERSION_PATCH;
-    resp.app_flags = 0x00;  // avoid uninitialized data
+    resp.app_flags = !!is_locked;
 
 #ifdef TARGET_NANOX
     resp.device = 1;

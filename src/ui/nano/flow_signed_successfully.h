@@ -9,7 +9,7 @@
 #define SRC_UI_NANO_FLOW_SIGNED_SUCCESSFULLY_H_
 
 
-void flow_signed_successfully();
+void flow_signed_successfully(void);
 
 
 #endif /* SRC_UI_NANO_FLOW_SIGNED_SUCCESSFULLY_H_ */

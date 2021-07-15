@@ -9,7 +9,7 @@
 #define SRC_UI_NANO_FLOW_GENERIC_ERROR_H_
 
 
-void flow_generic_error();
+void flow_generic_error(void);
 
 
 #endif /* SRC_UI_NANO_FLOW_GENERIC_ERROR_H_ */
