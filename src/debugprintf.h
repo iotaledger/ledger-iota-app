@@ -19,7 +19,7 @@ extern char G_debug_print_buf[DEBUG_BUFFER_SIZE];
 
 void debug_write(char *buf);
 
-void debug_print_sp();
+void debug_print_sp(void);
 
 // use define to avoid vsnprintf (would need _sbrk what is dynamic memory
 // allocation)

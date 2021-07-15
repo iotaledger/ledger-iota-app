@@ -12,10 +12,9 @@ enum {
     FLOW_SIGNING = 5,
 };
 
-// the following implementation are different for Blue and Nano
 void ui_init(void);
 void ui_reset(void);
-void ui_user_confirm_essence();
+void ui_user_confirm_essence(void);
 
 void ui_timer_event(void);
 
