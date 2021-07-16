@@ -15,12 +15,12 @@
 #include "cx.h"
 #include "api.h"
 
+#include "essence.h"
+
 #ifndef FUZZING
  #include "iota_io.h"
  #include "iota/ed25519.h"
 #endif
-
-#include "essence.h"
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
