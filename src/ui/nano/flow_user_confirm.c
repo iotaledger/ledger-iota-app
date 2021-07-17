@@ -419,8 +419,8 @@ static unsigned int new_address_prev_cb(const bagl_element_t *e)
 
 /*
 Render data to the UI
-
-"  New Address   "    "   Remainder    "    "     Send To    "
+ 
+"Receive Address "    "   Remainder    "    "     Send To    "
 "iota1q9u552alqq0"    "iota1q9u552alqq0"    "iota1q9u552alqq0"
 "swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"
 "9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"
@@ -430,7 +430,7 @@ Render data to the UI
 "   BIP32 Path   "    "   BIP32 Path   "    ------------------
 "   2c'/107a'/   "    "   2c'/107a'/   "    ------------------
 "   3d5b0a0a'/   "    "   3d5b0a0a'/   "    ------------------
-"   7e5faa72'    "  "   7e5faa72'    "    ------------------
+"   7e5faa72'    "    "   7e5faa72'    "    ------------------
 
 */
 // clang-format on
@@ -557,7 +557,7 @@ static void populate_data()
         case 0:
             switch (type) {
             case NEW_ADDRESS:
-                strcpy(flow_data.flow_lines[i], (flow_data.flow_bip32[BIP32_CHANGE_INDEX] & 0x1) ? "New Remainder" : "New Address");
+                strcpy(flow_data.flow_lines[i], (flow_data.flow_bip32[BIP32_CHANGE_INDEX] & 0x1) ? "New Remainder" : "Receive Address");
                 break;
             case REMAINDER:
                 strcpy(flow_data.flow_lines[i], "Remainder");
