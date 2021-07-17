@@ -17,13 +17,6 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-void api_generate_address_accepted(void);
-void api_generate_address_timeout(void);
-void api_user_confirm_essence_accepted(void);
-void api_user_confirm_essence_rejected(void);
-void api_user_confirm_essence_timeout(void);
-
-
 /// global variable storing all data needed across multiple api calls
 API_CTX api;
 
@@ -199,7 +192,7 @@ uint32_t api_set_account(const uint8_t *data, uint32_t len)
 }
 
 // callback for acknowledging a new (remainder) address
-void api_generate_address_accepted()
+static void api_generate_address_accepted()
 {
     // in interactive flows set data_type here, so data is not readable
     // before acknowleding
@@ -208,7 +201,7 @@ void api_generate_address_accepted()
 }
 
 // callback for timeout
-void api_generate_address_timeout()
+static void api_generate_address_timeout()
 {
     api_clear_data();
     io_send(NULL, 0, SW_COMMAND_TIMEOUT);
@@ -380,21 +373,21 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
 }
 
 // callback for accept transaction
-void api_user_confirm_essence_accepted()
+static void api_user_confirm_essence_accepted()
 {
     api.data.type = USER_CONFIRMED_ESSENCE;
     io_send(NULL, 0, SW_OK);
 }
 
 // callback for rejected transaction
-void api_user_confirm_essence_rejected()
+static void api_user_confirm_essence_rejected()
 {
     api_clear_data();
     io_send(NULL, 0, SW_DENIED_BY_USER);
 }
 
 // callback for timeout
-void api_user_confirm_essence_timeout()
+static void api_user_confirm_essence_timeout()
 {
     api_clear_data();
     io_send(NULL, 0, SW_COMMAND_TIMEOUT);
