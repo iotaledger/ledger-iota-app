@@ -22,7 +22,10 @@ Clone the repository and run the build-script
 
 ```
 $ git clone https://github.com/iotaledger/ledger-iota-app
-$ cd ./ledger-iota-app/docker
+$ cd ledger-iota-app
+$ git submodule init
+$ git submodule update --recursive
+$ cd docker
 $ sudo ./build_docker.sh
 ```
 

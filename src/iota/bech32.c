@@ -30,9 +30,10 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 
-uint32_t bech32_polymod_step(uint32_t pre)
+static uint32_t bech32_polymod_step(uint32_t pre)
 {
     uint8_t b = pre >> 25;
     return ((pre & 0x1FFFFFF) << 5) ^ (-((b >> 0) & 1) & 0x3b6a57b2UL) ^

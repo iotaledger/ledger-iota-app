@@ -8,6 +8,6 @@
 #ifndef SRC_UI_NANO_FLOW_MAIN_MENU_H_
 #define SRC_UI_NANO_FLOW_MAIN_MENU_H_
 
-void flow_main_menu();
+void flow_main_menu(void);
 
 #endif /* SRC_UI_NANO_FLOW_MAIN_MENU_H_ */

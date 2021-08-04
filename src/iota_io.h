@@ -9,7 +9,7 @@
 void io_initialize(void);
 void io_send(const void *ptr, unsigned int length, unsigned short sw);
 
-uint8_t *io_get_buffer();
+uint8_t *io_get_buffer(void);
 
 
 unsigned int iota_dispatch(uint8_t ins, uint8_t p1, uint8_t p2, uint8_t len,

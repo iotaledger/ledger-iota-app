@@ -15,6 +15,8 @@
 #include "cx.h"
 #include "api.h"
 
+#include "essence.h"
+
 #ifndef FUZZING
  #include "iota_io.h"
  #include "iota/ed25519.h"
@@ -25,7 +27,7 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
-
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 #define MUST(c)                                                                \
     {                                                                          \
@@ -168,7 +170,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
 }
 
 // validate payload
-uint8_t validate_payload(const uint8_t *data, uint32_t *idx)
+static uint8_t validate_payload(const uint8_t *data, uint32_t *idx)
 {
     // uses safe getter macro that returns an error in case of invalid access
     uint32_t payload_length;
@@ -184,7 +186,7 @@ uint8_t validate_payload(const uint8_t *data, uint32_t *idx)
 }
 
 // validate if there are enough bip32 fragments
-uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
+static uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
                               uint16_t inputs_count,
                               API_INPUT_BIP32_INDEX **inputs_bip32_indices)
 {
@@ -208,7 +210,7 @@ uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
 }
 
 // find out how many bytes would be needed for signature/reference unlock blocks
-uint8_t validate_count_signature_types(
+static uint8_t validate_count_signature_types(
     uint32_t idx, const API_INPUT_BIP32_INDEX *inputs_bip32_indices,
     uint16_t inputs_count, uint8_t *sig_types, uint8_t single_sign)
 {

@@ -18,6 +18,7 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 // define global SDK variables
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];

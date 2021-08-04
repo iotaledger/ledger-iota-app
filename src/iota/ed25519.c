@@ -4,6 +4,8 @@
 #include "os.h"
 #include "cx.h"
 
+#include "ed25519.h"
+
 #include "constants.h"
 
 #include "debugprintf.h"
@@ -13,6 +15,7 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 
 // bip-path

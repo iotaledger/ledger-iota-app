@@ -14,6 +14,7 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 extern unsigned char G_io_apdu_buffer[IO_APDU_BUFFER_SIZE];
 
@@ -64,13 +65,13 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return 0;
 
     case INS_GET_APP_CONFIG:
-        return api_get_app_config(p1, input_data, len);
+        return api_get_app_config(is_locked);
 
     case INS_SET_ACCOUNT:
         return api_set_account(input_data, len);
 
     case INS_RESET:
-        return api_reset(p1, input_data, len);
+        return api_reset();
 
     case INS_WRITE_DATA_BLOCK:
         return api_write_data_block(p1, input_data, len);

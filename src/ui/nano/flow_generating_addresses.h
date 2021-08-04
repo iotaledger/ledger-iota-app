@@ -8,7 +8,7 @@
 #define SRC_UI_NANO_FLOW_GENERATING_ADDRESSES_H_
 
 
-void flow_generating_addresses();
+void flow_generating_addresses(void);
 
 
 #endif

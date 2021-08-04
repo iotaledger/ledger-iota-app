@@ -18,6 +18,7 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 #define MUST(c)                                                                \
     {                                                                          \
@@ -121,7 +122,7 @@ void format_value_short(char *s, const unsigned int n, uint64_t val)
 #define LINELENGTH 16
 
 // returns the length of hex string
-int hex_len(uint32_t v)
+static int hex_len(uint32_t v)
 {
     int len = 8;
     while (v) {
