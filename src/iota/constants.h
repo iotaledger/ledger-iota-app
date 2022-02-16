@@ -42,7 +42,7 @@
 
 #define DATA_BLOCK_SIZE 251 // cla + ins + p1 + p2 + p3 + data max 256 bytes
 
-#ifdef TARGET_NANOX
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #define DATA_BLOCK_COUNT 32 // approx 8kB
 #else
 #define DATA_BLOCK_COUNT 3 // 753Byte
