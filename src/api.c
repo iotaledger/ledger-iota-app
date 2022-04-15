@@ -127,7 +127,7 @@ uint32_t api_get_app_config(uint8_t is_locked)
     resp.app_version_patch = APPVERSION_PATCH;
     resp.app_flags = !!is_locked;
 
-#ifdef TARGET_NANOX
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
     resp.device = 1;
 #else
     resp.device = 0;
@@ -536,7 +536,7 @@ uint32_t api_sign_single(uint8_t p1)
 // DON'T enable it in production
 uint32_t api_dump_memory(uint8_t pagenr)
 {
-#ifdef TARGET_NANOX
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
     if (pagenr >= 30 * 1024 / 128) {
         THROW(SW_INCORRECT_P1P2);
     }
