@@ -42,7 +42,7 @@ done
 }
 
 [[ "$device" == "nanox" ]] && {
-    sdk="1.2"
+    sdk="2.0.2"
 }
 
 echo "device $device selected"
