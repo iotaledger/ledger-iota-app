@@ -20,25 +20,55 @@
 /// global variable storing all data needed across multiple api calls
 API_CTX api;
 
-void api_initialize()
+void api_initialize(APP_MODE_TYPE app_mode)
 {
     // wipe all data
     explicit_bzero(&api, sizeof(api));
 
     api.bip32_path[0] = 0x8000002c;
+    api.bip32_signing_path[0] = 0x8000002c;
+
+    switch (app_mode) {
+        case APP_MODE_IOTA:
+            // iota
+            api.bip32_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.protocol = PROTOCOL_CHRYSALIS;
+            break;
+        case APP_MODE_IOTA_STARDUST:
+            // iota
+            api.bip32_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.protocol = PROTOCOL_CHRYSALIS;
+            break;
+        case APP_MODE_CLAIM_SHIMMER:
+            // primary shimmer
+            api.bip32_path[BIP32_COIN_INDEX] = COIN_SHIMMER;
+            // bip path for claiming SMR from IOTA addresses is different
+            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.protocol = PROTOCOL_STARDUST;
+            break;
+        case APP_MODE_SHIMMER:
+            // shimmer
+            api.bip32_path[BIP32_COIN_INDEX] = COIN_SHIMMER;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_SHIMMER;
+            api.protocol = PROTOCOL_STARDUST;
+            break;
+        default:
+            THROW(SW_ACCOUNT_NOT_VALID);
+    }
 #ifdef APP_DEBUG
-    api.bip32_path[1] = 0x80000001;
-#else
-    api.bip32_path[1] = 0x8000107a;
+    // overwrite paths if in debug mode
+    api.bip32_path[BIP32_COIN_INDEX] = COIN_TESTNET;
+    api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_TESTNET;
 #endif
-    api.bip32_path[BIP32_ACCOUNT_INDEX] = 0;
-    api.bip32_path[BIP32_CHANGE_INDEX] = 0;
-    api.bip32_path[BIP32_ADDRESS_INDEX] = 0;
+
+    api.app_mode = app_mode;
 }
 
 void api_clear_data()
 {
-    // the only thing we shouldn't clear out is the account index
+    // we shouldn't clear out account index
     uint32_t tmp_bip32_account = api.bip32_path[BIP32_ACCOUNT_INDEX];
 
 #ifdef APP_DEBUG
@@ -46,10 +76,19 @@ void api_clear_data()
     uint8_t tmp_non_interactive = api.non_interactive_mode;
 #endif
 
-    api_initialize();
+    // app mode is the same after clearing data
+    api_initialize(api.app_mode);
 
-    // set saved account index and network
+    // set saved account index - both are always tied together
     api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+    api.bip32_signing_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+#ifdef APP_DEBUG
+    if (api.app_mode == APP_MODE_CLAIM_SHIMMER) {
+        // we only have one possible coin type for testing (0x80000001)
+        // but we need an different BIP-path for testing claiming SMR
+        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] += 0x40000000;
+    }
+#endif
 
 #ifdef APP_DEBUG
     api.non_interactive_mode = tmp_non_interactive;
@@ -146,7 +185,7 @@ uint32_t api_get_app_config(uint8_t is_locked)
 uint32_t api_reset()
 {
     // also resets the account index
-    api_initialize();
+    api_initialize(APP_MODE_IOTA);
 
     ui_reset();
 
@@ -164,13 +203,16 @@ uint32_t api_show_flow(uint8_t flow)
     return 0;
 }
 
-uint32_t api_set_account(const uint8_t *data, uint32_t len)
+uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len)
 {
     // check if a uint32_t was sent as data
     if (len != sizeof(uint32_t)) {
         THROW(SW_INCORRECT_LENGTH);
     }
 
+    if (app_mode > APP_MODE_SHIMMER) {
+        THROW(SW_INCORRECT_P1P2);
+    }
 
     uint32_t tmp_bip32_account;
     memcpy(&tmp_bip32_account, data, sizeof(uint32_t));
@@ -180,11 +222,20 @@ uint32_t api_set_account(const uint8_t *data, uint32_t len)
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
-    // delete all data
-    api_initialize();
+    // delete all data and set app_mode
+    api_initialize(app_mode);
 
     // set account index
+    // both are always tied together
     api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+    api.bip32_signing_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+#ifdef APP_DEBUG
+    if (app_mode == APP_MODE_CLAIM_SHIMMER) {
+        // we only have one possible coin type for testing (0x80000001)
+        // but we need an different BIP-path for testing claiming SMR
+        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] += 0x40000000;
+    }
+#endif
 
     io_send(NULL, 0, SW_OK);
 
@@ -362,8 +413,19 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
     // save into variable if single-sign mode will be used
     api.essence.single_sign_mode = !!single_sign;
 
-    if (!essence_parse_and_validate(&api)) {
-        THROW(SW_COMMAND_INVALID_DATA);
+    uint8_t ret = essence_parse_and_validate(&api);
+    switch (ret) {
+        case 0:
+            THROW(SW_COMMAND_INVALID_DATA);
+            break;
+        case 2:
+            THROW(SW_FEATURE_NOT_SUPPORTED);
+            break;
+        case 1:
+            // OK
+            break;
+        default:
+            THROW(SW_UNKNOWN);
     }
 
     api.data.type = VALIDATED_ESSENCE;

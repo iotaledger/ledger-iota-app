@@ -86,14 +86,6 @@ typedef enum {
 
 #endif // TARGET_NANOS
 
-// Menus
-
-#ifdef TARGET_NANOS
-static const char MENU_MORE_INFO_TEXT[][TEXT_LEN] = {
-    "Please visit", "iota.org/sec", "for more info."};
-#define MENU_MORE_INFO_LEN ARRAY_SIZE(MENU_MORE_INFO_TEXT)
-#endif
-
 // Split the entire address into 15 chunks with 6 trytes each
 #define MENU_ADDR_CHUNK_LEN 6
 #define MENU_ADDR_LEN                                                          \

@@ -4,8 +4,8 @@
     "version": "2.0.0",
     "options": {
         "env": {
-          "CLANGPATH": "${HOME}/programme/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/",
-          "GCCPATH": "${HOME}/programme/gcc-arm-none-eabi-5_4-2016q3/bin/",
+          //"CLANGPATH": "${HOME}/programme/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/",
+          //"GCCPATH": "${HOME}/programme/gcc-arm-none-eabi-5_4-2016q3/bin/",
           //"BOLOS_SDK": "${workspaceRoot}/dev/sdk/nanos-secure-sdk"
         }
      },

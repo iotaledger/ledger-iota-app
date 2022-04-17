@@ -29,20 +29,21 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
+#define RET_NOK             0
+#define RET_OK              1
+#define RET_NOT_SUPPORTED   2
 
-#define MUSTNOT(c)                                                             \
-    {                                                                          \
-        if ((c)) {                                                             \
-            return 0;                                                          \
-        }                                                                      \
+// behaviour was changed for more return codes than `true` (>0) and `false` (==0).
+// e.g. `MUST(signature_size)` was changed to `MUST(signature_size != 0)` 
+// because comparison always returns 0 or 1 according to std99 specification.
+// `MUST(!!signature_size)` would have been an alternative.
+#define MUST(c)                                                                 \
+    {                                                                           \
+        uint8_t _ret = (c);                                                     \
+        if (_ret != RET_OK) {                                                   \
+            return _ret;                                                        \
+        }                                                                       \
     }
-
 
 // own memcmp because we also need to check lexical order and
 // common memcmp implementations only specify an return value != 0 if
@@ -68,7 +69,7 @@ static inline uint8_t get_uint32(const uint8_t *data, uint32_t *idx,
     memcpy(v, &data[*idx],
               sizeof(uint32_t)); // copy to avoid unaligned access
     *idx = *idx + sizeof(uint32_t);
-    return 1;
+    return RET_OK;
 }
 static inline uint8_t get_uint16(const uint8_t *data, uint32_t *idx,
                                  uint16_t *v)
@@ -77,7 +78,7 @@ static inline uint8_t get_uint16(const uint8_t *data, uint32_t *idx,
     memcpy(v, &data[*idx],
               sizeof(uint16_t)); // copy to avoid unaligned access
     *idx = *idx + sizeof(uint16_t);
-    return 1;
+    return RET_OK;
 }
 
 static inline uint8_t get_uint8(const uint8_t *data, uint32_t *idx, uint8_t *v)
@@ -85,7 +86,7 @@ static inline uint8_t get_uint8(const uint8_t *data, uint32_t *idx, uint8_t *v)
     MUST(*idx + sizeof(uint8_t) < API_BUFFER_SIZE_BYTES);
     *v = data[*idx];
     *idx = *idx + sizeof(uint8_t);
-    return 1;
+    return RET_OK;
 }
 
 
@@ -114,11 +115,11 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
         MUST(tmp.input_type == INPUT_TYPE_UTXO);
 
         // Transaction Output Index must be 0 ≤ x < 127.
-        MUST(tmp.transaction_output_id >= 0 && tmp.transaction_output_id < 127);
+        MUST(/*tmp.transaction_output_id >= 0 &&*/ tmp.transaction_output_id < 127);
 
         *idx = *idx + sizeof(UTXO_INPUT);
     }
-    return 1;
+    return RET_OK;
 }
 
 // --- validate outputs ---
@@ -166,7 +167,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // 2'779'530'283'277'761.
     MUST(total_amount <= TOTAL_AMOUNT_MAX);
 
-    return 1;
+    return RET_OK;
 }
 
 // validate payload
@@ -182,7 +183,7 @@ static uint8_t validate_payload(const uint8_t *data, uint32_t *idx)
     MUST(*idx + payload_length < API_BUFFER_SIZE_BYTES);
 
     *idx = *idx + payload_length;
-    return 1;
+    return RET_OK;
 }
 
 // validate if there are enough bip32 fragments
@@ -201,12 +202,12 @@ static uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
             sizeof(API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
 
         // check is MSBs set
-        MUST(tmp.bip32_index & 0x80000000);
-        MUST(tmp.bip32_change & 0x80000000);
+        MUST((tmp.bip32_index & 0x80000000) != 0);
+        MUST((tmp.bip32_change & 0x80000000) != 0);
 
         *idx = *idx + sizeof(API_INPUT_BIP32_INDEX);
     }
-    return 1;
+    return RET_OK;
 }
 
 // find out how many bytes would be needed for signature/reference unlock blocks
@@ -259,7 +260,7 @@ static uint8_t validate_count_signature_types(
 
     // in single-sign mode no extra data is used for signatures
     if (single_sign) {
-        return 1;
+        return RET_OK;
     }
 
     uint32_t bytes_needed =
@@ -267,7 +268,7 @@ static uint8_t validate_count_signature_types(
         count_reference_unlock_blocks * sizeof(REFERENCE_UNLOCK_BLOCK);
 
     MUST(idx + bytes_needed < API_BUFFER_SIZE_BYTES);
-    return 1;
+    return RET_OK;
 }
 
 
@@ -282,11 +283,11 @@ static uint8_t validate_inputs_duplicates(const UTXO_INPUT *inputs,
             // we can check all bytes because first is the input_type that must
             // always be 0
             if (!memcmp(&inputs[i], &inputs[j], sizeof(UTXO_INPUT))) {
-                return 0;
+                return RET_NOK;
             }
         }
     }
-    return 1;
+    return RET_OK;
 }
 
 // --- CHECK OUTPUTS FOR DUPLICATES ---
@@ -299,11 +300,11 @@ validate_outputs_duplicates(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
         for (uint32_t j = i + 1; j < outputs_count; j++) {
             // check address (+1 for output_type, +1 for address_type)
             if (!memcmp(&outputs[i], &outputs[j], 1 + 1 + ADDRESS_SIZE_BYTES)) {
-                return 0;
+                return RET_NOK;
             }
         }
     }
-    return 1;
+    return RET_OK;
 }
 
 // --- CHECK INPUTS FOR LEXICOGRAPHICAL ORDER
@@ -312,17 +313,17 @@ static uint8_t validate_inputs_lexical_order(const UTXO_INPUT *inputs,
 {
     // at least 2 needed for check
     if (inputs_count < 2) {
-        return 1;
+        return RET_OK;
     }
 
     for (uint32_t i = 0; i < inputs_count - 1; i++) {
         // Inputs must be in lexicographical order of their serialized form.
         if (memcmp_bytewise((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
                             sizeof(UTXO_INPUT)) != -1) {
-            return 0;
+            return RET_NOK;
         }
     }
-    return 1;
+    return RET_OK;
 }
 
 // --- CHECK OUTPUTS FOR LEXICOGRAPHICAL ORDER
@@ -332,17 +333,17 @@ validate_outputs_lexical_order(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
 {
     // at least 2 needed for check
     if (outputs_count < 2) {
-        return 1;
+        return RET_OK;
     }
 
     for (uint32_t i = 0; i < outputs_count - 1; i++) {
         // Outputs must be in lexicographical order by their serialized form.
         if (memcmp_bytewise((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
                             sizeof(SIG_LOCKED_SINGLE_OUTPUT)) != -1) {
-            return 0;
+            return RET_NOK;
         }
     }
-    return 1;
+    return RET_OK;
 }
 
 static uint8_t essence_verify_remainder_address(
@@ -354,8 +355,8 @@ static uint8_t essence_verify_remainder_address(
     MUST(remainder_index < outputs_count);
 
     // check bip32 index
-    MUST(remainder_bip32->bip32_change & 0x80000000);
-    MUST(remainder_bip32->bip32_index & 0x80000000);
+    MUST((remainder_bip32->bip32_change & 0x80000000) != 0);
+    MUST((remainder_bip32->bip32_index & 0x80000000) != 0);
 
     SIG_LOCKED_SINGLE_OUTPUT tmp;
 
@@ -377,7 +378,7 @@ static uint8_t essence_verify_remainder_address(
 #else
     (void)outputs;
 #endif
-    return 1;
+    return RET_OK;
 }
 
 static void essence_hash(API_CTX *api)
@@ -402,7 +403,7 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     // access
     uint8_t transaction_essence_type;
     MUST(get_uint8(api->data.buffer, &idx, &transaction_essence_type));
-    MUST(!transaction_essence_type);
+    MUST(transaction_essence_type == 0);
 
 
     // parse data
@@ -457,13 +458,13 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     // everything fine - calculate the hash
     essence_hash(api);
 
-    return 1;
+    return RET_OK;
 }
 
 #ifndef FUZZING
 static uint16_t essence_sign_signature_unlock_block(
     SIGNATURE_UNLOCK_BLOCK *pBlock, uint16_t output_max_len,
-    const uint8_t *essence_hash, uint32_t *bip32_path,
+    const uint8_t *essence_hash, uint32_t *bip32_signing_path,
     API_INPUT_BIP32_INDEX *input_bip32_index)
 {
 
@@ -472,9 +473,9 @@ static uint16_t essence_sign_signature_unlock_block(
     cx_ecfp_private_key_t pk;
     cx_ecfp_public_key_t pub;
 
-    // overwrite bip32_path
-    bip32_path[BIP32_ADDRESS_INDEX] = input_bip32_index->bip32_index;
-    bip32_path[BIP32_CHANGE_INDEX] = input_bip32_index->bip32_change;
+    // overwrite bip32_signing_path
+    bip32_signing_path[BIP32_ADDRESS_INDEX] = input_bip32_index->bip32_index;
+    bip32_signing_path[BIP32_CHANGE_INDEX] = input_bip32_index->bip32_change;
 
     pBlock->unlock_type = UNLOCK_TYPE_SIGNATURE;     // signature
     pBlock->signature_type = SIGNATURE_TYPE_ED25519; // ED25519
@@ -487,7 +488,7 @@ static uint16_t essence_sign_signature_unlock_block(
         TRY
         {
             // create key pair and convert pub key to bytes
-            ret = ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub);
+            ret = ed25519_get_key_pair(bip32_signing_path, BIP32_PATH_LEN, &pk, &pub);
 
             ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
                                       pBlock->signature, &signature_length);
@@ -505,12 +506,12 @@ static uint16_t essence_sign_signature_unlock_block(
     END_TRY;
 
     // ed25519_get_key_pair and ed25519_sign must succeed
-    MUST(ret);
+    MUST(ret != 0);
 
     // length of signature must not be 0
-    MUST(signature_length);
+    MUST(signature_length != 0);
 
-    MUST(ed25519_public_key_to_bytes(&pub, pBlock->public_key));
+    MUST(ed25519_public_key_to_bytes(&pub, pBlock->public_key) != 0);
 
     return (uint16_t)sizeof(SIGNATURE_UNLOCK_BLOCK);
 }
@@ -530,7 +531,7 @@ essence_sign_reference_unlock_block(REFERENCE_UNLOCK_BLOCK *pBlock,
 
 static uint16_t
 essence_sign_single_int(uint8_t *output, uint16_t output_max_len,
-                        uint8_t *essence_hash, uint32_t *bip32_path,
+                        uint8_t *essence_hash, uint32_t *bip32_signing_path,
                         uint8_t signature_type,
                         API_INPUT_BIP32_INDEX *input_bip32_index)
 {
@@ -540,7 +541,7 @@ essence_sign_single_int(uint8_t *output, uint16_t output_max_len,
     if (signature_type & 0x80) {
         return essence_sign_signature_unlock_block(
             (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, essence_hash,
-            bip32_path, input_bip32_index);
+            bip32_signing_path, input_bip32_index);
     }
     else {
         return essence_sign_reference_unlock_block(
@@ -552,7 +553,7 @@ uint16_t essence_sign_single(API_CTX *api, uint8_t *output,
                              uint16_t output_max_len, uint32_t signature_index)
 {
     // should already be validated
-    MUST(api->essence.single_sign_mode);
+    MUST(api->essence.single_sign_mode != 0);
 
     MUST(signature_index < api->essence.inputs_count);
 
@@ -562,10 +563,10 @@ uint16_t essence_sign_single(API_CTX *api, uint8_t *output,
               sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
     uint16_t signature_size = essence_sign_single_int(
-        output, output_max_len, api->essence.hash, api->bip32_path,
+        output, output_max_len, api->essence.hash, api->bip32_signing_path,
         api->essence.signature_types[signature_index], &input_bip32_index);
 
-    MUST(signature_size);
+    MUST(signature_size != 0);
 
     return signature_size;
 }
@@ -574,7 +575,7 @@ uint16_t essence_sign_single(API_CTX *api, uint8_t *output,
 uint8_t essence_sign(API_CTX *api)
 {
     // should already be validated
-    MUST(!api->essence.single_sign_mode);
+    MUST(api->essence.single_sign_mode == 0);
 
     // signatures will be written at the end of the data (incl. bip32-indices)
     uint16_t signature_ofs = api->data.length;
@@ -594,10 +595,10 @@ uint8_t essence_sign(API_CTX *api)
                   sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
         uint16_t signature_size = essence_sign_single_int(
-            output, output_max_len, api->essence.hash, api->bip32_path,
+            output, output_max_len, api->essence.hash, api->bip32_signing_path,
             api->essence.signature_types[i], &input_bip32_index);
 
-        MUST(signature_size);
+        MUST(signature_size != 0);
 
         signature_ofs += signature_size;
     }
@@ -616,6 +617,6 @@ uint8_t essence_sign(API_CTX *api)
                   API_BUFFER_SIZE_BYTES - api->data.length);
     }
 
-    return 1;
+    return RET_OK;
 }
 #endif // FUZZING

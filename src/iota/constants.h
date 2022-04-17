@@ -51,9 +51,14 @@
 #define API_BUFFER_SIZE_BYTES (DATA_BLOCK_COUNT * DATA_BLOCK_SIZE)
 
 #define BIP32_PATH_LEN 5 // fixed
+#define BIP32_COIN_INDEX 1
 #define BIP32_ACCOUNT_INDEX 2
 #define BIP32_CHANGE_INDEX 3
 #define BIP32_ADDRESS_INDEX 4
+
+#define COIN_IOTA       0x8000107a
+#define COIN_SHIMMER    0x8000107b
+#define COIN_TESTNET    0x80000001
 
 // the address is the ed25519 pub-key
 #define ADDRESS_SIZE_BYTES 32

@@ -112,7 +112,7 @@ static void IOTA_main()
                     break;
                 default:
                     // reset states and UI
-                    api_initialize();
+                    api_initialize(APP_MODE_IOTA);
                     ui_reset();
                 }
 
@@ -226,8 +226,6 @@ __attribute__((section(".boot"))) int main(void)
 
     // ensure exception will work as planned
     os_boot();
-
-    //    debug_print_sp();
 
     for (;;) {
         UX_INIT();

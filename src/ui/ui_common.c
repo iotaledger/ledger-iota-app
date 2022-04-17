@@ -87,9 +87,10 @@ void format_value_full(char *s, const unsigned int n, const uint64_t val)
     char buffer[n];
 
     const size_t num_len = format_s64(buffer, sizeof(buffer), val);
-    const size_t num_len_comma = num_len + (num_len - (val < 0 ? 2 : 1)) / 3;
+    const size_t num_len_comma = num_len + (num_len - 1) / 3;
 
     // if the length with commas plus the unit does not fit
+    // +3 = max unit length (i, Mi, Gi, Ti)
     if (num_len_comma + 3 > n) {
         snprintf(s, n, "%s %s", buffer, IOTA_UNITS[0]);
     }

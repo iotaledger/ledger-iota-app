@@ -21,6 +21,18 @@ typedef enum {
     LOCKED = 5,
 } DATA_TYPE;
 
+typedef enum {
+    APP_MODE_IOTA = 0,
+    APP_MODE_IOTA_STARDUST = 1,
+    APP_MODE_CLAIM_SHIMMER = 2,
+    APP_MODE_SHIMMER = 3
+} APP_MODE_TYPE;
+
+typedef enum {
+    PROTOCOL_CHRYSALIS = 0,
+    PROTOCOL_STARDUST = 0
+} PROTOCOL_TYPE;
+
 typedef IO_STRUCT
 {
     uint8_t input_type;
@@ -153,8 +165,18 @@ typedef struct {
 } API_DATA;
 
 typedef struct {
-    /// BIP32 path used for seed derivation
+    /// primary BIP32 path used for seed derivation
     uint32_t bip32_path[BIP32_PATH_LEN];
+
+    // signing path is extra because it's different for
+    // claiming SMR from IOTA addresses
+    uint32_t bip32_signing_path[BIP32_PATH_LEN];
+
+    // app_mode
+    APP_MODE_TYPE app_mode;
+
+    // protocol version
+    PROTOCOL_TYPE protocol;
 
     // buffer for api
     API_DATA data;
@@ -178,13 +200,13 @@ typedef struct {
 // extern API_CTX api;
 
 /** @brief Clear and initialize the entire API context. */
-void api_initialize(void);
+void api_initialize(APP_MODE_TYPE app_mode);
 
 // get application configuration (flags and version)
 uint32_t api_get_app_config(uint8_t is_locked);
 
 // set account index
-uint32_t api_set_account(const uint8_t *data, uint32_t len);
+uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len);
 
 // reset api
 uint32_t api_reset(void);
@@ -204,7 +226,7 @@ uint32_t api_get_data_buffer_state(void);
 // clear data
 void api_clear_data(void);
 
-// clear data buffer;
+// clear data buffer
 uint32_t api_clear_data_buffer(void);
 
 uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,

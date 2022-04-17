@@ -2,7 +2,6 @@
 #include "api.h"
 #include "macros.h"
 #include "os.h"
-//#include "io_seproxyhal.h"
 #include <string.h>
 
 #include "api.h"
@@ -21,7 +20,7 @@ extern unsigned char G_io_apdu_buffer[IO_APDU_BUFFER_SIZE];
 void io_initialize()
 {
     memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
-    api_initialize();
+    api_initialize(APP_MODE_IOTA);
 }
 
 void io_send(const void *ptr, unsigned int length, unsigned short sw)
@@ -68,7 +67,7 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return api_get_app_config(is_locked);
 
     case INS_SET_ACCOUNT:
-        return api_set_account(input_data, len);
+        return api_set_account(p1, input_data, len);
 
     case INS_RESET:
         return api_reset();
