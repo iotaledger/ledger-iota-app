@@ -32,7 +32,7 @@ do
 
 done
 
-[[ "$device" != "nanos" && "$device" != "nanox" ]] && {
+[[ "$device" != "nanos" && "$device" != "nanox" && "$device" != "nanosplus" ]] && {
     error "unknown device"
 }
         
@@ -45,7 +45,7 @@ echo "device $device selected"
 
 
 docker run --privileged -v /dev/bus/usb:/dev/bus/usb  -it -v /tmp/.X11-unix:/tmp/.X11-unix build-app bash -c \
-"cd /root/git/ledger-iota-app;"\
-"source env_${device}.sh;"\
+"cd /root/git/app;"\
+"source ../env_${device}.sh;"\
 "make clean;"\
 "make load"\

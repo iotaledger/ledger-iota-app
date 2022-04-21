@@ -86,7 +86,7 @@ void api_clear_data()
     if (api.app_mode == APP_MODE_CLAIM_SHIMMER) {
         // we only have one possible coin type for testing (0x80000001)
         // but we need an different BIP-path for testing claiming SMR
-        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] += 0x40000000;
+        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] |= 0x40000000;
     }
 #endif
 
@@ -233,7 +233,7 @@ uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len)
     if (app_mode == APP_MODE_CLAIM_SHIMMER) {
         // we only have one possible coin type for testing (0x80000001)
         // but we need an different BIP-path for testing claiming SMR
-        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] += 0x40000000;
+        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] |= 0x40000000;
     }
 #endif
 

@@ -33,16 +33,23 @@ do
 
 done
 
-[[ "$device" != "nanos" && "$device" != "nanox" ]] && {
+[[ "$device" != "nanos" && "$device" != "nanox" && "$device" != "nanosplus" ]] && {
     error "unknown device"
 }
 
 [[ "$device" == "nanos" ]] && {
-    sdk="2.0"
+    sdk="2.1"
+    m="nanos"
 }
 
 [[ "$device" == "nanox" ]] && {
     sdk="2.0.2"
+    m="nanox"
+}
+
+[[ "$device" == "nanosplus" ]] && {
+    sdk="1.0"
+    m="nanosp"
 }
 
 echo "device $device selected"
@@ -55,10 +62,19 @@ else
     VOLUME_MOUNT_ARG="-v /tmp/.X11-unix:/tmp/.X11-unix"
     xhost +local:docker
 fi
-QT_GRAPHICSSYSTEM="native" docker run -p 9999:9999 -it -e DISPLAY=$DISPLAY $VOLUME_MOUNT_ARG build-app bash -c \
-"cd /root/git/ledger-iota-app/;"\
+
+# default Ledger seed
+seed="glory promote mansion idle axis finger extra february uncover one trip resource lawn turtle enact monster seven myth punch hobby comfort wild raise skin"
+
+[ -f 'testseed.txt' ] && { seed="$( cat testseed.txt )"; }
+
+rpath="$( dirname $( readlink -f $0 ) )"
+
+QT_GRAPHICSSYSTEM="native" docker run -v $rpath/..:/root/git/app -p 9999:9999 -it -e DISPLAY=$DISPLAY $VOLUME_MOUNT_ARG iotaledger/ledger-build-image:0.0.1 bash -c \
+"cd /root/git;"\
 "source env_${device}.sh;"\
+"cd /root/git/app;"\
 "make clean;"\
 "SPECULOS=1 make;"\
-"cd /root/git/ledger-iota-app/dev/speculos;"\
-"SPECULOS_APPNAME=IOTA:0.7.0 python3.8 speculos.py --seed 'glory promote mansion idle axis finger extra february uncover one trip resource lawn turtle enact monster seven myth punch hobby comfort wild raise skin' --sdk $sdk -m \$( cat ../../../ledger-iota-app/device.txt )  ../../bin/app.elf"
+"cd /opt/ledger/speculos;"\
+"SPECULOS_APPNAME=IOTA:0.7.0 python3.8 speculos.py --seed '$seed' --sdk $sdk -m $n /root/git/bin/app.elf"

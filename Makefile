@@ -46,8 +46,6 @@ all: default
 # Platform #
 ############
 
-
-
 DEFINES += $(DEFINES_LIB)
 
 DEFINES += OS_IO_SEPROXYHAL
@@ -70,7 +68,6 @@ DEFINES += APPVERSION_MINOR=$(APPVERSION_MINOR)
 DEFINES += APPVERSION_PATCH=$(APPVERSION_PATCH)
 DEFINES += APPVERSION=\"$(APPVERSION)\"
 
-
 ifeq ($(TARGET_NAME),TARGET_NANOX)
     DEFINES += HAVE_BLE BLE_COMMAND_TIMEOUT_MS=2000
     DEFINES += HAVE_BLE_APDU # basic ledger apdu transport over BLE
@@ -88,8 +85,6 @@ else
     DEFINES += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
 endif
 
-#################
-# sdk 1.6 supports ux_flow for the nano as well
 DEFINES += HAVE_UX_FLOW
 
 # if speculos simulator is selected enable debuging features
@@ -106,11 +101,6 @@ ifeq ($(DEBUG),1)
 
     # we don't need printf
     DEFINES += HAVE_PRINTF PRINTF=
-#    ifeq ($(TARGET_NAME),TARGET_NANOX)
-#        DEFINES += HAVE_PRINTF PRINTF=mcu_usb_printf
-#    else
-#        DEFINES += HAVE_PRINTF PRINTF=screen_printf
-#    endif
 else
     # Release flags
     DEFINES += PRINTF\(...\)=
@@ -178,8 +168,6 @@ include $(BOLOS_SDK)/Makefile.rules
 
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile
-
-
 
 listvariants:
 	@echo VARIANTS COIN iota
