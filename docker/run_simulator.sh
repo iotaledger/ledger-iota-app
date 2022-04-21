@@ -77,4 +77,4 @@ QT_GRAPHICSSYSTEM="native" docker run -v $rpath/..:/root/git/app -p 9999:9999 -i
 "make clean;"\
 "SPECULOS=1 make;"\
 "cd /opt/ledger/speculos;"\
-"SPECULOS_APPNAME=IOTA:0.7.0 python3.8 speculos.py --seed '$seed' --sdk $sdk -m $n /root/git/bin/app.elf"
+"SPECULOS_APPNAME=IOTA:0.7.0 python3.8 speculos.py --seed '$seed' --sdk $sdk -m $m /root/git/app/bin/app.elf"
