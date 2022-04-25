@@ -34,11 +34,15 @@ function usage {
     echo "-l|--load:     load app to device"
     echo "-s|--speculos: run app after building with the speculos simulator"
     echo "-c|--cxlib:    don't autodetect cx-lib version (for speculos)"
+    echo "-g|--gdb:      start speculos with -d (waiting for gdb debugger)"
     exit 1
 }
 
 # pull and tag image 
 function pull_image {
+    # already pulled?
+    docker inspect --type=image "$2" >& /dev/null && return 0
+
     docker image pull "$1" && \
     docker image tag "$1" "$2"
 }
@@ -67,6 +71,7 @@ nobuild=0
 load=0
 speculos=0
 debug=0
+gdb=0
 cxlib=""
 while (( $# ))
 do
@@ -90,6 +95,9 @@ do
         ;;
     "-d" | "--debug")
         debug=1
+        ;;
+    "-g" | "--gdb")
+        gdb=1
         ;;
     *)
         error "unknown parameter: $1"
@@ -218,6 +226,8 @@ docker run \
 
     { sleep 10; echo -e "\nPlease open your browser: http://localhost:5000\n"; echo; } &
 
+    (( $gdb )) extra_args="-d "
+
     docker run \
         -v "$rpath:/speculos/apps" \
         -p 9999:9999 \
@@ -229,7 +239,7 @@ docker run \
             --apdu-port 9999 \
             --display headless \
             --seed "$seed" \
-            --sdk "$cxlib" \
+            --sdk "$cxlib" $extra_args \
             -m "$model" /speculos/apps/bin/app.elf
 }
 

@@ -13,8 +13,20 @@
         {
             "label": "Build IOTA App for Nano S (Speculos)",
             "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk; export SPECULOS=1; make clean && make"
+            "command": "${workspaceRoot}/build.sh -m nanos"
         },
+        {
+            "label": "Run IOTA App for Nano S (Speculos)",
+            "type": "shell",
+            "command": "${workspaceRoot}/build.sh -m nanos -s"
+        },
+        {
+            "label": "Debug IOTA App for Nano S (Speculos)",
+            "type": "shell",
+            "command": "${workspaceRoot}/build.sh -m nanos -s -g"
+        },
+
+/*        
         {
             "label": "Build IOTA App for Nano X (Speculos)",
             "type": "shell",
@@ -55,6 +67,6 @@
             "type": "shell",
             "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanox-secure-sdk;export SPECULOS=1; make clean && make; python3 ./dev/speculos/speculos.py --ontop ./bin/app.elf -m nanox"
         },
-
+*/
     ]
 }
