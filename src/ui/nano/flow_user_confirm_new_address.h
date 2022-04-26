@@ -1,0 +1,6 @@
+#ifndef SRC_UI_NANO_FLOW_USER_CONFIRM_NEW_ADDRESS_H_
+#define SRC_UI_NANO_FLOW_USER_CONFIRM_NEW_ADDRESS_H_
+
+void populate_data_new_address();
+
+#endif

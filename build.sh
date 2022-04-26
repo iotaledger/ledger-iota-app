@@ -226,7 +226,7 @@ docker run \
 
     { sleep 10; echo -e "\nPlease open your browser: http://localhost:5000\n"; echo; } &
 
-    (( $gdb )) extra_args="-d "
+    (( $gdb )) && extra_args="-d "
 
     docker run \
         -v "$rpath:/speculos/apps" \

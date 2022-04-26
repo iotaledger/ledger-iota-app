@@ -178,3 +178,19 @@ int format_bip32(const uint32_t *b32, int linenr, char *out,
     }
     return !!ofs;
 }
+
+
+uint8_t get_no_lines_bip32(const uint32_t *b32) {
+    // at least one line
+    uint8_t no_lines = 1;
+
+    // figure out, how many lines we need for a nice formatted bip32 path
+    for (int i = 1; i < 3; i++) {
+        // with *0 no memory is changed
+        if (format_bip32(b32, i, (char *)0, 0)) {
+            no_lines++;
+        }
+    }    
+    return no_lines;
+}
+

@@ -28,4 +28,6 @@ void format_value_short(char *s, unsigned int n, uint64_t val);
 int format_bip32(const uint32_t *b32, int linenr, char *out,
                  uint32_t out_max_len);
 
+uint8_t get_no_lines_bip32(const uint32_t *b32);
+
 #endif // UI_COMMON_H
