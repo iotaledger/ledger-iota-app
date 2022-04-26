@@ -187,31 +187,16 @@ UX_FLOW(
 );
 // clang-format on
 
-
 //--- callbacks for ux components ---
-static unsigned int ux_datasets_next_cb(const bagl_element_t *e)
-{
-    if (flow_data.next_cb) {
-        return flow_data.next_cb(e);
-    }
-    return 0;
-}
-
-static unsigned int ux_datasets_prev_cb(const bagl_element_t *e)
-{
-    if (flow_data.prev_cb) {
-        return flow_data.prev_cb(e);
-    }
-    return 0;
-}
 
 static unsigned int ux_datasets_accept_prev_cb(const bagl_element_t *e)
 {
     UNUSED(e);
-    flow_data.flow_outputs_index_current = flow_data.flow_dataset_count - 1;
+    flow_data.flow_outputs_index_current =
+        flow_data.flow_dataset_count - 1;
 
     // gets changed to the right value in populate_data
-    flow_data.flow_scroll_ypos = 100;
+    flow_data.flow_scroll_ypos = 100; 
 
     ux_datasets_step(0);
     return 0; // DO NOT REDRAW THE BUTTON
@@ -226,7 +211,6 @@ static unsigned int ux_datasets_reject_next_cb(const bagl_element_t *e)
     //    ux_flow_init(0, ux_flow_datasets, &ux_flow_datasets_reject);
     return 0; // DO NOT REDRAW THE BUTTON
 }
-
 
 static unsigned int ux_datasets_accept_cb(const bagl_element_t *e)
 {
@@ -256,12 +240,12 @@ static unsigned int ux_datasets_next_dataset_cb(const bagl_element_t *e)
     flow_data.flow_outputs_index_current++;
 
     // already the last dataset?
-    if (flow_data.flow_outputs_index_current >= flow_data.flow_dataset_count) {
+    if (flow_data.flow_outputs_index_current >=
+        flow_data.flow_dataset_count) {
         // yes: continue with accept/reject flow
         if (flow_data.flow_type == FLOW_ACCEPT_REJECT) {
             ux_flow_init(0, ux_flow_datasets, &ux_flow_datasets_accept);
-        }
-        else {
+        } else {
             ux_flow_init(0, ux_flow_datasets, &ux_flow_datasets_ok);
         }
     }
@@ -284,8 +268,7 @@ static unsigned int ux_datasets_prev_dataset_cb(const bagl_element_t *e)
         // yes: continue with accept/reject flow
         if (flow_data.flow_type == FLOW_ACCEPT_REJECT) {
             ux_flow_init(0, ux_flow_datasets, &ux_flow_datasets_reject);
-        }
-        else {
+        } else {
             ux_flow_init(0, ux_flow_datasets, &ux_flow_datasets_ok);
         }
         return 0;
@@ -299,29 +282,25 @@ static unsigned int ux_datasets_prev_dataset_cb(const bagl_element_t *e)
 
 // --- callbacks for handling transitions from line to line within one dataset
 // ---
-static unsigned int ux_datasets_transition_next_cb(const bagl_element_t *e)
+static unsigned int ux_datasets_next_cb(const bagl_element_t *e)
 {
     // the last line of the current datasheet is shown in the middle of the
     // page?
     if (flow_data.flow_scroll_ypos == flow_data.number_of_lines - 3) {
         // yes: load next dataset
-        if (flow_data.next_dataset_cb) {
-            return flow_data.next_dataset_cb(e);
-        }
+        return ux_datasets_next_dataset_cb(e);
     }
     // no: just advance line
     ux_datasets_step(1);
     return 0; // DO NOT REDRAW THE BUTTON
 }
 
-static unsigned int ux_datasets_transition_prev_cb(const bagl_element_t *e)
+static unsigned int ux_datasets_prev_cb(const bagl_element_t *e)
 {
     // the first line of the current dataset is shown in the middle of the page?
     if (flow_data.flow_scroll_ypos == -2) {
         // yes: load previous dataset
-        if (flow_data.prev_dataset_cb) {
-            return flow_data.prev_dataset_cb(e);
-        }
+        return ux_datasets_prev_dataset_cb(e);
     }
     // no: just step back one line
     ux_datasets_step(-1);
@@ -350,23 +329,23 @@ static void ux_datasets_step(short dir)
     ux_flow_init(0, ux_flow_datasets, &ux_flow_datasets_step);
 }
 
-void populate_data()
-{
-    // reset all lines to display
+void populate_data() {
+        // reset all lines to display
     memset(flow_data.flow_lines, 0, sizeof(flow_data.flow_lines));
 
     if (flow_data.populate_cb) {
         flow_data.populate_cb();
-    }
-    else {
+    } else {
         THROW(SW_UNKNOWN);
     }
 }
 
 
-void flow_start(const API_CTX *api, accept_cb_t accept_cb,
-                reject_cb_t reject_cb, timeout_cb_t timeout_cb,
-                const uint32_t bip32[BIP32_PATH_LEN])
+
+void flow_start(const API_CTX *api, 
+                           accept_cb_t accept_cb, reject_cb_t reject_cb,
+                           timeout_cb_t timeout_cb,
+                           const uint32_t bip32[BIP32_PATH_LEN])
 {
     memset(&flow_data, 0, sizeof(flow_data));
     memcpy(flow_data.flow_bip32, bip32, sizeof(flow_data.flow_bip32));
@@ -382,7 +361,7 @@ void flow_start(const API_CTX *api, accept_cb_t accept_cb,
     flow_data.flow_active = 1;
 
     // data[0] vertically in the middle of the screen
-    flow_data.flow_scroll_ypos = -2;
+    flow_data.flow_scroll_ypos = -2; 
 }
 
 void flow_init()
@@ -396,20 +375,12 @@ void flow_stop()
     flow_main_menu();
 }
 void flow_confirm_datasets(const API_CTX *api, accept_cb_t accept_cb,
-                           reject_cb_t reject_cb, timeout_cb_t timeout_cb,
-                           populate_cb_t populate_cb,
-                           const uint32_t bip32[BIP32_PATH_LEN],
-                           FLOW_TYPES flow_type, uint16_t dataset_count)
+                             reject_cb_t reject_cb, timeout_cb_t timeout_cb, populate_cb_t populate_cb,
+                             const uint32_t bip32[BIP32_PATH_LEN], FLOW_TYPES flow_type, uint16_t dataset_count)
 {
     flow_start(api, accept_cb, reject_cb, timeout_cb, bip32);
-
-    flow_data.next_cb = ux_datasets_transition_next_cb;
-    flow_data.prev_cb = ux_datasets_transition_prev_cb;
-
+    
     flow_data.populate_cb = populate_cb;
-
-    flow_data.next_dataset_cb = ux_datasets_next_dataset_cb;
-    flow_data.prev_dataset_cb = ux_datasets_prev_dataset_cb;
 
     flow_data.flow_type = flow_type;
     flow_data.flow_dataset_count = dataset_count;

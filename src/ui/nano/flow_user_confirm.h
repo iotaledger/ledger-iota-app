@@ -49,13 +49,6 @@ typedef struct {
 
     populate_cb_t populate_cb;
 
-    // callbacks for next prev events
-    ux_callback_cb_t next_cb;
-    ux_callback_cb_t prev_cb;
-
-    ux_callback_cb_t next_dataset_cb;
-    ux_callback_cb_t prev_dataset_cb;
-
     // buffer for nnbnn layout
     char flow_lines[5][LINE_WIDTH + 1];
     int flow_scroll_ypos;
