@@ -4,9 +4,7 @@
  *  Created on: 21.10.2020
  *      Author: thomas
  */
-
-#ifndef SRC_UI_NANO_FLOW_USER_CONFIRM_H_
-#define SRC_UI_NANO_FLOW_USER_CONFIRM_H_
+#pragma once
 
 #include <stdint.h>
 
@@ -23,6 +21,8 @@
 
 #define FLOW_USER_CONFIRM 0
 #define FLOW_NEW_ADDRESS 1
+
+typedef enum { FLOW_ACCEPT_REJECT, FLOW_OK } FLOW_TYPES;
 
 typedef unsigned int (*ux_callback_cb_t)(const bagl_element_t *e);
 typedef void (*ux_fetch_data)();
@@ -75,7 +75,8 @@ typedef struct {
     // flag that indicates the flow is active
     uint8_t flow_active;
 
-    uint8_t flow_mode;
+    FLOW_TYPES flow_type;
+    uint16_t flow_dataset_count;
 
     uint32_t flow_bip32[BIP32_PATH_LEN];
 } flowdata_t;
@@ -84,15 +85,13 @@ void flow_main_menu(void);
 
 void flow_init(void);
 
-void flow_start_user_confirm(const API_CTX *api, accept_cb_t accept_cb,
-                             reject_cb_t reject_cb, timeout_cb_t timeout_cb,
-                             const uint32_t bip32[BIP32_PATH_LEN]);
-void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
-                            timeout_cb_t timeout_cb,
-                            const uint32_t bip32[BIP32_PATH_LEN]);
+void flow_confirm_datasets(const API_CTX *api, accept_cb_t accept_cb,
+                           reject_cb_t reject_cb, timeout_cb_t timeout_cb,
+                           populate_cb_t populate_cb,
+                           const uint32_t bip32[BIP32_PATH_LEN],
+                           FLOW_TYPES flow_type, uint16_t dataset_count);
 
 void flow_stop(void);
 
 void flow_timer_event(void);
 
-#endif /* SRC_UI_NANO_FLOW_USER_CONFIRM_H_ */

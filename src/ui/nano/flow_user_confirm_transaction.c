@@ -1,64 +1,47 @@
 #include "ui_common.h"
-
 #include "flow_user_confirm.h"
 
 extern flowdata_t flow_data;
 
-// clang-format off
 
-/*
-"   Remainder    "    "     Send To    "
-"iota1q9u552alqq0"    "iota1q9u552alqq0"
-"swuaqc0m3qytkm3q"    "swuaqc0m3qytkm3q"
-"9k6j0cujh4ha78ax"    "9k6j0cujh4ha78ax"
-"y7v8tej4gqzadmcs"    "y7v8tej4gqzadmcs"
-"     Amount     "    "     Amount     "
-"     2.050 Gi   "    "     2.050 Gi   "
-"   BIP32 Path   "    ------------------
-"   2c'/107a'/   "    ------------------
-"   3d5b0a0a'/   "    ------------------
-"   7e5faa72'    "    ------------------
-
-*/
-// clang-format on
-
-void generate_bech32() {
+void generate_bech32(short read_index)
+{
     // clear buffer
     memset(flow_data.flow_bech32, 0, sizeof(flow_data.flow_bech32));
 
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
     address_encode_bech32(
-        &flow_data.api->essence.outputs[flow_data.flow_outputs_index_current].address_type, flow_data.flow_bech32,
-        sizeof(flow_data.flow_bech32));
+        &flow_data.api->essence.outputs[read_index].address_type,
+        flow_data.flow_bech32, sizeof(flow_data.flow_bech32));
 }
 
-
-static void populate_amount(short line_no, int read_index) {
+static void populate_amount(short line_no, int read_index)
+{
     uint64_t amount;
     // avoid unaligned access
-    memcpy(&amount,
-                &flow_data.api->essence.outputs[read_index].amount,
-                sizeof(uint64_t));
+    memcpy(&amount, &flow_data.api->essence.outputs[read_index].amount,
+           sizeof(uint64_t));
 
     if (flow_data.amount_toggle) { // full
         // max supply is 2779530283277761 - this fits nicely in one line
         // on the Ledger nano s always cut after the 16th char to not
         // make a page with a single 'i'.
         format_value_full(flow_data.flow_lines[line_no],
-                            sizeof(flow_data.flow_lines[line_no]), amount);
+                          sizeof(flow_data.flow_lines[line_no]), amount);
 
         // (is done later anyways)
         // ui_output.lines[i][LINE_WIDTH]='\0';
     }
     else { // short
         format_value_short(flow_data.flow_lines[line_no],
-                            sizeof(flow_data.flow_lines[line_no]), amount);
+                           sizeof(flow_data.flow_lines[line_no]), amount);
     }
 }
 
 
-static void populate_header(uint8_t type, short line_no) {
+static void populate_header(uint8_t type, short line_no)
+{
     switch (type) {
     case REMAINDER:
         strcpy(flow_data.flow_lines[line_no], "Remainder");
@@ -68,16 +51,14 @@ static void populate_header(uint8_t type, short line_no) {
         // this is safe because the case of an essence with only one
         // remainder address as output is already covered
         // (is_bip32_remainder flag would be set).
-        int non_remainder_outputs =
-            flow_data.api->essence.outputs_count -
-            !!flow_data.api->essence.has_remainder;
+        int non_remainder_outputs = flow_data.api->essence.outputs_count -
+                                    !!flow_data.api->essence.has_remainder;
 
         // more than one? Show with numbers on the UI
         if (non_remainder_outputs > 1) {
             snprintf(flow_data.flow_lines[line_no],
-                        sizeof(flow_data.flow_lines[line_no]) - 1,
-                        "Send To [%d]",
-                        flow_data.flow_outputs_index_current + 1);
+                     sizeof(flow_data.flow_lines[line_no]) - 1, "Send To [%d]",
+                     flow_data.flow_outputs_index_current + 1);
         }
         else {
             strcpy(flow_data.flow_lines[line_no], "Send To");
@@ -127,13 +108,14 @@ void populate_data_outputs()
         }
     }
 
-    generate_bech32();
+    generate_bech32(read_index);
 
 
     // there are two types of displays with different number of lines
     switch (type) {
     case REMAINDER:
-        flow_data.number_of_lines = 8 + get_no_lines_bip32(flow_data.flow_bip32);
+        flow_data.number_of_lines =
+            8 + get_no_lines_bip32(flow_data.flow_bip32);
         break;
     case OUTPUT:
         flow_data.number_of_lines = 7;
@@ -182,8 +164,8 @@ void populate_data_outputs()
         case 2: // bech32 second line
         case 3: // bech32 third line
         case 4: // bech32 fourth line
-            memcpy(flow_data.flow_lines[i], &flow_data.flow_bech32[(cy - 1) * LINE_WIDTH],
-                   LINE_WIDTH);
+            memcpy(flow_data.flow_lines[i],
+                   &flow_data.flow_bech32[(cy - 1) * LINE_WIDTH], LINE_WIDTH);
             break;
         case 5: // show amount header
             strcpy(flow_data.flow_lines[i], "Amount");
@@ -204,4 +186,13 @@ void populate_data_outputs()
         // always zero-terminate to be sure
         flow_data.flow_lines[i][LINE_WIDTH] = 0;
     }
+}
+
+void flow_start_user_confirm(const API_CTX *api, accept_cb_t accept_cb,
+                             reject_cb_t reject_cb, timeout_cb_t timeout_cb,
+                             const uint32_t bip32[BIP32_PATH_LEN])
+{
+    flow_confirm_datasets(api, accept_cb, reject_cb, timeout_cb,
+                          &populate_data_outputs, bip32, FLOW_ACCEPT_REJECT,
+                          api->essence.outputs_count);
 }

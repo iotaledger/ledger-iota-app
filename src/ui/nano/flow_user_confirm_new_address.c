@@ -1,5 +1,9 @@
 #include "ui_common.h"
 
+#include "ux.h"
+#include "ux_layout_pb_ud.h"
+#include "glyphs.h"
+
 #include "flow_user_confirm.h"
 
 extern flowdata_t flow_data;
@@ -23,15 +27,11 @@ Render data to the UI
 // clang-format on
 
 // in flow_user_confirm_outputs.c
-void generate_bech32();
+void generate_bech32(short read_index);
 
 static void populate_data_new_address()
 {
-    if (flow_data.flow_mode != FLOW_NEW_ADDRESS) {
-        THROW(SW_UNKNOWN);
-    }
-    
-    generate_bech32();
+    generate_bech32(0);
 
     flow_data.number_of_lines = 6 + get_no_lines_bip32(flow_data.flow_bip32);
 
@@ -53,26 +53,37 @@ static void populate_data_new_address()
 
         switch (cy) {
         case 0: // show flow header
-            strcpy(flow_data.flow_lines[i], (flow_data.flow_bip32[BIP32_CHANGE_INDEX] & 0x1) ? "New Remainder" : "Receive Address");
+            strcpy(flow_data.flow_lines[i],
+                   (flow_data.flow_bip32[BIP32_CHANGE_INDEX] & 0x1)
+                       ? "New Remainder"
+                       : "Receive Address");
             break;
         case 1: // bech32 first line
         case 2: // bech32 second line
         case 3: // bech32 third line
         case 4: // bech32 fourth line
-            memcpy(flow_data.flow_lines[i], &flow_data.flow_bech32[(cy - 1) * LINE_WIDTH],
-                   LINE_WIDTH);
+            memcpy(flow_data.flow_lines[i],
+                   &flow_data.flow_bech32[(cy - 1) * LINE_WIDTH], LINE_WIDTH);
             break;
         case 5: // show bip32 path header
             strcpy(flow_data.flow_lines[i], "BIP32 Path");
             break;
-        case 6:  // bip32 first line
-        case 7:  // bip32 second line
-        case 8:  // bip32 third line
-            format_bip32(flow_data.flow_bip32, cy - 8, flow_data.flow_lines[i],
+        case 6: // bip32 first line
+        case 7: // bip32 second line
+        case 8: // bip32 third line
+            format_bip32(flow_data.flow_bip32, cy - 6, flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }
         // always zero-terminate to be sure
         flow_data.flow_lines[i][LINE_WIDTH] = 0;
     }
+}
+
+void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
+                            timeout_cb_t timeout_cb,
+                            const uint32_t bip32[BIP32_PATH_LEN])
+{
+    flow_confirm_datasets(api, accept_cb, 0, timeout_cb,
+                          &populate_data_new_address, bip32, FLOW_OK, 1);
 }

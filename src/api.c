@@ -8,7 +8,8 @@
 #include "iota/constants.h"
 #include "iota/essence.h"
 
-#include "ui/nano/flow_user_confirm.h"
+#include "ui/nano/flow_user_confirm_transaction.h"
+#include "ui/nano/flow_user_confirm_new_address.h"
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"

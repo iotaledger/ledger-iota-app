@@ -1,6 +1,8 @@
-#ifndef SRC_UI_NANO_FLOW_USER_CONFIRM_NEW_ADDRESS_H_
-#define SRC_UI_NANO_FLOW_USER_CONFIRM_NEW_ADDRESS_H_
+#pragma once
 
-void populate_data_new_address();
+#include "flow_user_confirm.h"
 
-#endif
+void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
+                            timeout_cb_t timeout_cb,
+                            const uint32_t bip32[BIP32_PATH_LEN]);
+
