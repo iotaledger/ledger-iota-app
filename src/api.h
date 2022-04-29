@@ -152,9 +152,6 @@ typedef struct {
     // contains the signatur types after validation
     uint8_t signature_types[INPUTS_MAX_COUNT];
 
-    // flag for single-sign-mode
-    uint8_t single_sign_mode;
-
     // flag for blindsigning
     uint8_t blindsigning;
 
@@ -244,14 +241,12 @@ void api_clear_data(void);
 // clear data buffer
 uint32_t api_clear_data_buffer(void);
 
-uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
+uint32_t api_prepare_signing(uint8_t has_remainder,
                              const uint8_t *data, uint32_t len);
 
-uint32_t api_prepare_blindsigning(uint8_t single_sign);
+uint32_t api_prepare_blindsigning(void);
 
 uint32_t api_user_confirm_essence(void);
-
-uint32_t api_sign(void);
 
 uint32_t api_sign_single(uint8_t p1);
 

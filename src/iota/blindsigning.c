@@ -76,21 +76,6 @@ static uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
     return 1;
 }
 
-// we only need to check if we can return enough pubkeys + signatures
-static uint8_t validate_count_signature_types(
-    uint32_t idx, uint16_t inputs_count, uint8_t single_sign)
-{
-    // in single-sign mode no extra data is used for signatures
-    if (single_sign) {
-        return 1;
-    }
-
-    uint32_t bytes_needed = inputs_count * sizeof(SIGNATURE_BLOCK);
-
-    MUST(idx + bytes_needed < API_BUFFER_SIZE_BYTES);
-    return 1;
-}
-
 uint8_t essence_parse_and_validate_blindsigning(API_CTX *api) {
     uint32_t idx = 0;
 
@@ -114,9 +99,6 @@ uint8_t essence_parse_and_validate_blindsigning(API_CTX *api) {
 
     // save data length
     api->data.length = idx;
-
-    // enough space for signature blocks?
-    MUST(validate_count_signature_types(idx, api->essence.inputs_count, api->essence.single_sign_mode));
 
     return 1;
 }

@@ -76,10 +76,10 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return api_write_data_block(p1, input_data, len);
 
     case INS_PREPARE_SIGNING:
-        return api_prepare_signing(p1, p2, input_data, len);
+        return api_prepare_signing(p2, input_data, len);
 
     case INS_PREPARE_BLINDSIGNING:
-        return api_prepare_blindsigning(p1);
+        return api_prepare_blindsigning();
 
     case INS_GENERATE_ADDRESS:
         return api_generate_address(p1, input_data, len);
@@ -89,9 +89,6 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
 
     case INS_CLEAR_DATA_BUFFER:
         return api_clear_data_buffer();
-
-    case INS_SIGN:
-        return api_sign();
 
     case INS_USER_CONFIRM_ESSENCE:
         return api_user_confirm_essence();

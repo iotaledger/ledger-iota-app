@@ -210,8 +210,8 @@ static uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
 
 // find out how many bytes would be needed for signature/reference unlock blocks
 static uint8_t validate_count_signature_types(
-    uint32_t idx, const API_INPUT_BIP32_INDEX *inputs_bip32_indices,
-    uint16_t inputs_count, uint8_t *sig_types, uint8_t single_sign)
+    const API_INPUT_BIP32_INDEX *inputs_bip32_indices,
+    uint16_t inputs_count, uint8_t *sig_types)
 {
     uint32_t count_signature_unlock_blocks = 0;
     uint32_t count_reference_unlock_blocks = 0;
@@ -256,16 +256,6 @@ static uint8_t validate_count_signature_types(
         }
     }
 
-    // in single-sign mode no extra data is used for signatures
-    if (single_sign) {
-        return 1;
-    }
-
-    uint32_t bytes_needed =
-        count_signature_unlock_blocks * sizeof(SIGNATURE_UNLOCK_BLOCK) +
-        count_reference_unlock_blocks * sizeof(REFERENCE_UNLOCK_BLOCK);
-
-    MUST(idx + bytes_needed < API_BUFFER_SIZE_BYTES);
     return 1;
 }
 
@@ -439,8 +429,8 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     // also finds out what will become signature or reference blocks
     // save directly to api-struct to avoid usage of stack
     MUST(validate_count_signature_types(
-        idx, api->essence.inputs_bip32_index, api->essence.inputs_count,
-        api->essence.signature_types, api->essence.single_sign_mode));
+        api->essence.inputs_bip32_index, api->essence.inputs_count,
+        api->essence.signature_types));
 
     // additional validation steps of parsed data
     MUST(validate_inputs_duplicates(api->essence.inputs,

@@ -134,9 +134,6 @@ static uint16_t sign_single_int(uint8_t *output, uint16_t output_max_len,
 uint16_t sign_single(API_CTX *api, uint8_t *output, uint16_t output_max_len,
                      uint32_t signature_index)
 {
-    // should already be validated
-    MUST(api->essence.single_sign_mode);
-
     MUST(signature_index < api->essence.inputs_count);
 
     API_INPUT_BIP32_INDEX input_bip32_index;
@@ -154,52 +151,3 @@ uint16_t sign_single(API_CTX *api, uint8_t *output, uint16_t output_max_len,
     return signature_size;
 }
 
-// sign will append all signatures at the end of input data
-uint8_t sign(API_CTX *api)
-{
-    // should already be validated
-    MUST(!api->essence.single_sign_mode);
-
-    // signatures will be written at the end of the data (incl. bip32-indices)
-    uint16_t signature_ofs = api->data.length;
-    uint16_t signature_start_ofs = api->data.length;
-
-    // create signatures for every input
-    for (uint32_t i = 0; i < api->essence.inputs_count; i++) {
-        uint8_t *output = &api->data.buffer[signature_ofs];
-
-        // calculate remaining space
-        uint16_t output_max_len = API_BUFFER_SIZE_BYTES - signature_ofs;
-
-        MUST(output_max_len < API_BUFFER_SIZE_BYTES);
-
-        API_INPUT_BIP32_INDEX input_bip32_index;
-        memcpy(&input_bip32_index, &api->essence.inputs_bip32_index[i],
-               sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
-
-        uint16_t signature_size = sign_single_int(
-            output, output_max_len, api->essence.hash, api->bip32_signing_path,
-            api->essence.signature_types[i], &input_bip32_index,
-            !api->essence.blindsigning);
-
-        MUST(signature_size);
-
-        signature_ofs += signature_size;
-    }
-
-    // copy unlock blocks to start of data
-    memcpy(api->data.buffer, &api->data.buffer[signature_start_ofs],
-           signature_ofs - signature_start_ofs);
-
-    // and set new length
-    api->data.length = signature_ofs - signature_start_ofs;
-
-    // clear remaining buffer
-    if (api->data.length < API_BUFFER_SIZE_BYTES &&
-        API_BUFFER_SIZE_BYTES - api->data.length) {
-        explicit_bzero(&api->data.buffer[api->data.length],
-                       API_BUFFER_SIZE_BYTES - api->data.length);
-    }
-
-    return 1;
-}

@@ -374,7 +374,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     return IO_ASYNCH_REPLY;
 }
 
-uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
+uint32_t api_prepare_signing(uint8_t has_remainder,
                              const uint8_t *data, uint32_t len)
 {
     // when calling validation the buffer still is marked as empty
@@ -414,9 +414,6 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
         api.essence.has_remainder = 0;
     }
 
-    // save into variable if single-sign mode will be used
-    api.essence.single_sign_mode = !!single_sign;
-
     // no blindsigning
     api.essence.blindsigning = 0;
 
@@ -430,7 +427,7 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
     return 0;
 }
 
-uint32_t api_prepare_blindsigning(uint8_t single_sign)
+uint32_t api_prepare_blindsigning()
 {
     // when calling validation the buffer still is marked as empty
     if (api.data.type != EMPTY) {
@@ -444,11 +441,6 @@ uint32_t api_prepare_blindsigning(uint8_t single_sign)
     if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
         THROW(SW_ACCOUNT_NOT_VALID);
     }
-
-    // save into variable if single-sign mode will be used
-    // actually single_sign == FLAG_SIGN_SINGLE, but do it a bit more complicated
-    // for purpose of documentation
-    api.essence.single_sign_mode = !!single_sign;
 
     // set flag for blindsigning
     api.essence.blindsigning = 1;
@@ -553,61 +545,12 @@ uint32_t api_user_confirm_essence()
     return IO_ASYNCH_REPLY;
 }
 
-// prefered signing methond on the nano-x
-// uses additional memory on in the buffer but only
-// needs a single call to the signing method
-uint32_t api_sign()
-{
-    if (api.data.type != USER_CONFIRMED_ESSENCE) {
-        THROW(SW_COMMAND_NOT_ALLOWED);
-    }
-
-    // was not validated in single sign mode?
-    if (api.essence.single_sign_mode) {
-        THROW(SW_COMMAND_NOT_ALLOWED);
-    }
-
-    // some basic checks - actually data should be 100% validated already
-    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
-        api.essence.length >= API_BUFFER_SIZE_BYTES ||
-        api.data.length < api.essence.length ||
-        api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        api.essence.inputs_count > INPUTS_MAX_COUNT) {
-        THROW(SW_UNKNOWN);
-    }
-
-    uint8_t ret = sign(&api);
-    if (!ret) {
-        THROW(SW_UNKNOWN);
-    }
-
-    api.data.type = SIGNATURES;
-
-    io_send(NULL, 0, SW_OK);
-
-    return 0;
-}
-
 // prefered signing methond on the nano-s
 // it needs as many calls as there are inputs but needs
 // no additional memory in the buffer for signatures
 uint32_t api_sign_single(uint8_t p1)
 {
     if (api.data.type != USER_CONFIRMED_ESSENCE) {
-        THROW(SW_COMMAND_NOT_ALLOWED);
-    }
-
-    // this check actually wouldn't be needed because
-    // if validation passed without single-flag, sign_single would be
-    // okay but not the other way around!
-    // but if validation without single-flag passes, you could use the
-    // sign-api-call right away.
-    //
-    // so this check only is here to prevent mixing validation and signing
-    // modes because it doesn't make sense and could lead to client problems.
-
-    // was validated in single sign mode?
-    if (!api.essence.single_sign_mode) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
