@@ -35,6 +35,8 @@ enum {
 
     INS_SHOW_FLOW = 0x90,
 
+    INS_PREPARE_BLINDSIGNING = 0x91,
+    
     INS_PREPARE_SIGNING = 0xa0,
     INS_GENERATE_ADDRESS = 0xa1,
     INS_SIGN = 0xa2,

@@ -78,6 +78,9 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
     case INS_PREPARE_SIGNING:
         return api_prepare_signing(p1, p2, input_data, len);
 
+    case INS_PREPARE_BLINDSIGNING:
+        return api_prepare_blindsigning(p1);
+
     case INS_GENERATE_ADDRESS:
         return api_generate_address(p1, input_data, len);
 

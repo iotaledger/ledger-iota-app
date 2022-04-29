@@ -3,7 +3,6 @@
 
 extern flowdata_t flow_data;
 
-
 void generate_bech32(short read_index)
 {
     // clear buffer
@@ -115,7 +114,7 @@ void populate_data_outputs()
     switch (type) {
     case REMAINDER:
         flow_data.number_of_lines =
-            8 + get_no_lines_bip32(flow_data.flow_bip32);
+            8 + get_no_lines_bip32(flow_data.api->bip32_path);
         break;
     case OUTPUT:
         flow_data.number_of_lines = 7;
@@ -179,7 +178,7 @@ void populate_data_outputs()
         case 8:  // bip32 first line
         case 9:  // bip32 second line
         case 10: // bip32 third line
-            format_bip32(flow_data.flow_bip32, cy - 8, flow_data.flow_lines[i],
+            format_bip32(flow_data.api->bip32_path, cy - 8, flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }
@@ -189,10 +188,9 @@ void populate_data_outputs()
 }
 
 void flow_start_user_confirm(const API_CTX *api, accept_cb_t accept_cb,
-                             reject_cb_t reject_cb, timeout_cb_t timeout_cb,
-                             const uint32_t bip32[BIP32_PATH_LEN])
+                             reject_cb_t reject_cb, timeout_cb_t timeout_cb)
 {
     flow_confirm_datasets(api, accept_cb, reject_cb, timeout_cb,
-                          &populate_data_outputs, bip32, FLOW_ACCEPT_REJECT,
+                          &populate_data_outputs, FLOW_ACCEPT_REJECT,
                           api->essence.outputs_count);
 }

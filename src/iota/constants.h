@@ -75,6 +75,7 @@
 
 // size of hash
 #define BLAKE2B_SIZE_BYTES 32
+#define ESSENCE_HASH_SIZE_BYTES 32
 
 // address type of ED25519 addresses
 #define ADDRESS_TYPE_ED25519    0

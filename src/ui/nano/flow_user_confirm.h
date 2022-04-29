@@ -70,8 +70,6 @@ typedef struct {
 
     FLOW_TYPES flow_type;
     uint16_t flow_dataset_count;
-
-    uint32_t flow_bip32[BIP32_PATH_LEN];
 } flowdata_t;
 
 void flow_main_menu(void);
@@ -81,7 +79,6 @@ void flow_init(void);
 void flow_confirm_datasets(const API_CTX *api, accept_cb_t accept_cb,
                            reject_cb_t reject_cb, timeout_cb_t timeout_cb,
                            populate_cb_t populate_cb,
-                           const uint32_t bip32[BIP32_PATH_LEN],
                            FLOW_TYPES flow_type, uint16_t dataset_count);
 
 void flow_stop(void);

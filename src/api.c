@@ -7,9 +7,12 @@
 
 #include "iota/constants.h"
 #include "iota/essence.h"
+#include "iota/blindsigning.h"
+#include "iota/signing.h"
 
 #include "ui/nano/flow_user_confirm_transaction.h"
 #include "ui/nano/flow_user_confirm_new_address.h"
+#include "ui/nano/flow_user_confirm_blindsigning.h"
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
@@ -367,7 +370,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     api.flow_locked = 1; // mark flow locked
 
     flow_start_new_address(&api, api_generate_address_accepted,
-                           api_generate_address_timeout, api.bip32_path);
+                           api_generate_address_timeout);
     return IO_ASYNCH_REPLY;
 }
 
@@ -414,19 +417,45 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
     // save into variable if single-sign mode will be used
     api.essence.single_sign_mode = !!single_sign;
 
-    uint8_t ret = essence_parse_and_validate(&api);
-    switch (ret) {
-        case 0:
-            THROW(SW_COMMAND_INVALID_DATA);
-            break;
-        case 2:
-            THROW(SW_FEATURE_NOT_SUPPORTED);
-            break;
-        case 1:
-            // OK
-            break;
-        default:
-            THROW(SW_UNKNOWN);
+    // no blindsigning
+    api.essence.blindsigning = 0;
+
+    if (!essence_parse_and_validate(&api)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
+    api.data.type = VALIDATED_ESSENCE;
+
+    io_send(NULL, 0, SW_OK);
+    return 0;
+}
+
+uint32_t api_prepare_blindsigning(uint8_t single_sign)
+{
+    // when calling validation the buffer still is marked as empty
+    if (api.data.type != EMPTY) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
+    // disable external read and write access before doing anything else
+    api.data.type = LOCKED;
+
+    // was account selected?
+    if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
+
+    // save into variable if single-sign mode will be used
+    // actually single_sign == FLAG_SIGN_SINGLE, but do it a bit more complicated
+    // for purpose of documentation
+    api.essence.single_sign_mode = !!single_sign;
+
+    // set flag for blindsigning
+    api.essence.blindsigning = 1;
+
+    // the only thing we can parse and validate are the bip32 input paths 
+    if (!essence_parse_and_validate_blindsigning(&api)) {
+        THROW(SW_COMMAND_INVALID_DATA);
     }
 
     api.data.type = VALIDATED_ESSENCE;
@@ -472,35 +501,55 @@ uint32_t api_user_confirm_essence()
         THROW(SW_ACCOUNT_NOT_VALID);
     }
 
-    // some basic checks - actually data should be 100% validated already
-    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
-        api.essence.length >= API_BUFFER_SIZE_BYTES ||
-        api.data.length < api.essence.length ||
-        api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        api.essence.inputs_count > INPUTS_MAX_COUNT) {
-        THROW(SW_UNKNOWN);
+    if (!api.essence.blindsigning) {
+        // normal flow without blindsigning
+
+        // some basic checks - actually data should be 100% validated already
+        if (api.data.length >= API_BUFFER_SIZE_BYTES ||
+            api.essence.length >= API_BUFFER_SIZE_BYTES ||
+            api.data.length < api.essence.length ||
+            api.essence.inputs_count < INPUTS_MIN_COUNT ||
+            api.essence.inputs_count > INPUTS_MAX_COUNT) {
+            THROW(SW_UNKNOWN);
+        }
+
+        // set correct bip32 path for showing the remainder address on the UI
+        api.bip32_path[BIP32_ADDRESS_INDEX] =
+            api.essence.remainder_bip32.bip32_index;
+        api.bip32_path[BIP32_CHANGE_INDEX] =
+            api.essence.remainder_bip32.bip32_change;
+
+    #ifdef APP_DEBUG
+        if (api.non_interactive_mode) {
+            api.data.type = USER_CONFIRMED_ESSENCE;
+
+            io_send(NULL, 0, SW_OK);
+            return 0;
+        }
+    #endif
+        api.flow_locked = 1; // mark flow locked
+
+        flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
+                                &api_user_confirm_essence_rejected,
+                                &api_user_confirm_essence_timeout);
+    } else {
+        // start flow for blindsigning
+        #ifdef APP_DEBUG
+            if (api.non_interactive_mode) {
+                api.data.type = USER_CONFIRMED_ESSENCE;
+
+                io_send(NULL, 0, SW_OK);
+                return 0;
+            }
+        #endif
+
+        api.flow_locked = 1; // mark flow locked
+
+        // we can use the same callbacks
+        flow_start_blindsigning(&api, &api_user_confirm_essence_accepted,
+                                &api_user_confirm_essence_rejected,
+                                &api_user_confirm_essence_timeout);
     }
-
-    // set correct bip32 path for showing the remainder address on the UI
-    api.bip32_path[BIP32_ADDRESS_INDEX] =
-        api.essence.remainder_bip32.bip32_index;
-    api.bip32_path[BIP32_CHANGE_INDEX] =
-        api.essence.remainder_bip32.bip32_change;
-
-#ifdef APP_DEBUG
-    if (api.non_interactive_mode) {
-        api.data.type = USER_CONFIRMED_ESSENCE;
-
-        io_send(NULL, 0, SW_OK);
-        return 0;
-    }
-#endif
-    api.flow_locked = 1; // mark flow locked
-
-    flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
-                            &api_user_confirm_essence_rejected,
-                            &api_user_confirm_essence_timeout, api.bip32_path);
-
     return IO_ASYNCH_REPLY;
 }
 
@@ -527,7 +576,7 @@ uint32_t api_sign()
         THROW(SW_UNKNOWN);
     }
 
-    uint8_t ret = essence_sign(&api);
+    uint8_t ret = sign(&api);
     if (!ret) {
         THROW(SW_UNKNOWN);
     }
@@ -578,7 +627,7 @@ uint32_t api_sign_single(uint8_t p1)
     uint32_t signature_idx = p1;
 
     uint8_t *output = io_get_buffer();
-    uint16_t signature_size_bytes = essence_sign_single(
+    uint16_t signature_size_bytes = sign_single(
         &api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
 
     if (!signature_size_bytes) {

@@ -50,12 +50,20 @@ typedef IO_STRUCT
 }
 SIG_LOCKED_SINGLE_OUTPUT;
 
+// used for blindisning
+typedef IO_STRUCT
+{
+    uint8_t public_key[32];
+    uint8_t signature[64];
+}
+SIGNATURE_BLOCK;
+
+
 typedef IO_STRUCT
 {
     uint8_t unlock_type;
     uint8_t signature_type;
-    uint8_t public_key[32];
-    uint8_t signature[64];
+    SIGNATURE_BLOCK signature;
 }
 SIGNATURE_UNLOCK_BLOCK;
 
@@ -66,6 +74,9 @@ typedef IO_STRUCT
 }
 REFERENCE_UNLOCK_BLOCK;
 
+
+#define FLAG_SIGN_SINGLE    0x01
+#define FLAG_SIGN_BLIND     0x02
 
 // --- request and response structures ---
 typedef IO_STRUCT
@@ -141,7 +152,11 @@ typedef struct {
     // contains the signatur types after validation
     uint8_t signature_types[INPUTS_MAX_COUNT];
 
+    // flag for single-sign-mode
     uint8_t single_sign_mode;
+
+    // flag for blindsigning
+    uint8_t blindsigning;
 
     uint16_t remainder_index;
     API_REMAINDER_BIP32_INDEX remainder_bip32;
@@ -231,6 +246,8 @@ uint32_t api_clear_data_buffer(void);
 
 uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
                              const uint8_t *data, uint32_t len);
+
+uint32_t api_prepare_blindsigning(uint8_t single_sign);
 
 uint32_t api_user_confirm_essence(void);
 

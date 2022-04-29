@@ -344,11 +344,9 @@ void populate_data() {
 
 void flow_start(const API_CTX *api, 
                            accept_cb_t accept_cb, reject_cb_t reject_cb,
-                           timeout_cb_t timeout_cb,
-                           const uint32_t bip32[BIP32_PATH_LEN])
+                           timeout_cb_t timeout_cb)
 {
     memset(&flow_data, 0, sizeof(flow_data));
-    memcpy(flow_data.flow_bip32, bip32, sizeof(flow_data.flow_bip32));
 
     flow_data.api = api;
 
@@ -376,9 +374,9 @@ void flow_stop()
 }
 void flow_confirm_datasets(const API_CTX *api, accept_cb_t accept_cb,
                              reject_cb_t reject_cb, timeout_cb_t timeout_cb, populate_cb_t populate_cb,
-                             const uint32_t bip32[BIP32_PATH_LEN], FLOW_TYPES flow_type, uint16_t dataset_count)
+                            FLOW_TYPES flow_type, uint16_t dataset_count)
 {
-    flow_start(api, accept_cb, reject_cb, timeout_cb, bip32);
+    flow_start(api, accept_cb, reject_cb, timeout_cb);
     
     flow_data.populate_cb = populate_cb;
 

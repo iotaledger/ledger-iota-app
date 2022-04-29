@@ -33,7 +33,7 @@ static void populate_data_new_address()
 {
     generate_bech32(0);
 
-    flow_data.number_of_lines = 6 + get_no_lines_bip32(flow_data.flow_bip32);
+    flow_data.number_of_lines = 6 + get_no_lines_bip32(flow_data.api->bip32_path);
 
     // fix ypos if needed
     if (flow_data.flow_scroll_ypos > flow_data.number_of_lines - 3) {
@@ -54,7 +54,7 @@ static void populate_data_new_address()
         switch (cy) {
         case 0: // show flow header
             strcpy(flow_data.flow_lines[i],
-                   (flow_data.flow_bip32[BIP32_CHANGE_INDEX] & 0x1)
+                   (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1)
                        ? "New Remainder"
                        : "Receive Address");
             break;
@@ -71,7 +71,7 @@ static void populate_data_new_address()
         case 6: // bip32 first line
         case 7: // bip32 second line
         case 8: // bip32 third line
-            format_bip32(flow_data.flow_bip32, cy - 6, flow_data.flow_lines[i],
+            format_bip32(flow_data.api->bip32_path, cy - 6, flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }
@@ -81,9 +81,8 @@ static void populate_data_new_address()
 }
 
 void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
-                            timeout_cb_t timeout_cb,
-                            const uint32_t bip32[BIP32_PATH_LEN])
+                            timeout_cb_t timeout_cb)
 {
     flow_confirm_datasets(api, accept_cb, 0, timeout_cb,
-                          &populate_data_new_address, bip32, FLOW_OK, 1);
+                          &populate_data_new_address, FLOW_OK, 1);
 }
