@@ -144,7 +144,7 @@ uint16_t sign_single(API_CTX *api, uint8_t *output, uint16_t output_max_len,
     uint16_t signature_size = sign_single_int(
         output, output_max_len, api->essence.hash, api->bip32_signing_path,
         api->essence.signature_types[signature_index], &input_bip32_index,
-        !api->essence.blindsigning);
+        api->essence.blindsigning);
 
     MUST(signature_size);
 

@@ -232,6 +232,7 @@ docker run \
         -v "$rpath:/speculos/apps" \
         -p 9999:9999 \
         -p 5000:5000 \
+        -p 1234:1234 \
         -e SPECULOS_APPNAME="$APPNAME:$APPVERSION" \
         --rm \
         -it \

@@ -23,7 +23,7 @@ include $(BOLOS_SDK)/Makefile.defines
 
 APP_LOAD_PARAMS = --path "44'/4218'" --curve ed25519 --appFlags 0x240 $(COMMON_LOAD_PARAMS)
 
-APPNAME      = "IOTA Legacy"
+APPNAME      = "IOTA"
 APPVERSION_M = 0
 APPVERSION_N = 7
 APPVERSION_P = 4
