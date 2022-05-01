@@ -150,7 +150,7 @@ typedef struct {
     API_INPUT_BIP32_INDEX *inputs_bip32_index;
 
     // contains the signatur types after validation
-    uint8_t signature_types[INPUTS_MAX_COUNT];
+    uint8_t signature_types[API_MAX_SIGNATURE_TYPES];
 
     // flag for blindsigning
     uint8_t blindsigning;

@@ -44,6 +44,10 @@
         }                                                                       \
     }
 
+#if INPUTS_MAX_COUNT >= 128
+#error "assumptions violated! MSB used for marking which unlock block is needed!"
+#endif
+
 
 // own memcmp because we also need to check lexical order and
 // common memcmp implementations only specify an return value != 0 if
@@ -217,7 +221,7 @@ static uint8_t validate_count_signature_types(
     uint32_t count_reference_unlock_blocks = 0;
 
     // MSB can be used as markings because MAX_INPUTS always is below 128
-    memset(sig_types, 0xff, INPUTS_MAX_COUNT);
+    memset(sig_types, 0xff, API_MAX_SIGNATURE_TYPES);
 
     // count signature and reference unlock blocks by comparing and marking
     for (uint32_t i = 0; i < inputs_count; i++) {

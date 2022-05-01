@@ -13,7 +13,7 @@ extern flowdata_t flow_data;
 /*
 Render data to the UI
  
-"   Sign Hash    "
+" Blind Signing  "
 "18fac39809cf8952"
 "1c72bdd00d6bf36b"
 "76203cefe9997ee0"
@@ -63,7 +63,7 @@ static void populate_data_blindsigning()
 
         switch (cy) {
         case 0: // show flow header
-            strcpy(flow_data.flow_lines[i], "   Sign Hash    ");
+            strcpy(flow_data.flow_lines[i], " Blind Signing  ");
             break;
         case 1: // hash first line
         case 2: // hash second line

@@ -570,7 +570,7 @@ uint32_t api_sign_single(uint8_t p1)
     uint32_t signature_idx = p1;
 
     uint8_t *output = io_get_buffer();
-    uint16_t signature_size_bytes = sign_single(
+    uint16_t signature_size_bytes = sign(
         &api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
 
     if (!signature_size_bytes) {

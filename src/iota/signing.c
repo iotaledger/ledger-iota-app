@@ -103,36 +103,8 @@ static uint16_t sign_reference_unlock_block(REFERENCE_UNLOCK_BLOCK *pBlock,
     return (uint16_t)sizeof(REFERENCE_UNLOCK_BLOCK);
 }
 
-static uint16_t sign_single_int(uint8_t *output, uint16_t output_max_len,
-                                uint8_t *essence_hash,
-                                uint32_t *bip32_signing_path,
-                                uint8_t signature_type,
-                                API_INPUT_BIP32_INDEX *input_bip32_index,
-                                uint8_t is_blindsigning)
-{
-    if (is_blindsigning) {
-        // in blindsigning mode, we have only "naked" signature blocks
-        return sign_signature((SIGNATURE_BLOCK *)output, output_max_len,
-                              essence_hash, bip32_signing_path,
-                              input_bip32_index);
-    }
-    else {
-        // in non-blindsigning mode, we have signature or reference blocks
-        // if MSB is set, it's a signature unlock block
-        if (signature_type & 0x80) {
-            return sign_signature_unlock_block(
-                (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, essence_hash,
-                bip32_signing_path, input_bip32_index);
-        }
-        else {
-            return sign_reference_unlock_block((REFERENCE_UNLOCK_BLOCK *)output,
-                                               output_max_len, signature_type);
-        }
-    }
-}
-
-uint16_t sign_single(API_CTX *api, uint8_t *output, uint16_t output_max_len,
-                     uint32_t signature_index)
+uint16_t sign(API_CTX *api, uint8_t *output, uint16_t output_max_len,
+              uint32_t signature_index)
 {
     MUST(signature_index < api->essence.inputs_count);
 
@@ -141,13 +113,23 @@ uint16_t sign_single(API_CTX *api, uint8_t *output, uint16_t output_max_len,
            &api->essence.inputs_bip32_index[signature_index],
            sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
-    uint16_t signature_size = sign_single_int(
-        output, output_max_len, api->essence.hash, api->bip32_signing_path,
-        api->essence.signature_types[signature_index], &input_bip32_index,
-        api->essence.blindsigning);
+    uint16_t signature_size = 0;
+    uint8_t signature_type = api->essence.signature_types[signature_index];
+
+    // if MSB is set, it's a signature unlock block
+    // also use it (for consistent deserialization in ledger.rs) for
+    // blindsigning
+    if ((signature_type & 0x80) || api->essence.blindsigning) {
+        signature_size = sign_signature_unlock_block(
+            (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, api->essence.hash,
+            api->bip32_signing_path, &input_bip32_index);
+    }
+    else {
+        signature_size = sign_reference_unlock_block(
+            (REFERENCE_UNLOCK_BLOCK *)output, output_max_len, signature_type);
+    }
 
     MUST(signature_size);
 
     return signature_size;
 }
-
