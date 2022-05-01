@@ -44,9 +44,6 @@
         }                                                                       \
     }
 
-#if INPUTS_MAX_COUNT >= 128
-#error "assumptions violated! MSB used for marking which unlock block is needed!"
-#endif
 
 
 // own memcmp because we also need to check lexical order and
@@ -212,58 +209,6 @@ static uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
     return 1;
 }
 
-// find out how many bytes would be needed for signature/reference unlock blocks
-static uint8_t validate_count_signature_types(
-    const API_INPUT_BIP32_INDEX *inputs_bip32_indices,
-    uint16_t inputs_count, uint8_t *sig_types)
-{
-    uint32_t count_signature_unlock_blocks = 0;
-    uint32_t count_reference_unlock_blocks = 0;
-
-    // MSB can be used as markings because MAX_INPUTS always is below 128
-    memset(sig_types, 0xff, API_MAX_SIGNATURE_TYPES);
-
-    // count signature and reference unlock blocks by comparing and marking
-    for (uint32_t i = 0; i < inputs_count; i++) {
-        API_INPUT_BIP32_INDEX tmp_i;
-        memcpy(
-            &tmp_i, &inputs_bip32_indices[i],
-            sizeof(API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
-
-        // if already marked, continue
-        if (sig_types[i] != 0xff) {
-            continue;
-        }
-
-        // current will becomes a signature unlock block
-        sig_types[i] = i | 0x80;
-        count_signature_unlock_blocks++;
-
-        for (uint32_t j = i + 1; j < inputs_count; j++) {
-            // two bip32-paths the same?
-            API_INPUT_BIP32_INDEX tmp_j;
-            memcpy(
-                &tmp_j, &inputs_bip32_indices[j],
-                sizeof(
-                    API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
-
-            // if already marked, continue
-            if (sig_types[j] != 0xff) {
-                continue;
-            }
-            // key indices equal?
-            if (!memcmp(&tmp_i, &tmp_j, sizeof(API_INPUT_BIP32_INDEX))) {
-                // yes, it becomes a reference unlock block
-                sig_types[j] = i; // reference
-                count_reference_unlock_blocks++;
-            }
-        }
-    }
-
-    return 1;
-}
-
-
 // --- CHECK INPUTS FOR DUPLICATES ---
 static uint8_t validate_inputs_duplicates(const UTXO_INPUT *inputs,
                                           uint16_t inputs_count)
@@ -427,14 +372,6 @@ uint8_t essence_parse_and_validate(API_CTX *api)
 		MUST(api->essence.outputs_count > 1);
 #endif
     }
-
-
-    // enough space for signature/reference unlock blocks?
-    // also finds out what will become signature or reference blocks
-    // save directly to api-struct to avoid usage of stack
-    MUST(validate_count_signature_types(
-        api->essence.inputs_bip32_index, api->essence.inputs_count,
-        api->essence.signature_types));
 
     // additional validation steps of parsed data
     MUST(validate_inputs_duplicates(api->essence.inputs,

@@ -58,7 +58,6 @@ typedef IO_STRUCT
 }
 SIGNATURE_BLOCK;
 
-
 typedef IO_STRUCT
 {
     uint8_t unlock_type;
@@ -148,9 +147,6 @@ typedef struct {
     // pointer to BIP32 array for input addresses
     // don't use this directly because data is unaligned to save space
     API_INPUT_BIP32_INDEX *inputs_bip32_index;
-
-    // contains the signatur types after validation
-    uint8_t signature_types[API_MAX_SIGNATURE_TYPES];
 
     // flag for blindsigning
     uint8_t blindsigning;
