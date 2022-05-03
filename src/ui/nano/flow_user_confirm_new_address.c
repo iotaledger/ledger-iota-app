@@ -4,9 +4,19 @@
 #include "ux_layout_pb_ud.h"
 #include "glyphs.h"
 
+#include "abstraction.h"
 #include "flow_user_confirm.h"
+#include "flow_user_confirm_new_address.h"
 
 extern flowdata_t flow_data;
+
+// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
+//#pragma GCC diagnostic error "-Werror"
+#pragma GCC diagnostic error "-Wpedantic"
+#pragma GCC diagnostic error "-Wall"
+#pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
+
 
 // clang-format off
 
@@ -26,12 +36,23 @@ Render data to the UI
 */
 // clang-format on
 
-// in flow_user_confirm_outputs.c
-void generate_bech32(short read_index);
+
+static void generate_bech32()
+{
+    // clear buffer
+    memset(flow_data.flow_bech32, 0, sizeof(flow_data.flow_bech32));
+
+    // generate bech32 address including the address_type
+    // we only have a single generated address in the buffer
+    address_encode_bech32(
+        &flow_data.api->data.buffer[0],
+        flow_data.flow_bech32, sizeof(flow_data.flow_bech32));
+}
+
 
 static void populate_data_new_address()
 {
-    generate_bech32(0);
+    generate_bech32();
 
     flow_data.number_of_lines = 6 + get_no_lines_bip32(flow_data.api->bip32_path);
 

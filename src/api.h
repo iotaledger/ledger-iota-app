@@ -22,7 +22,7 @@ typedef enum {
 } DATA_TYPE;
 
 typedef enum {
-    APP_MODE_IOTA = 0,
+    APP_MODE_IOTA_CHRYSALIS = 0,
     APP_MODE_IOTA_STARDUST = 1,
     APP_MODE_CLAIM_SHIMMER = 2,
     APP_MODE_SHIMMER = 3
@@ -30,8 +30,13 @@ typedef enum {
 
 typedef enum {
     PROTOCOL_CHRYSALIS = 0,
-    PROTOCOL_STARDUST = 0
+    PROTOCOL_STARDUST = 1
 } PROTOCOL_TYPE;
+
+typedef enum {
+    COIN_IOTA = 0,
+    COIN_SHIMMER = 1
+} COIN_TYPE;
 
 typedef IO_STRUCT
 {
@@ -43,12 +48,55 @@ UTXO_INPUT;
 
 typedef IO_STRUCT
 {
+    // 0 enforced in validation
     uint8_t output_type;
+
+    // 0 enorced in validation
     uint8_t address_type;
+
     uint8_t address[ADDRESS_SIZE_BYTES];
+
     uint64_t amount;
 }
 SIG_LOCKED_SINGLE_OUTPUT;
+
+typedef IO_STRUCT 
+{
+    // 3 enforced in validation
+    uint8_t output_type;
+
+    uint64_t amount;
+
+    // 0 enforced in validation
+    uint8_t native_tokens_count;
+
+    // "none" enforced in validation   
+    // NATIVE_TOKENS native_tokens
+
+    // 1 enforced in validation
+    uint8_t unlock_conditions_count;
+
+    // 0 enforced in validation
+    // (Address Unlock Condition)
+    uint8_t unlock_condition_type;
+
+    // 0 enforced in validation
+    // (Ed25519 Address)
+    uint8_t address_type;
+
+    uint8_t pubkey_hash[ADDRESS_SIZE_BYTES];
+
+    // 0 enforced in validation
+    uint8_t blocks_count;
+
+    // "none" enforced in validation
+    // BLOCKS blocks;
+}
+BASIC_OUTPUT;
+
+
+
+
 
 // used for blindisning
 typedef IO_STRUCT
@@ -142,7 +190,7 @@ typedef struct {
 
     // pointer to outputs
     // don't use this directly because data is unaligned to save space
-    SIG_LOCKED_SINGLE_OUTPUT *outputs;
+    uint8_t *outputs;
 
     // pointer to BIP32 array for input addresses
     // don't use this directly because data is unaligned to save space
@@ -185,6 +233,9 @@ typedef struct {
 
     // protocol version
     PROTOCOL_TYPE protocol;
+
+    // coin type
+    COIN_TYPE coin;
 
     // buffer for api
     API_DATA data;

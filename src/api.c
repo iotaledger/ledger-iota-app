@@ -5,6 +5,8 @@
 #include "os.h"
 #include "ui/ui.h"
 
+#include "abstraction.h"
+
 #include "iota/constants.h"
 #include "iota/essence.h"
 #include "iota/blindsigning.h"
@@ -33,38 +35,42 @@ void api_initialize(APP_MODE_TYPE app_mode)
     api.bip32_signing_path[0] = 0x8000002c;
 
     switch (app_mode) {
-        case APP_MODE_IOTA:
+        case APP_MODE_IOTA_CHRYSALIS:
             // iota
-            api.bip32_path[BIP32_COIN_INDEX] = COIN_IOTA;
-            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
             api.protocol = PROTOCOL_CHRYSALIS;
+            api.coin = COIN_IOTA;
             break;
         case APP_MODE_IOTA_STARDUST:
             // iota
-            api.bip32_path[BIP32_COIN_INDEX] = COIN_IOTA;
-            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_IOTA;
-            api.protocol = PROTOCOL_CHRYSALIS;
+            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+            api.protocol = PROTOCOL_STARDUST;
+            api.coin = COIN_IOTA;
             break;
         case APP_MODE_CLAIM_SHIMMER:
             // primary shimmer
-            api.bip32_path[BIP32_COIN_INDEX] = COIN_SHIMMER;
+            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
             // bip path for claiming SMR from IOTA addresses is different
-            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_IOTA;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
             api.protocol = PROTOCOL_STARDUST;
+            api.coin = COIN_SHIMMER;
             break;
         case APP_MODE_SHIMMER:
             // shimmer
-            api.bip32_path[BIP32_COIN_INDEX] = COIN_SHIMMER;
-            api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_SHIMMER;
+            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
+            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
             api.protocol = PROTOCOL_STARDUST;
+            api.coin = COIN_SHIMMER;
             break;
         default:
             THROW(SW_ACCOUNT_NOT_VALID);
     }
 #ifdef APP_DEBUG
     // overwrite paths if in debug mode
-    api.bip32_path[BIP32_COIN_INDEX] = COIN_TESTNET;
-    api.bip32_signing_path[BIP32_COIN_INDEX] = COIN_TESTNET;
+    api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
+    api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
 #endif
 
     api.app_mode = app_mode;
@@ -189,7 +195,7 @@ uint32_t api_get_app_config(uint8_t is_locked)
 uint32_t api_reset()
 {
     // also resets the account index
-    api_initialize(APP_MODE_IOTA);
+    api_initialize(APP_MODE_IOTA_CHRYSALIS);
 
     ui_reset();
 
@@ -348,17 +354,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         return 0;
     }
 
-    // use api buffer and essence to show new address on the screen
-    // buffer is free after index 32
-    // writing to the buffer from external is not allowed, so data 
-    // can't be changed after the flow is started
-    SIG_LOCKED_SINGLE_OUTPUT *tmp =
-        (SIG_LOCKED_SINGLE_OUTPUT *)&api.data.buffer[64];
-    memcpy(&tmp->address_type, api.data.buffer,
-              ADDRESS_WITH_TYPE_SIZE_BYTES);
-
     api.essence.outputs_count = 1;
-    api.essence.outputs = tmp;
     api.essence.remainder_bip32.bip32_index = req.bip32_index;
     api.essence.remainder_bip32.bip32_change = req.bip32_change;
     api.essence.remainder_index = 0;

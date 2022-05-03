@@ -11,8 +11,17 @@
 #include <stdint.h>
 #include "api.h"
 
-uint8_t essence_parse_and_validate(API_CTX *api);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+uint8_t essence_parse_and_validate_stardust(API_CTX *api);
+uint8_t essence_parse_and_validate_chryslis(API_CTX *api);
 
 uint8_t essence_parse_and_validate_blindsigning(API_CTX *api);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SRC_IOTA_ESSENCE_H_ */

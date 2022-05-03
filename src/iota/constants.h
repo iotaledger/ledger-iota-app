@@ -56,9 +56,9 @@
 #define BIP32_CHANGE_INDEX 3
 #define BIP32_ADDRESS_INDEX 4
 
-#define COIN_IOTA       0x8000107a
-#define COIN_SHIMMER    0x8000107b
-#define COIN_TESTNET    0x80000001
+#define BIP32_COIN_IOTA       0x8000107a
+#define BIP32_COIN_SHIMMER    0x8000107b
+#define BIP32_COIN_TESTNET    0x80000001
 
 // the address is the ed25519 pub-key
 #define ADDRESS_SIZE_BYTES 32
@@ -87,20 +87,36 @@
 #define UNLOCK_TYPE_SIGNATURE   0
 #define UNLOCK_TYPE_REFERENCE   1
 
+// stardust unlock types
+#define ADDRESS_UNLOCK_CONDITION    0
+
 // input types
 #define INPUT_TYPE_UTXO         0
 
 // output types
 #define OUTPUT_TYPE_SIGLOCKEDSINGLEOUTPUT   0
+#define OUTPUT_TYPE_BASICOUTPUT             3
+
+
+#define TRANSACTION_ESSENCE_TYPE_STARDUST   1
+#define TRANSACTION_ESSENCE_TYPE_CHRYSALIS  0
 
 
 // following constants are valid with bech32 encoding (address_type included)
 #define ADDRESS_SIZE_BASE32 ((ADDRESS_WITH_TYPE_SIZE_BYTES * 8 + 4) / 5)
 
+
+
 #ifdef APP_DEBUG
-#define ADDRESS_HRP "atoi"
+#define COIN_HRP_IOTA "atoi"
 #else
-#define ADDRESS_HRP "iota"
+#define COIN_HRP_IOTA "iota"
+#endif
+
+#ifdef APP_DEBUG
+#define COIN_HRP_SHIMMER "rms"
+#else
+#define COIN_HRP_SHIMMER "smr"
 #endif
 
 #define ADDRESS_HRP_LENGTH 4

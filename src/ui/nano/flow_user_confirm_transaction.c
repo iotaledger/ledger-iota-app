@@ -1,26 +1,50 @@
 #include "ui_common.h"
+
+#include "abstraction.h"
+
 #include "flow_user_confirm.h"
+#include "flow_user_confirm_transaction.h"
 
 extern flowdata_t flow_data;
 
-void generate_bech32(short read_index)
+// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
+//#pragma GCC diagnostic error "-Werror"
+#pragma GCC diagnostic error "-Wpedantic"
+#pragma GCC diagnostic error "-Wall"
+#pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
+
+#define MUST_THROW(c)                                                          \
+    {                                                                          \
+        if (!(c)) {                                                            \
+            THROW(SW_UNKNOWN);                                                 \
+        }                                                                      \
+    }
+
+
+
+static void generate_bech32(short read_index)
 {
     // clear buffer
     memset(flow_data.flow_bech32, 0, sizeof(flow_data.flow_bech32));
 
+    uint8_t *address_with_type;
+
+    MUST_THROW(address_with_type = get_output_address(flow_data.api, read_index));
+
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
     address_encode_bech32(
-        &flow_data.api->essence.outputs[read_index].address_type,
+        address_with_type,
         flow_data.flow_bech32, sizeof(flow_data.flow_bech32));
 }
 
 static void populate_amount(short line_no, int read_index)
 {
     uint64_t amount;
-    // avoid unaligned access
-    memcpy(&amount, &flow_data.api->essence.outputs[read_index].amount,
-           sizeof(uint64_t));
+    
+    // amount > 0 enforced by validation
+    MUST_THROW(amount = get_output_amount(flow_data.api, read_index));
 
     if (flow_data.amount_toggle) { // full
         // max supply is 2779530283277761 - this fits nicely in one line
@@ -70,7 +94,7 @@ static void populate_header(uint8_t type, short line_no)
     }
 }
 
-void populate_data_outputs()
+static void populate_data_outputs()
 {
     // default is normal output
     uint8_t type = OUTPUT;

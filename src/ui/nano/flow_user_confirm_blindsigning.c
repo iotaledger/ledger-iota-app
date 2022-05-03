@@ -5,6 +5,14 @@
 #include "glyphs.h"
 
 #include "flow_user_confirm.h"
+#include "flow_user_confirm_blindsigning.h"
+
+// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
+//#pragma GCC diagnostic error "-Werror"
+#pragma GCC diagnostic error "-Wpedantic"
+#pragma GCC diagnostic error "-Wall"
+#pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 extern flowdata_t flow_data;
 
@@ -78,8 +86,8 @@ static void populate_data_blindsigning()
 }
 
 void flow_start_blindsigning(const API_CTX *api, accept_cb_t accept_cb,
-                            timeout_cb_t timeout_cb)
+                             reject_cb_t reject_cb, timeout_cb_t timeout_cb)
 {
-    flow_confirm_datasets(api, accept_cb, 0, timeout_cb,
+    flow_confirm_datasets(api, accept_cb, reject_cb, timeout_cb,
                           &populate_data_blindsigning, FLOW_ACCEPT_REJECT, 1);
 }

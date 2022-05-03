@@ -6,6 +6,7 @@
 #include "api.h"
 
 #include "essence.h"
+#include "signing.h"
 
 #ifndef FUZZING
 #include "iota_io.h"
@@ -18,6 +19,14 @@
             return 0;                                                          \
         }                                                                      \
     }
+
+// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
+//#pragma GCC diagnostic error "-Werror"
+#pragma GCC diagnostic error "-Wpedantic"
+#pragma GCC diagnostic error "-Wall"
+#pragma GCC diagnostic error "-Wextra"
+#pragma GCC diagnostic error "-Wmissing-prototypes"
+
 
 #if INPUTS_MAX_COUNT >= 128
 #error "assumptions violated! MSB used for marking which unlock block is needed!"
@@ -113,7 +122,7 @@ static uint8_t sign_get_reference_index(API_CTX *api, uint32_t signature_index)
     // it's not in blind_signing mode
     if (signature_index && !api->essence.blindsigning) {
         // check if it is a reference unlock block
-        for (int i = 0; i < signature_index; i++) {
+        for (uint32_t i = 0; i < signature_index; i++) {
             // if there is a match, we found the reference block index
             if (!memcmp(&api->essence.inputs_bip32_index[signature_index],
                         &api->essence.inputs_bip32_index[i],
