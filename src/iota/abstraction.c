@@ -33,11 +33,13 @@ uint8_t *get_output_address(const API_CTX *api, uint8_t index)
     case PROTOCOL_STARDUST: {
         BASIC_OUTPUT *tmp = (BASIC_OUTPUT *)api->essence.outputs;
         ret = &tmp[index].address_type;
+        break;
     }
     case PROTOCOL_CHRYSALIS: {
         SIG_LOCKED_SINGLE_OUTPUT *tmp =
             (SIG_LOCKED_SINGLE_OUTPUT *)api->essence.outputs;
         ret = &tmp[index].address_type;
+        break;
     }
     default:
         THROW(SW_UNKNOWN);
