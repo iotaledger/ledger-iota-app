@@ -119,10 +119,10 @@
 #define COIN_HRP_SHIMMER "smr"
 #endif
 
-#define ADDRESS_HRP_LENGTH 4
+#define ADDRESS_HRP_LENGTH_MAX 4
 
-// Ed25519-based addresses will result in a Bech32 string of 63 characters.
-#define ADDRESS_SIZE_BECH32 (ADDRESS_HRP_LENGTH + 1 + ADDRESS_SIZE_BASE32 + 6)
+// Ed25519-based addresses will result in a Bech32 string of 62/63 characters.
+#define ADDRESS_SIZE_BECH32 (ADDRESS_HRP_LENGTH_MAX + 1 + ADDRESS_SIZE_BASE32 + 6)
 
 
 // API-constants

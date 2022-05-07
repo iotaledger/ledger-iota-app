@@ -71,7 +71,7 @@ static void populate_data_blindsigning()
 
         switch (cy) {
         case 0: // show flow header
-            strcpy(flow_data.flow_lines[i], " Blind Signing  ");
+            strcpy(flow_data.flow_lines[i], "Blind Signing");
             break;
         case 1: // hash first line
         case 2: // hash second line

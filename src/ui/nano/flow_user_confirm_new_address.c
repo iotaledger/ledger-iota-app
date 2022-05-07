@@ -54,7 +54,7 @@ static void populate_data_new_address()
 {
     generate_bech32();
 
-    flow_data.number_of_lines = 6 + get_no_lines_bip32(flow_data.api->bip32_path);
+    flow_data.number_of_lines = 7 + get_no_lines_bip32(flow_data.api->bip32_path);
 
     // fix ypos if needed
     if (flow_data.flow_scroll_ypos > flow_data.number_of_lines - 3) {
@@ -72,6 +72,9 @@ static void populate_data_new_address()
             continue;
         }
 
+        // clear line
+        memset(flow_data.flow_lines[i], 0, sizeof(flow_data.flow_lines[i]));
+
         switch (cy) {
         case 0: // show flow header
             strcpy(flow_data.flow_lines[i],
@@ -83,16 +86,17 @@ static void populate_data_new_address()
         case 2: // bech32 second line
         case 3: // bech32 third line
         case 4: // bech32 fourth line
+        case 5: // bech32 fifth line
             memcpy(flow_data.flow_lines[i],
-                   &flow_data.flow_bech32[(cy - 1) * LINE_WIDTH], LINE_WIDTH);
+                   &flow_data.flow_bech32[(cy - 1) * BECH32_CHARS_PER_LINE], BECH32_CHARS_PER_LINE);
             break;
-        case 5: // show bip32 path header
+        case 6: // show bip32 path header
             strcpy(flow_data.flow_lines[i], "BIP32 Path");
             break;
-        case 6: // bip32 first line
-        case 7: // bip32 second line
-        case 8: // bip32 third line
-            format_bip32(flow_data.api->bip32_path, cy - 6, flow_data.flow_lines[i],
+        case 7: // bip32 first line
+        case 8: // bip32 second line
+        case 9: // bip32 third line
+            format_bip32(flow_data.api->bip32_path, cy - 7, flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }

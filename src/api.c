@@ -176,8 +176,10 @@ uint32_t api_get_app_config(uint8_t is_locked)
     resp.app_version_patch = APPVERSION_PATCH;
     resp.app_flags = !!is_locked;
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+#if defined(TARGET_NANOX) 
     resp.device = 1;
+#elif defined(TARGET_NANOS2)
+    resp.device = 2;
 #else
     resp.device = 0;
 #endif

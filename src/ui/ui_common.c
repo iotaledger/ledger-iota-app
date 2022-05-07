@@ -5,13 +5,8 @@
 #include "macros.h"
 #include "os.h"
 
-#ifdef TARGET_BLUE
-#include "blue/blue_types.h"
-#define MENU_IDX_BREAK blue_ui_state.menu_idx
-#else
 #include "nano/nano_types.h"
 #define MENU_IDX_BREAK ui_state.menu_idx / 2
-#endif // TARGET_BLUE
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
@@ -180,7 +175,8 @@ int format_bip32(const uint32_t *b32, int linenr, char *out,
 }
 
 
-uint8_t get_no_lines_bip32(const uint32_t *b32) {
+uint8_t get_no_lines_bip32(const uint32_t *b32)
+{
     // at least one line
     uint8_t no_lines = 1;
 
@@ -190,7 +186,7 @@ uint8_t get_no_lines_bip32(const uint32_t *b32) {
         if (format_bip32(b32, i, (char *)0, 0)) {
             no_lines++;
         }
-    }    
+    }
     return no_lines;
 }
 

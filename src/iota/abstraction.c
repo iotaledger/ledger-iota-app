@@ -6,7 +6,8 @@
 
 #include "os.h"
 
-#include "essence.h"
+#include "essence_chrysalis.h"
+#include "essence_stardust.h"
 #include "abstraction.h"
 
 #include "api.h"

@@ -11,16 +11,21 @@
 #include "ux.h"
 
 #include "api.h"
+#include "ui_common.h"
+
 
 #define UNKNOWN 0
 #define NEW_ADDRESS 1
 #define REMAINDER 2
 #define OUTPUT 3
 
-#define LINE_WIDTH 16
-
 #define FLOW_USER_CONFIRM 0
 #define FLOW_NEW_ADDRESS 1
+
+#define LINE_WIDTH 16
+
+#define BECH32_NUM_LINES        5
+#define BECH32_CHARS_PER_LINE   13
 
 typedef enum { FLOW_ACCEPT_REJECT, FLOW_OK } FLOW_TYPES;
 
@@ -50,11 +55,14 @@ typedef struct {
     populate_cb_t populate_cb;
 
     // buffer for nnbnn layout
-    char flow_lines[5][LINE_WIDTH + 1];
+    char flow_lines[5][LINE_WIDTH + 1]; // +1 zero terminator
     int flow_scroll_ypos;
 
     // buffer for bech32 strings
-    char flow_bech32[ADDRESS_SIZE_BECH32 + 1]; // +1 zero terminator
+    // ed25519 addresses will need 62/63 characters but we use some extra
+    // for displaying on the UI with 5 lines of 13 characters each
+	// unused chars are zero-terminators
+    char flow_bech32[BECH32_NUM_LINES * BECH32_CHARS_PER_LINE]; 
 
     // total number of lines
     uint8_t number_of_lines;

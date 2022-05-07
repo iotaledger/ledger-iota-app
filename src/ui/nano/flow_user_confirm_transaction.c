@@ -22,7 +22,6 @@ extern flowdata_t flow_data;
     }
 
 
-
 static void generate_bech32(short read_index)
 {
     // clear buffer
@@ -138,10 +137,10 @@ static void populate_data_outputs()
     switch (type) {
     case REMAINDER:
         flow_data.number_of_lines =
-            8 + get_no_lines_bip32(flow_data.api->bip32_path);
+            9 + get_no_lines_bip32(flow_data.api->bip32_path);
         break;
     case OUTPUT:
-        flow_data.number_of_lines = 7;
+        flow_data.number_of_lines = 8;
         break;
     default:
         THROW(SW_UNKNOWN);
@@ -179,6 +178,9 @@ static void populate_data_outputs()
             continue;
         }
 
+        // clear line
+        memset(flow_data.flow_lines[i], 0, sizeof(flow_data.flow_lines[i]));
+
         switch (cy) {
         case 0: // show header of transaction
             populate_header(type, i);
@@ -187,22 +189,23 @@ static void populate_data_outputs()
         case 2: // bech32 second line
         case 3: // bech32 third line
         case 4: // bech32 fourth line
+        case 5: // bech32 fifth line
             memcpy(flow_data.flow_lines[i],
-                   &flow_data.flow_bech32[(cy - 1) * LINE_WIDTH], LINE_WIDTH);
+                &flow_data.flow_bech32[(cy - 1) * BECH32_CHARS_PER_LINE], BECH32_CHARS_PER_LINE);
             break;
-        case 5: // show amount header
+        case 6: // show amount header
             strcpy(flow_data.flow_lines[i], "Amount");
             break;
-        case 6: // show amount
+        case 7: // show amount
             populate_amount(i, read_index);
             break;
-        case 7: // show head of bip32 path
+        case 8: // show head of bip32 path
             strcpy(flow_data.flow_lines[i], "BIP32 Path");
             break;
-        case 8:  // bip32 first line
-        case 9:  // bip32 second line
-        case 10: // bip32 third line
-            format_bip32(flow_data.api->bip32_path, cy - 8, flow_data.flow_lines[i],
+        case 9:  // bip32 first line
+        case 10:  // bip32 second line
+        case 11: // bip32 third line
+            format_bip32(flow_data.api->bip32_path, cy - 9, flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }
