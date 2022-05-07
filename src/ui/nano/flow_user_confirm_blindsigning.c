@@ -30,28 +30,30 @@ Render data to the UI
 */
 // clang-format on
 
+static void generate_hash()
+{
+    const char *hex = "0123456789ABCDEF";
 
-static void populate_hash(short line_nr) {
-    if (line_nr < 1 || line_nr > 4) {
-        THROW(SW_UNKNOWN);
-    }
+    // generate hash
+    memset(flow_data.tmp, 0, sizeof(flow_data.tmp));
 
-    uint8_t chunk = (uint8_t) (line_nr - 1);
+    char *src = flow_data.api->essence.hash;
+    char *dst = flow_data.tmp;
 
-    char *dst = flow_data.flow_lines[line_nr];
-    const uint8_t *src = &flow_data.api->essence.hash[chunk * LINE_WIDTH];
-
-    // hash is 32 bytes
-    const char* hex="0123456789abcdef";
-
-    for (int i=0;i<16;i++) {
-        *dst++ = hex[((*src & 0xf0) >> 4)];
+    *dst++ = '0';
+    *dst++ = 'x';
+    for (uint8_t i = 0; i < 32; i++) {
+        *dst++ = hex[*src >> 4];
         *dst++ = hex[*src++ & 0x0f];
     }
+    *dst = 0;
 }
+
 static void populate_data_blindsigning()
 {
-    flow_data.number_of_lines = 5;
+    flow_data.number_of_lines = 6;
+
+    generate_hash();
 
     // fix ypos if needed
     if (flow_data.flow_scroll_ypos > flow_data.number_of_lines - 3) {
@@ -77,7 +79,10 @@ static void populate_data_blindsigning()
         case 2: // hash second line
         case 3: // hash third line
         case 4: // hash fourth line
-            populate_hash(i);
+        case 5: // hash fifth line
+            memcpy(flow_data.flow_lines[i],
+                   &flow_data.tmp[(cy - 1) * FLOW_DATA_CHARS_PER_LINE],
+                   FLOW_DATA_CHARS_PER_LINE + ((cy == 5) ? 1 : 0));
             break;
         }
         // always zero-terminate to be sure

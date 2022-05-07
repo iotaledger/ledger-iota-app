@@ -40,13 +40,13 @@ Render data to the UI
 static void generate_bech32()
 {
     // clear buffer
-    memset(flow_data.flow_bech32, 0, sizeof(flow_data.flow_bech32));
+    memset(flow_data.tmp, 0, sizeof(flow_data.tmp));
 
     // generate bech32 address including the address_type
     // we only have a single generated address in the buffer
     address_encode_bech32(
         &flow_data.api->data.buffer[0],
-        flow_data.flow_bech32, sizeof(flow_data.flow_bech32));
+        flow_data.tmp, sizeof(flow_data.tmp));
 }
 
 
@@ -88,7 +88,7 @@ static void populate_data_new_address()
         case 4: // bech32 fourth line
         case 5: // bech32 fifth line
             memcpy(flow_data.flow_lines[i],
-                   &flow_data.flow_bech32[(cy - 1) * BECH32_CHARS_PER_LINE], BECH32_CHARS_PER_LINE);
+                   &flow_data.tmp[(cy - 1) * FLOW_DATA_CHARS_PER_LINE], FLOW_DATA_CHARS_PER_LINE);
             break;
         case 6: // show bip32 path header
             strcpy(flow_data.flow_lines[i], "BIP32 Path");

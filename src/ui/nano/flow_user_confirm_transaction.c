@@ -25,7 +25,7 @@ extern flowdata_t flow_data;
 static void generate_bech32(short read_index)
 {
     // clear buffer
-    memset(flow_data.flow_bech32, 0, sizeof(flow_data.flow_bech32));
+    memset(flow_data.tmp, 0, sizeof(flow_data.tmp));
 
     uint8_t *address_with_type;
 
@@ -35,7 +35,7 @@ static void generate_bech32(short read_index)
     // since the struct is packed, the address follows directly the address_type
     address_encode_bech32(
         address_with_type,
-        flow_data.flow_bech32, sizeof(flow_data.flow_bech32));
+        flow_data.tmp, sizeof(flow_data.tmp));
 }
 
 static void populate_amount(short line_no, int read_index)
@@ -191,7 +191,7 @@ static void populate_data_outputs()
         case 4: // bech32 fourth line
         case 5: // bech32 fifth line
             memcpy(flow_data.flow_lines[i],
-                &flow_data.flow_bech32[(cy - 1) * BECH32_CHARS_PER_LINE], BECH32_CHARS_PER_LINE);
+                &flow_data.tmp[(cy - 1) * FLOW_DATA_CHARS_PER_LINE], FLOW_DATA_CHARS_PER_LINE);
             break;
         case 6: // show amount header
             strcpy(flow_data.flow_lines[i], "Amount");
