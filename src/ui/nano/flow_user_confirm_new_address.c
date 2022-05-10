@@ -17,6 +17,7 @@ extern flowdata_t flow_data;
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
+#define FLOW_BECH32_CHARS_PER_LINE 13
 
 // clang-format off
 
@@ -44,9 +45,8 @@ static void generate_bech32()
 
     // generate bech32 address including the address_type
     // we only have a single generated address in the buffer
-    address_encode_bech32(
-        &flow_data.api->data.buffer[0],
-        flow_data.tmp, sizeof(flow_data.tmp));
+    address_encode_bech32(&flow_data.api->data.buffer[0], flow_data.tmp,
+                          sizeof(flow_data.tmp));
 }
 
 
@@ -54,7 +54,8 @@ static void populate_data_new_address()
 {
     generate_bech32();
 
-    flow_data.number_of_lines = 7 + get_no_lines_bip32(flow_data.api->bip32_path);
+    flow_data.number_of_lines =
+        7 + get_no_lines_bip32(flow_data.api->bip32_path);
 
     // fix ypos if needed
     if (flow_data.flow_scroll_ypos > flow_data.number_of_lines - 3) {
@@ -88,7 +89,8 @@ static void populate_data_new_address()
         case 4: // bech32 fourth line
         case 5: // bech32 fifth line
             memcpy(flow_data.flow_lines[i],
-                   &flow_data.tmp[(cy - 1) * FLOW_DATA_CHARS_PER_LINE], FLOW_DATA_CHARS_PER_LINE);
+                   &flow_data.tmp[(cy - 1) * FLOW_BECH32_CHARS_PER_LINE],
+                   FLOW_BECH32_CHARS_PER_LINE);
             break;
         case 6: // show bip32 path header
             strcpy(flow_data.flow_lines[i], "BIP32 Path");
@@ -96,7 +98,8 @@ static void populate_data_new_address()
         case 7: // bip32 first line
         case 8: // bip32 second line
         case 9: // bip32 third line
-            format_bip32(flow_data.api->bip32_path, cy - 7, flow_data.flow_lines[i],
+            format_bip32(flow_data.api->bip32_path, cy - 7,
+                         flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }

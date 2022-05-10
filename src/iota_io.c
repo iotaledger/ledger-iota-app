@@ -20,7 +20,7 @@ extern unsigned char G_io_apdu_buffer[IO_APDU_BUFFER_SIZE];
 void io_initialize()
 {
     memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
-    api_initialize(APP_MODE_IOTA_CHRYSALIS);
+    api_initialize(APP_MODE_IOTA_CHRYSALIS, 0);
 }
 
 void io_send(const void *ptr, unsigned int length, unsigned short sw)
@@ -94,7 +94,7 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return api_user_confirm_essence();
 
     case INS_SIGN_SINGLE:
-        return api_sign_single(p1);
+        return api_sign(p1);
 
     case INS_READ_DATA_BLOCK:
         return api_read_data_block(p1);

@@ -14,6 +14,8 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
+#define FLOW_HASH_CHARS_PER_LINE   13
+
 extern flowdata_t flow_data;
 
 // clang-format off
@@ -37,7 +39,7 @@ static void generate_hash()
     // generate hash
     memset(flow_data.tmp, 0, sizeof(flow_data.tmp));
 
-    char *src = flow_data.api->essence.hash;
+    const char *src = (const char *)flow_data.api->essence.hash;
     char *dst = flow_data.tmp;
 
     *dst++ = '0';
@@ -80,9 +82,11 @@ static void populate_data_blindsigning()
         case 3: // hash third line
         case 4: // hash fourth line
         case 5: // hash fifth line
+                // display one char more in the last line to avoid an extra line
+                // with a single character
             memcpy(flow_data.flow_lines[i],
-                   &flow_data.tmp[(cy - 1) * FLOW_DATA_CHARS_PER_LINE],
-                   FLOW_DATA_CHARS_PER_LINE + ((cy == 5) ? 1 : 0));
+                   &flow_data.tmp[(cy - 1) * FLOW_HASH_CHARS_PER_LINE],
+                   FLOW_HASH_CHARS_PER_LINE + ((cy == 5) ? 1 : 0));
             break;
         }
         // always zero-terminate to be sure

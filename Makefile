@@ -21,6 +21,27 @@ endif
 
 include $(BOLOS_SDK)/Makefile.defines
 
+APP_SHIMMER = 1
+APP_IOTA = 0
+
+APP_LOAD_PARAMS = --path "44'/1'" --curve ed25519 --appFlags 0x240 $(COMMON_LOAD_PARAMS)
+
+ifeq ($(APP_SHIMMER), 1)
+# IOTA BIP-path for claiming Shimmer from IOTA addresses
+APP_LOAD_PARAMS += --path "44'/4218'"
+# Shimmer BIP-path
+APP_LOAD_PARAMS += --path "44'/4219'"
+
+DEFINES += APP_SHIMMER
+endif
+
+ifeq ($(APP_IOTA), 1)
+# IOTA BIP-path
+APP_LOAD_PARAMS += --path "44'/4218'"
+
+DEFINES += APP_IOTA
+endif
+
 APP_LOAD_PARAMS = --path "44'/4218'" --curve ed25519 --appFlags 0x240 $(COMMON_LOAD_PARAMS)
 
 APPNAME      = "IOTA"

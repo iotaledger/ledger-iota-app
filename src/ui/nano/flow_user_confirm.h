@@ -24,12 +24,9 @@
 
 #define LINE_WIDTH 16
 
-#define FLOW_DATA_NUM_LINES        5
-#define FLOW_DATA_CHARS_PER_LINE   13
-
 // bech32: 62/63 bytes
 // essence hash: 66 bytes
-#define TMP_DATA_SIZE   67
+#define TMP_DATA_SIZE   66
 
 typedef enum { FLOW_ACCEPT_REJECT, FLOW_OK } FLOW_TYPES;
 
@@ -66,7 +63,7 @@ typedef struct {
     // ed25519 addresses will need 62/63 characters but we use some extra
     // for displaying on the UI with 5 lines of 13 characters each
 	// unused chars are zero-terminators
-    char tmp[TMP_DATA_SIZE]; 
+    char tmp[TMP_DATA_SIZE + 1]; // +1 zero terminator
 
     // total number of lines
     uint8_t number_of_lines;

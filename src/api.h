@@ -259,7 +259,7 @@ typedef struct {
 // extern API_CTX api;
 
 /** @brief Clear and initialize the entire API context. */
-void api_initialize(APP_MODE_TYPE app_mode);
+void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index);
 
 // get application configuration (flags and version)
 uint32_t api_get_app_config(uint8_t is_locked);
@@ -295,7 +295,7 @@ uint32_t api_prepare_blindsigning(void);
 
 uint32_t api_user_confirm_essence(void);
 
-uint32_t api_sign_single(uint8_t p1);
+uint32_t api_sign(uint8_t p1);
 
 uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
                               uint32_t len);

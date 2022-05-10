@@ -105,19 +105,10 @@
 // following constants are valid with bech32 encoding (address_type included)
 #define ADDRESS_SIZE_BASE32 ((ADDRESS_WITH_TYPE_SIZE_BYTES * 8 + 4) / 5)
 
-
-
-#ifdef APP_DEBUG
-#define COIN_HRP_IOTA "atoi"
-#else
-#define COIN_HRP_IOTA "iota"
-#endif
-
-#ifdef APP_DEBUG
-#define COIN_HRP_SHIMMER "rms"
-#else
-#define COIN_HRP_SHIMMER "smr"
-#endif
+#define COIN_HRP_IOTA               "iota"
+#define COIN_HRP_IOTA_TESTNET       "atoi"
+#define COIN_HRP_SHIMMER            "smr"
+#define COIN_HRP_SHIMMER_TESTNET    "rms"
 
 #define ADDRESS_HRP_LENGTH_MAX 4
 

@@ -24,7 +24,7 @@
 extern API_CTX api;
 
 
-uint8_t *get_output_address(const API_CTX *api, uint8_t index)
+uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
 {
     MUST(index < api->essence.outputs_count);
 
@@ -33,12 +33,14 @@ uint8_t *get_output_address(const API_CTX *api, uint8_t index)
     switch (api->protocol) {
     case PROTOCOL_STARDUST: {
         BASIC_OUTPUT *tmp = (BASIC_OUTPUT *)api->essence.outputs;
+        // address follows the address_type in a pact struct
         ret = &tmp[index].address_type;
         break;
     }
     case PROTOCOL_CHRYSALIS: {
         SIG_LOCKED_SINGLE_OUTPUT *tmp =
             (SIG_LOCKED_SINGLE_OUTPUT *)api->essence.outputs;
+        // address follows the address_type in a pact struct
         ret = &tmp[index].address_type;
         break;
     }
@@ -78,17 +80,25 @@ uint8_t address_encode_bech32(const uint8_t *addr_with_type, char *bech32,
                               uint32_t bech32_max_length)
 {
     switch (api.coin) {
-        case COIN_IOTA: {
-            MUST(address_encode_bech32_hrp(addr_with_type, bech32, bech32_max_length, COIN_HRP_IOTA, strlen(COIN_HRP_IOTA)));
-            break;
-        }
-        case COIN_SHIMMER: {
-            MUST(address_encode_bech32_hrp(addr_with_type, bech32, bech32_max_length, COIN_HRP_SHIMMER, strlen(COIN_HRP_SHIMMER)));
-            break;
-        }
-        default:
-            THROW(SW_UNKNOWN);
-            break;
+    case COIN_IOTA: {
+        MUST(address_encode_bech32_hrp(
+            addr_with_type, bech32, bech32_max_length,
+            (api.app_mode & 0x80) ? COIN_HRP_IOTA_TESTNET : COIN_HRP_IOTA,
+            strlen(COIN_HRP_IOTA))); // strlen valid because HRP has the same
+                                     // length in testnet
+        break;
+    }
+    case COIN_SHIMMER: {
+        MUST(address_encode_bech32_hrp(
+            addr_with_type, bech32, bech32_max_length,
+            (api.app_mode & 0x80) ? COIN_HRP_SHIMMER_TESTNET : COIN_HRP_SHIMMER,
+            strlen(COIN_HRP_SHIMMER))); // strlen valid because HRP has the same
+                                        // length in testnet
+        break;
+    }
+    default:
+        THROW(SW_UNKNOWN);
+        break;
     }
     return 1;
 }

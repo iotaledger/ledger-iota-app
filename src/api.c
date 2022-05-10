@@ -26,7 +26,7 @@
 /// global variable storing all data needed across multiple api calls
 API_CTX api;
 
-void api_initialize(APP_MODE_TYPE app_mode)
+void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
 {
     // wipe all data
     explicit_bzero(&api, sizeof(api));
@@ -34,73 +34,95 @@ void api_initialize(APP_MODE_TYPE app_mode)
     api.bip32_path[0] = 0x8000002c;
     api.bip32_signing_path[0] = 0x8000002c;
 
-    switch (app_mode) {
-        case APP_MODE_IOTA_CHRYSALIS:
-            // iota
-            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-            api.protocol = PROTOCOL_CHRYSALIS;
-            api.coin = COIN_IOTA;
-            break;
-        case APP_MODE_IOTA_STARDUST:
-            // iota
-            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-            api.protocol = PROTOCOL_STARDUST;
-            api.coin = COIN_IOTA;
-            break;
-        case APP_MODE_CLAIM_SHIMMER:
-            // primary shimmer
-            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
-            // bip path for claiming SMR from IOTA addresses is different
-            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-            api.protocol = PROTOCOL_STARDUST;
-            api.coin = COIN_SHIMMER;
-            break;
-        case APP_MODE_SHIMMER:
-            // shimmer
-            api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
-            api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
-            api.protocol = PROTOCOL_STARDUST;
-            api.coin = COIN_SHIMMER;
-            break;
-        default:
-            THROW(SW_ACCOUNT_NOT_VALID);
+    switch (app_mode & 0x7f) {
+#ifdef APP_IOTA
+    case APP_MODE_IOTA_CHRYSALIS:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_CHRYSALIS;
+        api.coin = COIN_IOTA;
+        break;
+    case APP_MODE_IOTA_STARDUST:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_IOTA;
+        break;
+#endif
+#ifdef APP_SHIMMER
+    case APP_MODE_CLAIM_SHIMMER:
+        // primary shimmer
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
+        // bip path for claiming SMR from IOTA addresses is different
+        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_SHIMMER;
+        break;
+    case APP_MODE_SHIMMER:
+        // shimmer
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
+        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
+        api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_SHIMMER;
+        break;
+#endif
+    default:
+        THROW(SW_ACCOUNT_NOT_VALID);
     }
+
 #ifdef APP_DEBUG
-    // overwrite paths if in debug mode
-    api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
-    api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
+    // always set testnet if app was compiled with additional debug define
+    app_mode |= 0x80;
 #endif
 
-    api.app_mode = app_mode;
-}
+    // set bip paths for testnet
+    if (app_mode & 0x80) {
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
+        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
+    }
 
-void api_clear_data()
-{
-    // we shouldn't clear out account index
-    uint32_t tmp_bip32_account = api.bip32_path[BIP32_ACCOUNT_INDEX];
+    // set account indices
+    // value of 0 is allowed because it tells us that no account was set
+    // through the api and it is checked in every api function that uses
+    // account indices
+    api.bip32_path[BIP32_ACCOUNT_INDEX] = account_index;
+    api.bip32_signing_path[BIP32_ACCOUNT_INDEX] = account_index;
 
-#ifdef APP_DEBUG
-    // and the non-interactive flag if compiled in DEBUG mode
-    uint8_t tmp_non_interactive = api.non_interactive_mode;
-#endif
-
-    // app mode is the same after clearing data
-    api_initialize(api.app_mode);
-
-    // set saved account index - both are always tied together
-    api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
-    api.bip32_signing_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
-#ifdef APP_DEBUG
-    if (api.app_mode == APP_MODE_CLAIM_SHIMMER) {
+    if (api.app_mode == APP_MODE_CLAIM_SHIMMER && (api.app_mode & 0x80)) {
         // we only have one possible coin type for testing (0x80000001)
         // but we need an different BIP-path for testing claiming SMR
         api.bip32_signing_path[BIP32_ACCOUNT_INDEX] |= 0x40000000;
     }
+
+    api.app_mode = app_mode;
+}
+
+uint32_t api_reset()
+{
+    // also resets the account index
+    api_initialize(APP_MODE_IOTA_CHRYSALIS, 0);
+
+    ui_reset();
+
+    io_send(NULL, 0, SW_OK);
+    return 0;
+}
+
+
+void api_clear_data()
+{
+#ifdef APP_DEBUG
+    // save the non-interactive flag if compiled in DEBUG mode
+    uint8_t tmp_non_interactive = api.non_interactive_mode;
 #endif
 
+    // initialize with previously set app-mode and account index
+    api_initialize(api.app_mode, api.bip32_path[BIP32_ACCOUNT_INDEX]);
+
 #ifdef APP_DEBUG
+    // restore non-interactive flag
     api.non_interactive_mode = tmp_non_interactive;
 #endif
 }
@@ -123,7 +145,7 @@ uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
     }
 
     memcpy(&api.data.buffer[block_number * DATA_BLOCK_SIZE], input_data,
-              DATA_BLOCK_SIZE);
+           DATA_BLOCK_SIZE);
 
     io_send(NULL, 0, SW_OK);
 
@@ -158,6 +180,7 @@ uint32_t api_get_data_buffer_state()
     io_send(&resp, sizeof(resp), SW_OK);
     return 0;
 }
+
 uint32_t api_clear_data_buffer()
 {
     // wipe all including other api-flags
@@ -176,7 +199,7 @@ uint32_t api_get_app_config(uint8_t is_locked)
     resp.app_version_patch = APPVERSION_PATCH;
     resp.app_flags = !!is_locked;
 
-#if defined(TARGET_NANOX) 
+#if defined(TARGET_NANOX)
     resp.device = 1;
 #elif defined(TARGET_NANOS2)
     resp.device = 2;
@@ -194,16 +217,6 @@ uint32_t api_get_app_config(uint8_t is_locked)
     return 0;
 }
 
-uint32_t api_reset()
-{
-    // also resets the account index
-    api_initialize(APP_MODE_IOTA_CHRYSALIS);
-
-    ui_reset();
-
-    io_send(NULL, 0, SW_OK);
-    return 0;
-}
 
 uint32_t api_show_flow(uint8_t flow)
 {
@@ -234,20 +247,8 @@ uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len)
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
-    // delete all data and set app_mode
-    api_initialize(app_mode);
-
-    // set account index
-    // both are always tied together
-    api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
-    api.bip32_signing_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
-#ifdef APP_DEBUG
-    if (app_mode == APP_MODE_CLAIM_SHIMMER) {
-        // we only have one possible coin type for testing (0x80000001)
-        // but we need an different BIP-path for testing claiming SMR
-        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] |= 0x40000000;
-    }
-#endif
+    // delete all data, set app_mode and account index
+    api_initialize(app_mode, tmp_bip32_account);
 
     io_send(NULL, 0, SW_OK);
 
@@ -372,8 +373,8 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     return IO_ASYNCH_REPLY;
 }
 
-uint32_t api_prepare_signing(uint8_t has_remainder,
-                             const uint8_t *data, uint32_t len)
+uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
+                             uint32_t len)
 {
     // when calling validation the buffer still is marked as empty
     if (api.data.type != EMPTY) {
@@ -443,7 +444,7 @@ uint32_t api_prepare_blindsigning()
     // set flag for blindsigning
     api.essence.blindsigning = 1;
 
-    // the only thing we can parse and validate are the bip32 input paths 
+    // the only thing we can parse and validate are the bip32 input paths
     if (!essence_parse_and_validate_blindsigning(&api)) {
         THROW(SW_COMMAND_INVALID_DATA);
     }
@@ -494,7 +495,8 @@ uint32_t api_user_confirm_essence()
     if (!api.essence.blindsigning) {
         // normal flow without blindsigning
 
-        // some basic checks - actually data should be 100% validated already
+        // some basic checks - actually data should be 100% validated
+        // already
         if (api.data.length >= API_BUFFER_SIZE_BYTES ||
             api.essence.length >= API_BUFFER_SIZE_BYTES ||
             api.data.length < api.essence.length ||
@@ -503,35 +505,37 @@ uint32_t api_user_confirm_essence()
             THROW(SW_UNKNOWN);
         }
 
-        // set correct bip32 path for showing the remainder address on the UI
+        // set correct bip32 path for showing the remainder address on the
+        // UI
         api.bip32_path[BIP32_ADDRESS_INDEX] =
             api.essence.remainder_bip32.bip32_index;
         api.bip32_path[BIP32_CHANGE_INDEX] =
             api.essence.remainder_bip32.bip32_change;
 
-    #ifdef APP_DEBUG
+#ifdef APP_DEBUG
         if (api.non_interactive_mode) {
             api.data.type = USER_CONFIRMED_ESSENCE;
 
             io_send(NULL, 0, SW_OK);
             return 0;
         }
-    #endif
+#endif
         api.flow_locked = 1; // mark flow locked
 
         flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
                                 &api_user_confirm_essence_rejected,
                                 &api_user_confirm_essence_timeout);
-    } else {
-        // start flow for blindsigning
-        #ifdef APP_DEBUG
-            if (api.non_interactive_mode) {
-                api.data.type = USER_CONFIRMED_ESSENCE;
+    }
+    else {
+// start flow for blindsigning
+#ifdef APP_DEBUG
+        if (api.non_interactive_mode) {
+            api.data.type = USER_CONFIRMED_ESSENCE;
 
-                io_send(NULL, 0, SW_OK);
-                return 0;
-            }
-        #endif
+            io_send(NULL, 0, SW_OK);
+            return 0;
+        }
+#endif
 
         api.flow_locked = 1; // mark flow locked
 
@@ -546,7 +550,7 @@ uint32_t api_user_confirm_essence()
 // prefered signing methond on the nano-s
 // it needs as many calls as there are inputs but needs
 // no additional memory in the buffer for signatures
-uint32_t api_sign_single(uint8_t p1)
+uint32_t api_sign(uint8_t p1)
 {
     if (api.data.type != USER_CONFIRMED_ESSENCE) {
         THROW(SW_COMMAND_NOT_ALLOWED);
@@ -568,8 +572,8 @@ uint32_t api_sign_single(uint8_t p1)
     uint32_t signature_idx = p1;
 
     uint8_t *output = io_get_buffer();
-    uint16_t signature_size_bytes = sign(
-        &api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
+    uint16_t signature_size_bytes =
+        sign(&api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
 
     if (!signature_size_bytes) {
         THROW(SW_UNKNOWN);
@@ -590,6 +594,7 @@ uint32_t api_sign_single(uint8_t p1)
 uint32_t api_dump_memory(uint8_t pagenr)
 {
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+    // same size and location on Nano X and Nano S+
     if (pagenr >= 30 * 1024 / 128) {
         THROW(SW_INCORRECT_P1P2);
     }
@@ -618,4 +623,3 @@ uint32_t api_set_non_interactive_mode(uint8_t mode)
 }
 
 #endif
-

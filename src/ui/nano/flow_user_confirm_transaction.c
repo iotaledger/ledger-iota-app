@@ -14,6 +14,8 @@ extern flowdata_t flow_data;
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
+#define FLOW_BECH32_CHARS_PER_LINE 13
+
 #define MUST_THROW(c)                                                          \
     {                                                                          \
         if (!(c)) {                                                            \
@@ -29,19 +31,19 @@ static void generate_bech32(short read_index)
 
     uint8_t *address_with_type;
 
-    MUST_THROW(address_with_type = get_output_address(flow_data.api, read_index));
+    MUST_THROW(address_with_type_ptr =
+                   get_output_address_ptr(flow_data.api, read_index));
 
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
-    address_encode_bech32(
-        address_with_type,
-        flow_data.tmp, sizeof(flow_data.tmp));
+    address_encode_bech32(address_with_type_ptr, flow_data.tmp,
+                          sizeof(flow_data.tmp));
 }
 
 static void populate_amount(short line_no, int read_index)
 {
     uint64_t amount;
-    
+
     // amount > 0 enforced by validation
     MUST_THROW(amount = get_output_amount(flow_data.api, read_index));
 
@@ -191,7 +193,8 @@ static void populate_data_outputs()
         case 4: // bech32 fourth line
         case 5: // bech32 fifth line
             memcpy(flow_data.flow_lines[i],
-                &flow_data.tmp[(cy - 1) * FLOW_DATA_CHARS_PER_LINE], FLOW_DATA_CHARS_PER_LINE);
+                   &flow_data.tmp[(cy - 1) * FLOW_BECH32_CHARS_PER_LINE],
+                   FLOW_BECH32_CHARS_PER_LINE);
             break;
         case 6: // show amount header
             strcpy(flow_data.flow_lines[i], "Amount");
@@ -203,9 +206,10 @@ static void populate_data_outputs()
             strcpy(flow_data.flow_lines[i], "BIP32 Path");
             break;
         case 9:  // bip32 first line
-        case 10:  // bip32 second line
+        case 10: // bip32 second line
         case 11: // bip32 third line
-            format_bip32(flow_data.api->bip32_path, cy - 9, flow_data.flow_lines[i],
+            format_bip32(flow_data.api->bip32_path, cy - 9,
+                         flow_data.flow_lines[i],
                          sizeof(flow_data.flow_lines[i]));
             break;
         }
