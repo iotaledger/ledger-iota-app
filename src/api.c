@@ -35,7 +35,6 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
     api.bip32_signing_path[0] = 0x8000002c;
 
     switch (app_mode & 0x7f) {
-#ifdef APP_IOTA
     case APP_MODE_IOTA_CHRYSALIS:
         // iota
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
@@ -50,8 +49,6 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
         api.protocol = PROTOCOL_STARDUST;
         api.coin = COIN_IOTA;
         break;
-#endif
-#ifdef APP_SHIMMER
     case APP_MODE_CLAIM_SHIMMER:
         // primary shimmer
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
@@ -67,7 +64,6 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
         api.protocol = PROTOCOL_STARDUST;
         api.coin = COIN_SHIMMER;
         break;
-#endif
     default:
         THROW(SW_ACCOUNT_NOT_VALID);
     }
