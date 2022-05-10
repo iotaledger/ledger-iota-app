@@ -29,7 +29,7 @@ static void generate_bech32(short read_index)
     // clear buffer
     memset(flow_data.tmp, 0, sizeof(flow_data.tmp));
 
-    uint8_t *address_with_type;
+    uint8_t *address_with_type_ptr;
 
     MUST_THROW(address_with_type_ptr =
                    get_output_address_ptr(flow_data.api, read_index));
