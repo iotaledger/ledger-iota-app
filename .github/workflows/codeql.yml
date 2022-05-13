@@ -3,7 +3,7 @@ name: "CodeQL"
 on:
   push:
     branches:
-      - develop
+      - "feat/stardust+shimmer"
   pull_request:
   schedule:
     - cron: '0 0 * * *'
