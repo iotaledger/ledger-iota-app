@@ -1,7 +1,6 @@
 #include "ui_common.h"
 
 #include "ux.h"
-#include "ux_layout_pb_ud.h"
 #include "glyphs.h"
 
 #include "flow_user_confirm.h"
@@ -14,33 +13,66 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-#define FLOW_HASH_CHARS_PER_LINE   13
-
 extern flowdata_t flow_data;
+
+static void cb_hash_preinit();
+
+static void cb_bs_accept();
+static void cb_bs_reject();
+
+static void cb_hash_preinit();
 
 // clang-format off
 
-/*
-Render data to the UI
- 
-" Blind Signing  "
-"18fac39809cf8952"
-"1c72bdd00d6bf36b"
-"76203cefe9997ee0"
-"bb62f058b1e0d268"
+static UX_STEP_NOCB_INIT(
+    ux_step_hash,
+    bn_paging,
+    cb_hash_preinit(),
+    {
+        "Blind Signing", (const char*) flow_data.data
+    }
+);
 
-*/
+static UX_STEP_CB(
+    ux_step_bs_accept,
+    pb,
+    cb_bs_accept(NULL),
+    {
+        &C_x_icon_check,
+        "Accept"
+    }
+);
+
+static UX_STEP_CB(
+    ux_step_bs_reject,
+    pb,
+    cb_bs_reject(NULL),
+    {
+        &C_x_icon_cross,
+        "Reject"
+    }
+);
+
+static UX_FLOW(
+    ux_blindsigning,
+    &ux_step_hash,
+    &ux_step_bs_accept,
+    &ux_step_bs_reject,
+    FLOW_LOOP
+);
+
 // clang-format on
 
-static void generate_hash()
+
+void cb_hash_preinit()
 {
     const char *hex = "0123456789ABCDEF";
 
     // generate hash
-    memset(flow_data.tmp, 0, sizeof(flow_data.tmp));
+    memset(flow_data.data, 0, sizeof(flow_data.data));
 
     const char *src = (const char *)flow_data.api->essence.hash;
-    char *dst = flow_data.tmp;
+    char *dst = flow_data.data;
 
     *dst++ = '0';
     *dst++ = 'x';
@@ -51,52 +83,26 @@ static void generate_hash()
     *dst = 0;
 }
 
-static void populate_data_blindsigning()
+static void cb_bs_accept()
 {
-    flow_data.number_of_lines = 6;
-
-    generate_hash();
-
-    // fix ypos if needed
-    if (flow_data.flow_scroll_ypos > flow_data.number_of_lines - 3) {
-        flow_data.flow_scroll_ypos = flow_data.number_of_lines - 3;
+    if (flow_data.accept_cb) {
+        flow_data.accept_cb();
     }
+    flow_stop();
+}
 
-    // iterate through all lines to display and populate them with the right
-    // data
-    for (short i = 0; i < 5; i++) {
-        // calculate the real y line of the view-port
-        short cy = i + flow_data.flow_scroll_ypos;
-
-        // outside of the screen? then skip
-        if (cy < 0 || cy > flow_data.number_of_lines - 1) {
-            continue;
-        }
-
-        switch (cy) {
-        case 0: // show flow header
-            strcpy(flow_data.flow_lines[i], "Blind Signing");
-            break;
-        case 1: // hash first line
-        case 2: // hash second line
-        case 3: // hash third line
-        case 4: // hash fourth line
-        case 5: // hash fifth line
-                // display one char more in the last line to avoid an extra line
-                // with a single character
-            memcpy(flow_data.flow_lines[i],
-                   &flow_data.tmp[(cy - 1) * FLOW_HASH_CHARS_PER_LINE],
-                   FLOW_HASH_CHARS_PER_LINE + ((cy == 5) ? 1 : 0));
-            break;
-        }
-        // always zero-terminate to be sure
-        flow_data.flow_lines[i][LINE_WIDTH] = 0;
+static void cb_bs_reject()
+{
+    if (flow_data.reject_cb) {
+        flow_data.reject_cb();
     }
+    flow_stop();
 }
 
 void flow_start_blindsigning(const API_CTX *api, accept_cb_t accept_cb,
                              reject_cb_t reject_cb, timeout_cb_t timeout_cb)
 {
-    flow_confirm_datasets(api, accept_cb, reject_cb, timeout_cb,
-                          &populate_data_blindsigning, FLOW_ACCEPT_REJECT, 1);
+    flow_start_user_confirm(api, accept_cb, reject_cb, timeout_cb);
+
+    ux_flow_init(0, ux_blindsigning, &ux_step_hash);
 }

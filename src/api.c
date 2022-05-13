@@ -518,9 +518,10 @@ uint32_t api_user_confirm_essence()
 #endif
         api.flow_locked = 1; // mark flow locked
 
-        flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
-                                &api_user_confirm_essence_rejected,
-                                &api_user_confirm_essence_timeout);
+        flow_start_user_confirm_transaction(&api,
+                                            &api_user_confirm_essence_accepted,
+                                            &api_user_confirm_essence_rejected,
+                                            &api_user_confirm_essence_timeout);
     }
     else {
 // start flow for blindsigning

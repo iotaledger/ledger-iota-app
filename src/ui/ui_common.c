@@ -8,6 +8,8 @@
 #include "nano/nano_types.h"
 #define MENU_IDX_BREAK ui_state.menu_idx / 2
 
+#define BIP32_LINE_LENGTH 16
+
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
 #pragma GCC diagnostic error "-Wpedantic"
@@ -95,6 +97,37 @@ void format_value_full(char *s, const unsigned int n, const uint64_t val)
     }
 }
 
+void format_value_full_decimals(char *s, const unsigned int n, const uint64_t val)
+{
+    char buffer[n];
+
+    const size_t num_len = format_s64(buffer, sizeof(buffer), val);
+
+    // not enough space
+    if (n < num_len + 2) {
+        THROW(SW_UNKNOWN);
+    }
+
+    // format 0,xxxxxx
+    if (val < 1000000ull) {
+            snprintf(s, n, "0.%s", buffer);
+            return;
+    } 
+
+    // format yyyy,xxxxxx
+    // insert comma at the right spot during copying
+    char* src = buffer;
+    char* dst = s;
+    for (size_t i=0;i<num_len;i++) {
+            if (i == num_len-6) {
+                    *dst++ = ',';
+            } 
+            *dst++ = *src++;
+    }
+    *dst = 0;
+}
+
+
 void format_value_short(char *s, const unsigned int n, uint64_t val)
 {
     if (val < 1000) {
@@ -115,8 +148,6 @@ void format_value_short(char *s, const unsigned int n, uint64_t val)
              IOTA_UNITS[base]);
 }
 
-#define LINELENGTH 16
-
 // returns the length of hex string
 static int hex_len(uint32_t v)
 {
@@ -134,7 +165,7 @@ static int hex_len(uint32_t v)
 // format bip path to string
 // doesn't use a local buffer but generates the string
 // fitting in LINE_WIDTH characters directly
-int format_bip32(const uint32_t *b32, int linenr, char *out,
+static int format_bip32(const uint32_t *b32, int linenr, char *out,
                  uint32_t out_max_len)
 {
     int len[BIP32_PATH_LEN] = {0};
@@ -156,7 +187,7 @@ int format_bip32(const uint32_t *b32, int linenr, char *out,
         out[0] = 0;
     }
     for (int i = 0; i < BIP32_PATH_LEN; i++) {
-        if (curlen + len[i] > LINELENGTH) {
+        if (curlen + len[i] > BIP32_LINE_LENGTH) {
             curlen = 0;
             lines++;
         }
@@ -171,22 +202,36 @@ int format_bip32(const uint32_t *b32, int linenr, char *out,
         }
         curlen += len[i];
     }
-    return !!ofs;
+    return ofs;
 }
 
-
-uint8_t get_no_lines_bip32(const uint32_t *b32)
+int format_bip32_with_line_breaks(const uint32_t *b32, char *out,
+                 int out_max_len) 
 {
-    // at least one line
-    uint8_t no_lines = 1;
+    int ofs = 0;
+    int written = 0;
+    int last_zero = 0;
 
-    // figure out, how many lines we need for a nice formatted bip32 path
-    for (int i = 1; i < 3; i++) {
-        // with *0 no memory is changed
-        if (format_bip32(b32, i, (char *)0, 0)) {
-            no_lines++;
+    // maximum of 3 lines
+    for (int i=0;i<3;i++) {
+        written = format_bip32(b32, i, &out[ofs], out_max_len);
+        
+        if (!written) {
+            break; 
+        } 
+        if (last_zero) {
+            // if previously something was written, we have to replace \0 with \n
+            out[last_zero] = '\n';
         }
-    }
-    return no_lines;
-}
+        ofs += written; 
+        out_max_len -= written;
 
+        last_zero = ofs;
+
+        // skip \0
+        ofs++;
+        out_max_len--;
+    }
+    out[ofs] = 0;
+    return ofs;
+} 

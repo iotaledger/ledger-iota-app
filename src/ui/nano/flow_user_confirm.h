@@ -13,20 +13,9 @@
 #include "api.h"
 #include "ui_common.h"
 
-
-#define UNKNOWN 0
-#define NEW_ADDRESS 1
-#define REMAINDER 2
-#define OUTPUT 3
-
-#define FLOW_USER_CONFIRM 0
-#define FLOW_NEW_ADDRESS 1
-
-#define LINE_WIDTH 16
-
 // bech32: 62/63 bytes
 // essence hash: 66 bytes
-#define TMP_DATA_SIZE   66
+#define TMP_DATA_SIZE 66
 
 typedef enum { FLOW_ACCEPT_REJECT, FLOW_OK } FLOW_TYPES;
 
@@ -37,7 +26,12 @@ typedef void (*accept_cb_t)();
 typedef void (*reject_cb_t)();
 typedef void (*timeout_cb_t)();
 
-typedef void (*populate_cb_t)();
+#define MUST_THROW(c)                                                          \
+    {                                                                          \
+        if (!(c)) {                                                            \
+            THROW(SW_UNKNOWN);                                                 \
+        }                                                                      \
+    }
 
 
 // struct that contains the data to be displayed on the screen
@@ -53,17 +47,14 @@ typedef struct {
     reject_cb_t reject_cb;
     timeout_cb_t timeout_cb;
 
-    populate_cb_t populate_cb;
-
-    // buffer for nnbnn layout
-    char flow_lines[5][LINE_WIDTH + 1]; // +1 zero terminator
-    int flow_scroll_ypos;
+    int read_index;
+    uint8_t type;
 
     // buffer for bech32 strings
     // ed25519 addresses will need 62/63 characters but we use some extra
     // for displaying on the UI with 5 lines of 13 characters each
-	// unused chars are zero-terminators
-    char tmp[TMP_DATA_SIZE + 1]; // +1 zero terminator
+    // unused chars are zero-terminators
+    char data[TMP_DATA_SIZE + 1]; // +1 zero terminator
 
     // total number of lines
     uint8_t number_of_lines;
@@ -83,14 +74,12 @@ typedef struct {
 
 void flow_main_menu(void);
 
-void flow_init(void);
+void flow_start_user_confirm(const API_CTX *api, accept_cb_t accept_cb,
+                             reject_cb_t reject_cb, timeout_cb_t timeout_cb);
 
-void flow_confirm_datasets(const API_CTX *api, accept_cb_t accept_cb,
-                           reject_cb_t reject_cb, timeout_cb_t timeout_cb,
-                           populate_cb_t populate_cb,
-                           FLOW_TYPES flow_type, uint16_t dataset_count);
+
+void flow_init(void);
 
 void flow_stop(void);
 
 void flow_timer_event(void);
-

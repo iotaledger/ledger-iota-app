@@ -9,6 +9,7 @@
 #include "essence_chrysalis.h"
 #include "essence_stardust.h"
 #include "abstraction.h"
+#include "ui_common.h"
 
 #include "api.h"
 #include "iota_io.h"
@@ -118,6 +119,33 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     default:
         THROW(SW_UNKNOWN);
         break;
+    }
+    return 1;
+}
+
+uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
+                   uint8_t full)
+{
+    uint64_t amount;
+
+    // amount > 0 enforced by validation
+    MUST(amount = get_output_amount(api, index));
+
+    // only full decimals for shimmer
+    if (api->coin == COIN_SHIMMER) {
+        format_value_full_decimals(dst, dst_len, amount);
+        return 1;
+    }
+
+    // show IOTA in full or short mode
+    if (full) { // full
+        // max supply is 2779530283277761 - this fits nicely in one line
+        // on the Ledger nano s always cut after the 16th char to not
+        // make a page with a single 'i'.
+        format_value_full(dst, dst_len, amount);
+    }
+    else { // short
+        format_value_short(dst, dst_len, amount);
     }
     return 1;
 }
