@@ -243,7 +243,7 @@ int string_insert_chars_each(const char *src, size_t src_size, char *dst,
 {
     // enough space?
     if (dst_size < src_size + (src_size / insert_after) + 1) {
-        THROW(SW_UNKNOWN);
+        return 0;
     }
 
     size_t src_len = strnlen(src, src_size);
