@@ -18,6 +18,8 @@ extern flowdata_t flow_data;
 static void cb_address_preinit();
 
 static void cb_accept();
+static void cb_fix();
+static void cb_fix2();
 
 // clang-format off
 
@@ -26,7 +28,7 @@ static UX_STEP_NOCB_INIT(
     bn_paging,
     cb_address_preinit(),
     {
-        "Receive Address", (const char*) flow_data.data
+        "Receive Address", (const char*) flow_data.scratch[0]
     }
 );
 
@@ -35,7 +37,7 @@ static UX_STEP_NOCB_INIT(
     bn_paging,
     cb_address_preinit(),
     {
-        "New Remainder", (const char*) flow_data.data
+        "New Remainder", (const char*) flow_data.scratch[0]
     }
 );
 
@@ -49,17 +51,35 @@ static UX_STEP_CB(
     }
 );
 
+static UX_STEP_INIT(
+    ux_step_fix,
+    NULL,
+    NULL,
+    cb_fix()
+);
+
+static UX_STEP_INIT(
+    ux_step_fix2,
+    NULL,
+    NULL,
+    cb_fix2()
+);
+
 static UX_FLOW(
     ux_flow_new_address,
+    &ux_step_fix2,
     &ux_step_new_address,
     &ux_step_ok,
+    &ux_step_fix,
     FLOW_LOOP
 );
 
 static UX_FLOW(
     ux_flow_new_remainder,
+    &ux_step_fix2,
     &ux_step_new_remainder,
     &ux_step_ok,
+    &ux_step_fix,
     FLOW_LOOP
 );
 
@@ -68,12 +88,29 @@ static UX_FLOW(
 static void cb_address_preinit()
 {
     // clear buffer
-    memset(flow_data.data, 0, sizeof(flow_data.data));
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
+    memset(flow_data.scratch[1], 0, sizeof(flow_data.scratch[1]));
 
     // generate bech32 address including the address_type
-    // since the struct is packed, the address follows directly the address_type
-    address_encode_bech32(flow_data.api->data.buffer, flow_data.data,
-                          sizeof(flow_data.data));
+    // we only have a single address in the buffer starting at index 0
+    address_encode_bech32(flow_data.api->data.buffer, flow_data.scratch[1],
+                          sizeof(flow_data.scratch[1]));
+
+    // insert line-breaks
+    MUST_THROW(string_insert_chars_each(
+        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
+        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 16, 3, '\n'));
+
+#ifdef TARGET_NANOS
+    // NOP - paging of nanos is fine
+#else
+    memcpy(flow_data.scratch[1], flow_data.scratch[0],
+           sizeof(flow_data.scratch[1]));
+    // insert another line-break (2 lines per page)
+    MUST_THROW(string_insert_chars_each(
+        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
+        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 33, 1, '\n'));
+#endif
 }
 
 static void cb_accept()
@@ -82,6 +119,28 @@ static void cb_accept()
         flow_data.accept_cb();
     }
     flow_stop();
+}
+
+// fixes some weird paging issues (stepping forward, skips page 1/2)
+static void cb_fix()
+{
+    if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
+        ux_flow_init(0, ux_flow_new_remainder, &ux_step_new_remainder);
+    }
+    else {
+        ux_flow_init(0, ux_flow_new_address, &ux_step_new_remainder);
+    }
+}
+
+// fixes some weird paging issues (stepping forward, skips page 1/2)
+static void cb_fix2()
+{
+    if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
+        ux_flow_init(0, ux_flow_new_remainder, &ux_step_ok);
+    }
+    else {
+        ux_flow_init(0, ux_flow_new_address, &ux_step_ok);
+    }
 }
 
 void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,

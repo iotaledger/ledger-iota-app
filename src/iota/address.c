@@ -36,7 +36,7 @@ uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
 {
     // at least this space is needed - bech32_encode adds a zero-terminator
     // byte!
-    if (bech32_max_length < ADDRESS_SIZE_BECH32 + 1)
+    if (bech32_max_length < ADDRESS_SIZE_BECH32_MAX + 1)
         return 0;
 
     uint32_t base32_length = ADDRESS_SIZE_BASE32;

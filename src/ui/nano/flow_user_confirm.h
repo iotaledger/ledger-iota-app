@@ -13,9 +13,9 @@
 #include "api.h"
 #include "ui_common.h"
 
-// bech32: 62/63 bytes
-// essence hash: 66 bytes
-#define TMP_DATA_SIZE 66
+// bech32: 62/63 bytes + 3 line breaks = 65/66
+// essence hash: 66 bytes + 3 line breaks = 69
+#define TMP_DATA_SIZE 80
 
 typedef enum { FLOW_ACCEPT_REJECT, FLOW_OK } FLOW_TYPES;
 
@@ -50,11 +50,8 @@ typedef struct {
     int read_index;
     uint8_t type;
 
-    // buffer for bech32 strings
-    // ed25519 addresses will need 62/63 characters but we use some extra
-    // for displaying on the UI with 5 lines of 13 characters each
-    // unused chars are zero-terminators
-    char data[TMP_DATA_SIZE + 1]; // +1 zero terminator
+    // buffer for renderings of bech32 addresses, hashs, as temporary buffer, ...
+    char scratch[2][TMP_DATA_SIZE + 1]; // +1 zero terminator
 
     // total number of lines
     uint8_t number_of_lines;

@@ -29,7 +29,7 @@ static UX_STEP_NOCB_INIT(
     bn_paging,
     cb_hash_preinit(),
     {
-        "Blind Signing", (const char*) flow_data.data
+        "Blind Signing", (const char*) flow_data.scratch[0]
     }
 );
 
@@ -69,10 +69,10 @@ void cb_hash_preinit()
     const char *hex = "0123456789ABCDEF";
 
     // generate hash
-    memset(flow_data.data, 0, sizeof(flow_data.data));
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
     const char *src = (const char *)flow_data.api->essence.hash;
-    char *dst = flow_data.data;
+    char *dst = flow_data.scratch[0];
 
     *dst++ = '0';
     *dst++ = 'x';

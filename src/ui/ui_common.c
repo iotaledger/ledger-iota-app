@@ -97,7 +97,8 @@ void format_value_full(char *s, const unsigned int n, const uint64_t val)
     }
 }
 
-void format_value_full_decimals(char *s, const unsigned int n, const uint64_t val)
+void format_value_full_decimals(char *s, const unsigned int n,
+                                const uint64_t val)
 {
     char buffer[n];
 
@@ -110,19 +111,19 @@ void format_value_full_decimals(char *s, const unsigned int n, const uint64_t va
 
     // format 0,xxxxxx
     if (val < 1000000ull) {
-            snprintf(s, n, "0.%s", buffer);
-            return;
-    } 
+        snprintf(s, n, "0.%s", buffer);
+        return;
+    }
 
     // format yyyy,xxxxxx
     // insert comma at the right spot during copying
-    char* src = buffer;
-    char* dst = s;
-    for (size_t i=0;i<num_len;i++) {
-            if (i == num_len-6) {
-                    *dst++ = ',';
-            } 
-            *dst++ = *src++;
+    char *src = buffer;
+    char *dst = s;
+    for (size_t i = 0; i < num_len; i++) {
+        if (i == num_len - 6) {
+            *dst++ = ',';
+        }
+        *dst++ = *src++;
     }
     *dst = 0;
 }
@@ -166,7 +167,7 @@ static int hex_len(uint32_t v)
 // doesn't use a local buffer but generates the string
 // fitting in LINE_WIDTH characters directly
 static int format_bip32(const uint32_t *b32, int linenr, char *out,
-                 uint32_t out_max_len)
+                        uint32_t out_max_len)
 {
     int len[BIP32_PATH_LEN] = {0};
     for (int i = 0; i < BIP32_PATH_LEN; i++) {
@@ -206,24 +207,25 @@ static int format_bip32(const uint32_t *b32, int linenr, char *out,
 }
 
 int format_bip32_with_line_breaks(const uint32_t *b32, char *out,
-                 int out_max_len) 
+                                  int out_max_len)
 {
     int ofs = 0;
     int written = 0;
     int last_zero = 0;
 
     // maximum of 3 lines
-    for (int i=0;i<3;i++) {
+    for (int i = 0; i < 3; i++) {
         written = format_bip32(b32, i, &out[ofs], out_max_len);
-        
+
         if (!written) {
-            break; 
-        } 
+            break;
+        }
         if (last_zero) {
-            // if previously something was written, we have to replace \0 with \n
+            // if previously something was written, we have to replace \0 with
+            // \n
             out[last_zero] = '\n';
         }
-        ofs += written; 
+        ofs += written;
         out_max_len -= written;
 
         last_zero = ofs;
@@ -234,4 +236,28 @@ int format_bip32_with_line_breaks(const uint32_t *b32, char *out,
     }
     out[ofs] = 0;
     return ofs;
-} 
+}
+
+int string_insert_chars_each(const char *src, size_t src_size, char *dst,
+                             size_t dst_size, int insert_after, int count, char c)
+{
+    // enough space?
+    if (dst_size < src_size + (src_size / insert_after) + 1) {
+        THROW(SW_UNKNOWN);
+    }
+
+    size_t src_len = strnlen(src, src_size);
+
+    int ctr = 0;
+    for (size_t i = 0; i < src_len; i++) {
+        *dst++ = *src++;
+        ctr++;
+        if (count > 0 && ctr == insert_after) {
+            ctr = 0;
+            count--;
+            *dst++ = c;
+        }
+    }
+    *dst = 0;
+    return 1;
+}

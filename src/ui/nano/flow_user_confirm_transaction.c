@@ -69,7 +69,7 @@ static UX_STEP_NOCB_INIT(
     bb,
     cb_output_preinit(),
     {
-        "Review", (const char*) flow_data.data
+        "Review", (const char*) flow_data.scratch[0]
     }
 );
 
@@ -78,7 +78,8 @@ static UX_STEP_NOCB_INIT(
     bn,
     cb_amount_preinit(),
     {
-        "Amount SMR", (const char*) flow_data.data
+        (const char*) flow_data.scratch[1], (const char*) flow_data.scratch[0]
+
     }
 );
 
@@ -87,7 +88,7 @@ static UX_STEP_NOCB_INIT(
     bn_paging,
     cb_address_preinit(),
     {
-        "Address", (const char*) flow_data.data
+        "Address", (const char*) flow_data.scratch[0]
     }
 );
 
@@ -97,7 +98,7 @@ static UX_STEP_NOCB_INIT(
     bn_paging,
     cb_bip32_preinit(),
     {
-        "BIP32 Path", (const char*) flow_data.data
+        "BIP32 Path", (const char*) flow_data.scratch[0]
     }
 );
 #else
@@ -106,7 +107,7 @@ static UX_STEP_NOCB_INIT(
     bn,
     cb_bip32_preinit(),
     {
-        "BIP32 Path", (const char*) flow_data.data
+        "BIP32 Path", (const char*) flow_data.scratch[0]
     }
 );
 #endif
@@ -330,45 +331,75 @@ static unsigned int cb_reject(const bagl_element_t *e)
 static void cb_amount_preinit()
 {
     // clear buffer
-    memset(flow_data.data, 0, sizeof(flow_data.data));
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
-    MUST_THROW(get_amount(flow_data.api, flow_data.read_index, flow_data.data,
-                          sizeof(flow_data.data), flow_data.amount_toggle));
+    MUST_THROW(get_amount(flow_data.api, flow_data.read_index,
+                          flow_data.scratch[0], sizeof(flow_data.scratch[0]),
+                          flow_data.amount_toggle));
+
+    // copy header after writing amount
+    if (flow_data.api->coin == COIN_SHIMMER) {
+        strncpy(flow_data.scratch[1], "Amount SMR",
+                sizeof(flow_data.scratch[1]));
+    }
+    else {
+        strncpy(flow_data.scratch[1], "Amount IOTA",
+                sizeof(flow_data.scratch[1]));
+    }
 }
 
 static void cb_bip32_preinit()
 {
     // clear buffer
-    memset(flow_data.data, 0, sizeof(flow_data.data));
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
-    format_bip32_with_line_breaks(flow_data.api->bip32_path, flow_data.data,
-                                  sizeof(flow_data.data));
+    format_bip32_with_line_breaks(flow_data.api->bip32_path,
+                                  flow_data.scratch[0],
+                                  sizeof(flow_data.scratch[0]));
 }
 
 static void cb_address_preinit()
 {
     // clear buffer
-    memset(flow_data.data, 0, sizeof(flow_data.data));
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
+    memset(flow_data.scratch[1], 0, sizeof(flow_data.scratch[1]));
 
-    uint8_t *address_with_type_ptr;
+    uint8_t *address_with_type_ptr = 0;
 
     MUST_THROW(address_with_type_ptr =
                    get_output_address_ptr(flow_data.api, flow_data.read_index));
 
+
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
-    address_encode_bech32(address_with_type_ptr, flow_data.data,
-                          sizeof(flow_data.data));
+    address_encode_bech32(address_with_type_ptr, flow_data.scratch[1],
+                          sizeof(flow_data.scratch[1]));
+
+    // insert max 3 line-breaks
+    MUST_THROW(string_insert_chars_each(
+        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
+        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 16, 3, '\n'));
+
+#ifdef TARGET_NANOS
+    // NOP - paging of nanos is fine
+#else
+    memcpy(flow_data.scratch[1], flow_data.scratch[0],
+           sizeof(flow_data.scratch[1]));
+    // insert another line-break (2 lines per page)
+    MUST_THROW(string_insert_chars_each(
+        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
+        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 33, 1, '\n'));
+#endif
 }
 
 static void cb_output_preinit()
 {
     // clear buffer
-    memset(flow_data.data, 0, sizeof(flow_data.data));
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
     switch (flow_data.type) {
     case REMAINDER:
-        strcpy(flow_data.data, "Remainder");
+        strcpy(flow_data.scratch[0], "Remainder");
         break;
     case OUTPUT: {
         // how many non-remainder outputs are there?
@@ -380,11 +411,11 @@ static void cb_output_preinit()
 
         // more than one? Show with numbers on the UI
         if (non_remainder_outputs > 1) {
-            snprintf(flow_data.data, sizeof(flow_data.data) - 1, "Output [%d]",
-                     flow_data.flow_outputs_index_current + 1);
+            snprintf(flow_data.scratch[0], sizeof(flow_data.scratch[0]) - 1,
+                     "Output [%d]", flow_data.flow_outputs_index_current + 1);
         }
         else {
-            strcpy(flow_data.data, "Output");
+            strcpy(flow_data.scratch[0], "Output");
         }
         break;
     }
