@@ -10,6 +10,7 @@
 #include "seproxyhal_protocol.h"
 #include "ux.h"
 #include "ui/ui.h"
+#include "nv_mem.h"
 #include "debugprintf.h"
 #include "ui/nano/flow_user_confirm.h"
 
@@ -235,6 +236,8 @@ __attribute__((section(".boot"))) int main(void)
             TRY
             {
                 io_seproxyhal_init();
+
+                nv_init();
 
                 // deactivate usb before activating
                 USB_power(false);
