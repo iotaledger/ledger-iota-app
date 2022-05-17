@@ -34,6 +34,29 @@
         }                                                                      \
     }
 
+
+/**
+ * Define a flow step with autovalidation after a given timeout (in ms)
+ * with additional pre-init. Used for toggeling the IOTA amounts between short
+ * and full format
+ */
+#define UX_STEP_TIMEOUT_INIT(stepname, layoutkind, preinit, timeout_ms,        \
+                             validate_flow, ...)                               \
+    void stepname##_init(unsigned int stack_slot)                              \
+    {                                                                          \
+        preinit;                                                               \
+        ux_layout_##layoutkind##_init(stack_slot);                             \
+        ux_layout_set_timeout(stack_slot, timeout_ms);                         \
+    }                                                                          \
+    const ux_layout_##layoutkind##_params_t stepname##_val = __VA_ARGS__;      \
+    const ux_flow_step_t stepname = {                                          \
+        stepname##_init,                                                       \
+        &stepname##_val,                                                       \
+        validate_flow,                                                         \
+        NULL,                                                                  \
+    }
+
+
 extern flowdata_t flow_data;
 
 static void cb_value_toggle();
@@ -52,19 +75,21 @@ static void cb_back();
 static void cb_next_dataset();
 static void cb_prev_dataset();
 
+static void ui_confirm_output_value_toggle();
+
 static void get_type_and_read_index();
 
 
 //------------------------------------------------------------------------
 // clang-format off
 
-static UX_FLOW_CALL(
+UX_FLOW_CALL(
         ux_flow_datasets_value_toggle,
         cb_value_toggle()
 )
 
 // review output [...]
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_review,
     bb,
     cb_output_preinit(),
@@ -73,17 +98,24 @@ static UX_STEP_NOCB_INIT(
     }
 );
 
-static UX_STEP_NOCB_INIT(
+UX_FLOW_CALL(
+        ux_flow_confirm_output_value_toggle,
+        ui_confirm_output_value_toggle()
+)
+
+UX_STEP_TIMEOUT_INIT(
     ux_step_amount,
     bn,
     cb_amount_preinit(),
+    2500,
+    ux_flow_confirm_output_value_toggle,
     {
         (const char*) flow_data.scratch[1], (const char*) flow_data.scratch[0]
 
     }
 );
 
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_address,
     bn_paging,
     cb_address_preinit(),
@@ -93,7 +125,7 @@ static UX_STEP_NOCB_INIT(
 );
 
 #ifdef TARGET_NANOS    
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_remainder,
     bn_paging,
     cb_bip32_preinit(),
@@ -102,7 +134,7 @@ static UX_STEP_NOCB_INIT(
     }
 );
 #else
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_remainder,
     bn,
     cb_bip32_preinit(),
@@ -112,28 +144,28 @@ static UX_STEP_NOCB_INIT(
 );
 #endif
 
-static UX_STEP_INIT(
+UX_STEP_INIT(
     ux_step_switch,
     NULL,
     NULL,
     cb_switch()
 );
 
-static UX_STEP_INIT(
+UX_STEP_INIT(
     ux_step_data_next,
     NULL,
     NULL,
     cb_next_dataset()
 );
 
-static UX_STEP_INIT(
+UX_STEP_INIT(
     ux_step_data_prev,
     NULL,
     NULL,
     cb_prev_dataset()
 );
 
-static UX_STEP_INIT(
+UX_STEP_INIT(
     ux_step_back,
     NULL,
     NULL,
@@ -141,7 +173,7 @@ static UX_STEP_INIT(
 );
 //------------------------------------------------------------------------
 
-static UX_STEP_CB(
+UX_STEP_CB(
     ux_step_accept,
     pb,
     cb_accept(NULL),
@@ -151,7 +183,7 @@ static UX_STEP_CB(
     }
 );
 
-static UX_STEP_CB(
+UX_STEP_CB(
     ux_step_reject,
     pb,
     cb_reject(NULL),
@@ -161,7 +193,7 @@ static UX_STEP_CB(
     }
 );
 
-static UX_FLOW(
+UX_FLOW(
     ux_flow_base,
     &ux_step_data_prev,
     &ux_step_review,
@@ -172,7 +204,7 @@ static UX_FLOW(
     FLOW_LOOP
 );
 
-static UX_FLOW(
+UX_FLOW(
     ux_flow_has_remainder,
     &ux_step_back,
     &ux_step_remainder,
@@ -180,7 +212,7 @@ static UX_FLOW(
     FLOW_LOOP
 );
 
-static UX_FLOW(
+UX_FLOW(
     ux_flow_has_accept_reject,
     &ux_step_back,
     &ux_step_accept,
@@ -189,7 +221,7 @@ static UX_FLOW(
     FLOW_LOOP
 );
 
-static UX_FLOW(
+UX_FLOW(
     ux_flow_has_remainder_accept_reject,
     &ux_step_back,
     &ux_step_remainder,
@@ -264,6 +296,10 @@ static void cb_next_dataset()
         flow_data.flow_outputs_index_current = 0;
     }
     get_type_and_read_index();
+
+    // reset toggle flag
+    flow_data.amount_toggle = 0;
+
     ux_flow_init(0, ux_flow_base, &ux_step_review);
 }
 
@@ -276,31 +312,22 @@ static void cb_prev_dataset()
     }
     get_type_and_read_index();
 
+    // reset toggle flag
+    flow_data.amount_toggle = 0;
+
     uint8_t remainder = !!(flow_data.type == REMAINDER);
     uint8_t last = !!(flow_data.flow_outputs_index_current ==
                       flow_data.api->essence.outputs_count - 1);
 
     uint8_t m = (last << 1) | remainder;
     ux_flow_init(0, jump_table_prev[m].flow, jump_table_prev[m].step);
+}
 
-#if 0
-    switch (m) {
-        case 0x0:   // no remainder, not last
-            ux_flow_init(0, ux_flow_base, &ux_step_amount);
-            break;
-        case 0x1:   // remainder, not last
-            ux_flow_init(0, ux_flow_has_remainder, &ux_step_remainder);
-            break;
-        case 0x2:   // no remainder, last
-            ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_reject);
-            break;
-        case 0x3:   // remainder, last
-            ux_flow_init(0, ux_flow_has_remainder_accept_reject, &ux_step_reject);
-            break;
-        default:
-            THROW(SW_UNKNOWN);
-    }
-#endif
+// gets called by a timer to toggle the short and full view
+static void ui_confirm_output_value_toggle()
+{
+    flow_data.amount_toggle = 1 - flow_data.amount_toggle;
+    ux_flow_init(0, ux_flow_base, &ux_step_amount);
 }
 
 static void cb_back()

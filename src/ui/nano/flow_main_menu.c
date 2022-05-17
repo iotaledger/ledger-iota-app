@@ -55,7 +55,7 @@ UX_STEP_CB(
     pn,
     cb_settings_enter(),
     {
-        0, "Settings",
+        &C_icon_coggle, "Settings",
     }    
 );
 
@@ -108,32 +108,37 @@ UX_FLOW(
 
 // clang-format on
 
-void cb_settings_enter() {
+void cb_settings_enter()
+{
     ux_flow_init(0, ux_flow_settings, &ux_step_toggle_blindsigning);
 }
 
-void cb_settings_preinit() {
+void cb_settings_preinit()
+{
     if (nv_get_blindsigning()) {
         strcpy(switch_state, "enabled");
-    } else {
+    }
+    else {
         strcpy(switch_state, "disabled");
     }
 }
 
-void cb_toggle_blindsigning() {
+void cb_toggle_blindsigning()
+{
     nv_toggle_blindsigning();
     ux_flow_init(0, ux_flow_settings, &ux_step_toggle_blindsigning);
 }
 
-void cb_settings_back() {
+void cb_settings_back()
+{
     ux_flow_init(0, ux_main_menu, &ux_settings);
 }
 
-void flow_main_menu() {
-	// reserve a display stack slot if none yet
-	if (G_ux.stack_count == 0) {
-		ux_stack_push();
-	}
-	ux_flow_init(0, ux_main_menu, NULL);
+void flow_main_menu()
+{
+    // reserve a display stack slot if none yet
+    if (G_ux.stack_count == 0) {
+        ux_stack_push();
+    }
+    ux_flow_init(0, ux_main_menu, NULL);
 }
-

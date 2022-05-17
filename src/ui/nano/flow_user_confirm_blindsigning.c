@@ -3,6 +3,8 @@
 #include "ux.h"
 #include "glyphs.h"
 
+#include "nv_mem.h"
+
 #include "flow_user_confirm.h"
 #include "flow_user_confirm_blindsigning.h"
 
@@ -11,7 +13,6 @@
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
-#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 extern flowdata_t flow_data;
 
@@ -20,11 +21,14 @@ static void cb_hash_preinit();
 static void cb_bs_accept();
 static void cb_bs_reject();
 
+static void cb_bs_fix();
+static void cb_bs_fix2();
+
 static void cb_hash_preinit();
 
 // clang-format off
 
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_hash,
     bn_paging,
     cb_hash_preinit(),
@@ -33,7 +37,7 @@ static UX_STEP_NOCB_INIT(
     }
 );
 
-static UX_STEP_CB(
+UX_STEP_CB(
     ux_step_bs_accept,
     pb,
     cb_bs_accept(NULL),
@@ -43,7 +47,7 @@ static UX_STEP_CB(
     }
 );
 
-static UX_STEP_CB(
+UX_STEP_CB(
     ux_step_bs_reject,
     pb,
     cb_bs_reject(NULL),
@@ -53,13 +57,47 @@ static UX_STEP_CB(
     }
 );
 
-static UX_FLOW(
-    ux_blindsigning,
+UX_STEP_INIT(
+    ux_step_bs_fix,
+    NULL,
+    NULL,
+    cb_bs_fix()
+);
+
+UX_STEP_INIT(
+    ux_step_bs_fix2,
+    NULL,
+    NULL,
+    cb_bs_fix2()
+);
+
+UX_FLOW(
+    ux_flow_blindsigning,
+    &ux_step_bs_fix2,
     &ux_step_hash,
     &ux_step_bs_accept,
     &ux_step_bs_reject,
+    &ux_step_bs_fix,
     FLOW_LOOP
 );
+
+UX_STEP_NOCB(
+    ux_step_bs_not_enabled,
+    nn,
+    {
+        "Blind Signing", "is not enabled!"
+    }
+);
+
+
+
+UX_FLOW(
+    ux_flow_bs_not_enabled,
+    &ux_step_bs_not_enabled,
+    &ux_step_bs_reject,
+    FLOW_LOOP
+);
+
 
 // clang-format on
 
@@ -99,10 +137,27 @@ static void cb_bs_reject()
     flow_stop();
 }
 
+// fixes some weird paging issues (stepping forward, skips pages)
+static void cb_bs_fix()
+{
+    ux_flow_init(0, ux_flow_blindsigning, &ux_step_hash);
+}
+
+// fixes some weird paging issues (stepping forward, skips pages)
+static void cb_bs_fix2()
+{
+    ux_flow_init(0, ux_flow_blindsigning, &ux_step_bs_reject);
+}
+
 void flow_start_blindsigning(const API_CTX *api, accept_cb_t accept_cb,
                              reject_cb_t reject_cb, timeout_cb_t timeout_cb)
 {
     flow_start_user_confirm(api, accept_cb, reject_cb, timeout_cb);
 
-    ux_flow_init(0, ux_blindsigning, &ux_step_hash);
+    if (!nv_get_blindsigning()) {
+        ux_flow_init(0, ux_flow_bs_not_enabled, &ux_step_bs_not_enabled);
+    }
+    else {
+        ux_flow_init(0, ux_flow_blindsigning, &ux_step_hash);
+    }
 }

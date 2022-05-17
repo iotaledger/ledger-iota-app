@@ -131,21 +131,26 @@ uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
     // amount > 0 enforced by validation
     MUST(amount = get_output_amount(api, index));
 
-    // only full decimals for shimmer
-    if (api->coin == COIN_SHIMMER) {
+    switch (api->coin) {
+    case COIN_IOTA: {
+        // show IOTA in full or short mode
+        if (full) { // full
+            // max supply is 2779530283277761 - this fits nicely in one line
+            // on the Ledger nano s always cut after the 16th char to not
+            // make a page with a single 'i'.
+            format_value_full(dst, dst_len, amount);
+        }
+        else { // short
+            format_value_short(dst, dst_len, amount);
+        }
+        break;
+    }
+    case COIN_SHIMMER: {
         format_value_full_decimals(dst, dst_len, amount);
-        return 1;
+        break;
     }
-
-    // show IOTA in full or short mode
-    if (full) { // full
-        // max supply is 2779530283277761 - this fits nicely in one line
-        // on the Ledger nano s always cut after the 16th char to not
-        // make a page with a single 'i'.
-        format_value_full(dst, dst_len, amount);
-    }
-    else { // short
-        format_value_short(dst, dst_len, amount);
+    default:
+        THROW(SW_UNKNOWN);
     }
     return 1;
 }

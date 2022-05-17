@@ -13,17 +13,15 @@ extern flowdata_t flow_data;
 #pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
-#pragma GCC diagnostic error "-Wmissing-prototypes"
 
 static void cb_address_preinit();
+static void cb_bip32_preinit();
 
 static void cb_accept();
-static void cb_fix();
-static void cb_fix2();
 
 // clang-format off
 
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_new_address,
     bn_paging,
     cb_address_preinit(),
@@ -32,7 +30,7 @@ static UX_STEP_NOCB_INIT(
     }
 );
 
-static UX_STEP_NOCB_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_new_remainder,
     bn_paging,
     cb_address_preinit(),
@@ -41,7 +39,27 @@ static UX_STEP_NOCB_INIT(
     }
 );
 
-static UX_STEP_CB(
+#ifdef TARGET_NANOS    
+UX_STEP_NOCB_INIT(
+    ux_step_na_bip32,
+    bn_paging,
+    cb_bip32_preinit(),
+    {
+        "BIP32 Path", (const char*) flow_data.scratch[0]
+    }
+);
+#else
+UX_STEP_NOCB_INIT(
+    ux_step_na_bip32,
+    bn,
+    cb_bip32_preinit(),
+    {
+        "BIP32 Path", (const char*) flow_data.scratch[0]
+    }
+);
+#endif
+
+UX_STEP_CB(
     ux_step_ok,
     pb,
     cb_accept(),
@@ -51,35 +69,19 @@ static UX_STEP_CB(
     }
 );
 
-static UX_STEP_INIT(
-    ux_step_fix,
-    NULL,
-    NULL,
-    cb_fix()
-);
-
-static UX_STEP_INIT(
-    ux_step_fix2,
-    NULL,
-    NULL,
-    cb_fix2()
-);
-
-static UX_FLOW(
+UX_FLOW(
     ux_flow_new_address,
-    &ux_step_fix2,
     &ux_step_new_address,
+    &ux_step_na_bip32,
     &ux_step_ok,
-    &ux_step_fix,
     FLOW_LOOP
 );
 
-static UX_FLOW(
+UX_FLOW(
     ux_flow_new_remainder,
-    &ux_step_fix2,
     &ux_step_new_remainder,
+    &ux_step_na_bip32,
     &ux_step_ok,
-    &ux_step_fix,
     FLOW_LOOP
 );
 
@@ -113,34 +115,22 @@ static void cb_address_preinit()
 #endif
 }
 
+static void cb_bip32_preinit()
+{
+    // clear buffer
+    memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
+
+    format_bip32_with_line_breaks(flow_data.api->bip32_path,
+                                  flow_data.scratch[0],
+                                  sizeof(flow_data.scratch[0]));
+}
+
 static void cb_accept()
 {
     if (flow_data.accept_cb) {
         flow_data.accept_cb();
     }
     flow_stop();
-}
-
-// fixes some weird paging issues (stepping forward, skips page 1/2)
-static void cb_fix()
-{
-    if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
-        ux_flow_init(0, ux_flow_new_remainder, &ux_step_new_remainder);
-    }
-    else {
-        ux_flow_init(0, ux_flow_new_address, &ux_step_new_remainder);
-    }
-}
-
-// fixes some weird paging issues (stepping forward, skips page 1/2)
-static void cb_fix2()
-{
-    if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
-        ux_flow_init(0, ux_flow_new_remainder, &ux_step_ok);
-    }
-    else {
-        ux_flow_init(0, ux_flow_new_address, &ux_step_ok);
-    }
 }
 
 void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
