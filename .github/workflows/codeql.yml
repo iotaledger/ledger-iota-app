@@ -30,6 +30,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+      
+      - name: Set env vars
+        run: |
+          echo "BOLOS_SDK=${GITHUB_WORKSPACE}/dev/sdk/nanos-secure-sdk" >> $GITHUB_ENV
+          echo "TARGET_NAME=TARGET_NANOS" >> $GITHUB_ENV
+
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
