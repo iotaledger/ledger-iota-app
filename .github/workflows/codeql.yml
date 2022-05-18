@@ -1,7 +1,6 @@
 name: "CodeQL"
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - "feat/stardust+shimmer"
@@ -18,9 +17,6 @@ jobs:
       packages: read
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
-      # credentials:
-      #   username: ${{ github.actor }}
-      #   password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Install git
@@ -43,12 +39,8 @@ jobs:
           languages: cpp
           config-file: ./.github/codeql/codeql-config.yml
 
-      # - name: Autobuild
-      #   uses: github/codeql-action/autobuild@v1
       - name: Build app
-        run: |
-          make clean
-          make
+        run: make clean && make
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
