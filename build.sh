@@ -54,16 +54,18 @@ whoami="$( whoami )"
     error "please don't run the script as root or with sudo."
 }
 
-# and if the user has permissions to use docker
-grep -q docker <<< "$( id -Gn $whoami )" || {
-    echo "user $whoami not in docker group."
-    echo "to add the user you can use (on Ubuntu):"
-    echo
-    echo "sudo usermod -a -G docker $whoami"
-    echo
-    echo "after adding, logout and login is required"
-    exit 1
-}
+if [ "$(uname)" == "Linux" ]; then
+    # and if the user has permissions to use docker
+    grep -q docker <<< "$( id -Gn $whoami )" || {
+        echo "user $whoami not in docker group."
+        echo "to add the user you can use (on Ubuntu):"
+        echo
+        echo "sudo usermod -a -G docker $whoami"
+        echo
+        echo "after adding, logout and login is required"
+        exit 1
+    }
+fi
 
 # let's parse argments
 device="nanos" # default
