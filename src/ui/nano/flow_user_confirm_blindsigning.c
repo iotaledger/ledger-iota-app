@@ -40,7 +40,7 @@ UX_STEP_NOCB_INIT(
 UX_STEP_CB(
     ux_step_bs_accept,
     pb,
-    cb_bs_accept(NULL),
+    cb_bs_accept(),
     {
         &C_x_icon_check,
         "Accept"
@@ -50,7 +50,7 @@ UX_STEP_CB(
 UX_STEP_CB(
     ux_step_bs_reject,
     pb,
-    cb_bs_reject(NULL),
+    cb_bs_reject(),
     {
         &C_x_icon_cross,
         "Reject"
