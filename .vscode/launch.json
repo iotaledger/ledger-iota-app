@@ -16,7 +16,7 @@
             "gdbpath": "gdb-multiarch",
             "stopAtConnect": true,
             "autorun": [
-                "source \"${workspaceRoot}/tools/gdbinit\"",
+                //"source \"${workspaceRoot}/tools/gdbinit\"",
                 "set architecture arm",
                 "handle SIGILL nostop pass noprint",
                 //"add-symbol-file \"/home/thomas/git/ledger/speculos/tools/../build/src/launcher\" 0x000101c0",

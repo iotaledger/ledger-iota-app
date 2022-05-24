@@ -175,7 +175,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         // detect overflows
         MUST(total_amount >= tmp.amount);
 
-        *idx = *idx + sizeof(SIG_LOCKED_SINGLE_OUTPUT);
+        *idx = *idx + sizeof(BASIC_OUTPUT);
     }
 
     // shimmer has inflation
