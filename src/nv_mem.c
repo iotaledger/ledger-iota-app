@@ -3,14 +3,14 @@
 #include "os_nvm.h"
 #include "nv_mem.h"
 
-#define N_nv_mem (*(volatile nv_mem_t *)PIC(&nv_mem))
+#define N_nv_mem (*(volatile nv_mem_t *)PIC(&N_nv_mem_real))
 
 typedef struct nv_mem_t {
     uint8_t blindsigning;
     uint8_t initialized;
 } nv_mem_t;
 
-const nv_mem_t nv_mem;
+const nv_mem_t N_nv_mem_real;
 
 void nv_init()
 {

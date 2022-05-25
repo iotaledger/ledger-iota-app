@@ -45,24 +45,6 @@
         }                                                                      \
     }
 
-
-// own memcmp because we also need to check lexical order and
-// common memcmp implementations only specify an return value != 0 if
-// inputs are different but don't give back which of the inputs was
-// bigger / smaller
-static int memcmp_bytewise(const uint8_t *p1, const uint8_t *p2, uint32_t len)
-{
-    for (uint32_t i = 0; i < len; i++) {
-        if (p1[i] > p2[i]) {
-            return 1;
-        }
-        if (p1[i] < p2[i]) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
 static inline uint8_t get_uint32(const uint8_t *data, uint32_t *idx,
                                  uint32_t *v)
 {
@@ -238,6 +220,11 @@ validate_inputs_bip32(const uint8_t *data, uint32_t *idx, uint16_t inputs_count,
 static uint8_t validate_inputs_duplicates(const UTXO_INPUT *inputs,
                                           uint16_t inputs_count)
 {
+    // at least 2 needed for check
+    if (inputs_count < 2) {
+        return 1;
+    }
+
     // Every combination of Transaction ID + Transaction Output Index must be
     // unique in the inputs set.
     for (uint32_t i = 0; i < inputs_count; i++) {
@@ -251,47 +238,6 @@ static uint8_t validate_inputs_duplicates(const UTXO_INPUT *inputs,
     }
     return 1;
 }
-
-// --- CHECK INPUTS FOR LEXICOGRAPHICAL ORDER
-static uint8_t validate_inputs_lexical_order(const UTXO_INPUT *inputs,
-                                             uint16_t inputs_count)
-{
-    // at least 2 needed for check
-    if (inputs_count < 2) {
-        return 1;
-    }
-
-    for (uint32_t i = 0; i < inputs_count - 1; i++) {
-        // Inputs must be in lexicographical order of their serialized form.
-        if (memcmp_bytewise((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
-                            sizeof(UTXO_INPUT)) != -1) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-
-// --- CHECK OUTPUTS FOR LEXICOGRAPHICAL ORDER
-static uint8_t
-validate_outputs_lexical_order(const BASIC_OUTPUT *outputs,
-                                        uint16_t outputs_count)
-{
-    // at least 2 needed for check
-    if (outputs_count < 2) {
-        return 1;
-    }
-
-    for (uint32_t i = 0; i < outputs_count - 1; i++) {
-        // Outputs must be in lexicographical order by their serialized form.
-        if (memcmp_bytewise((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
-                            sizeof(BASIC_OUTPUT)) != -1) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 
 static uint8_t essence_verify_remainder_address(
     uint32_t *bip32_path, BASIC_OUTPUT *outputs, uint32_t outputs_count,
@@ -395,15 +341,6 @@ uint8_t essence_parse_and_validate_stardust(API_CTX *api)
     // additional validation steps of parsed data
     MUST(validate_inputs_duplicates(api->essence.inputs,
                                     api->essence.inputs_count));
-
-    // valid in stardust protocol
-    // MUST(validate_outputs_duplicates(api->essence.outputs,
-    //                                  api->essence.outputs_count));
-
-    MUST(validate_inputs_lexical_order(api->essence.inputs,
-                                       api->essence.inputs_count));
-    MUST(validate_outputs_lexical_order(
-        (BASIC_OUTPUT *)api->essence.outputs, api->essence.outputs_count));
 
     // everything fine - calculate the hash
     essence_hash(api);
