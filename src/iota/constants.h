@@ -60,6 +60,16 @@
 #define BIP32_COIN_SHIMMER    0x8000107b
 #define BIP32_COIN_TESTNET    0x80000001
 
+#if defined(APP_IOTA)
+#define APP_MODE_INIT APP_MODE_IOTA_CHRYSALIS
+#elif defined(APP_SHIMMER)
+#define APP_MODE_INIT APP_MODE_SHIMMER
+#else
+#error unknown app
+#endif
+
+
+
 // the address is the ed25519 pub-key
 #define ADDRESS_SIZE_BYTES 32
 #define ADDRESS_WITH_TYPE_SIZE_BYTES 33

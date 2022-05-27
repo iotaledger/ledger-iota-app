@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "api.h"
+#include "iota/constants.h"
 
 #include "ui/nano/flow_user_confirm.h"
 
@@ -20,7 +21,7 @@ extern unsigned char G_io_apdu_buffer[IO_APDU_BUFFER_SIZE];
 void io_initialize()
 {
     memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
-    api_initialize(APP_MODE_IOTA_CHRYSALIS, 0);
+    api_initialize(APP_MODE_INIT, 0);
 }
 
 void io_send(const void *ptr, unsigned int length, unsigned short sw)

@@ -32,6 +32,7 @@ void cb_settings_back();
 void cb_toggle_blindsigning();
 
 // clang-format off
+#if defined(APP_IOTA)
 UX_STEP_NOCB(
     ux_idle_flow_1_step, 
     pb,
@@ -40,6 +41,18 @@ UX_STEP_NOCB(
         "IOTA",
     }
 );
+#elif defined(APP_SHIMMER)
+UX_STEP_NOCB(
+    ux_idle_flow_1_step, 
+    pb,
+    {
+        &C_icon_shimmer,
+        "Shimmer",
+    }
+);
+#else
+#error unknown app
+#endif
 
 UX_STEP_NOCB(
     ux_idle_flow_2_step,
