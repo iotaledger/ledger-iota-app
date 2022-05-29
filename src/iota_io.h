@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "os.h"
+
 #include "iota/constants.h"
 
 void io_initialize(void);

@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "os.h"
+
 void nv_init();
 
 uint8_t nv_get_blindsigning();
