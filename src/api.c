@@ -1,8 +1,12 @@
-#include "api.h"
-#include <string.h>
-#include "iota_io.h"
-#include "macros.h"
 #include "os.h"
+
+#include <string.h>
+
+#include "iota_io.h"
+#include "api.h"
+
+#include "macros.h"
+
 #include "ui/ui.h"
 
 #include "nv_mem.h"

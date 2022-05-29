@@ -121,10 +121,6 @@ typedef IO_STRUCT
 }
 REFERENCE_UNLOCK_BLOCK;
 
-
-#define FLAG_SIGN_SINGLE    0x01
-#define FLAG_SIGN_BLIND     0x02
-
 // --- request and response structures ---
 typedef IO_STRUCT
 {
