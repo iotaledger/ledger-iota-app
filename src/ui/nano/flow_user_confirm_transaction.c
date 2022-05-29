@@ -63,6 +63,7 @@ static void cb_value_toggle();
 
 static unsigned int cb_accept(const bagl_element_t *e);
 static unsigned int cb_reject(const bagl_element_t *e);
+static unsigned int cb_continue_claiming(const bagl_element_t *e);
 
 static void cb_address_preinit();
 static void cb_amount_preinit();
@@ -231,6 +232,56 @@ UX_FLOW(
     FLOW_LOOP
 );
 
+//--------------------------------------------
+// SMR claiming
+
+UX_STEP_NOCB(
+    ux_step_srm_claiming_start,
+    pb,
+    {
+        &C_x_icon_info,
+        "Claim SMR"
+    }
+);
+
+UX_STEP_NOCB_INIT(
+    ux_step_smr_claiming_message,
+    bn_paging,
+    cb_address_preinit(),
+    {
+        "Claim SMR", "In order to claim the SMR token, you are now signing an IOTA transaction instead of a SMR transaction. Are you really sure you want to proceed?"
+    }
+);
+
+UX_STEP_CB(
+    ux_step_continue,
+    pb,
+    cb_continue_claiming(NULL),
+    {
+        &C_x_icon_check,
+        "Continue"
+    }
+);
+
+UX_STEP_CB(
+    ux_step_cancel,
+    pb,
+    cb_reject(NULL),
+    {
+        &C_x_icon_cross,
+        "Cancel"
+    }
+);
+
+UX_FLOW(
+    ux_flow_smr_claiming_start,
+    &ux_step_srm_claiming_start,
+    &ux_step_smr_claiming_message,
+    &ux_step_continue,
+    &ux_step_cancel,
+    FLOW_LOOP
+);
+
 // clang-format on
 
 
@@ -352,6 +403,15 @@ static unsigned int cb_reject(const bagl_element_t *e)
         flow_data.reject_cb();
     }
     flow_stop();
+    return 0;
+}
+
+static unsigned int cb_continue_claiming(const bagl_element_t *e) 
+{
+    UNUSED(e);
+    // user acknodlwedged to continue
+    // now start the actual transaction confirming flow
+    ux_flow_init(0, ux_flow_base, &ux_step_review);
     return 0;
 }
 
@@ -509,6 +569,11 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
     flow_start_user_confirm(api, accept_cb, reject_cb, timeout_cb);
 
     get_type_and_read_index();
-
-    ux_flow_init(0, ux_flow_base, &ux_step_review);
+    
+    if (1) {
+        // todo show claiming smr message
+        ux_flow_init(0, ux_flow_smr_claiming_start, &ux_step_srm_claiming_start);
+    } else {
+        ux_flow_init(0, ux_flow_base, &ux_step_review);
+    }
 }

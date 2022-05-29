@@ -1,9 +1,10 @@
-#include "api.h"
 #include <string.h>
 #include "iota_io.h"
 #include "macros.h"
 #include "os.h"
 #include "ui/ui.h"
+
+#include "nv_mem.h"
 
 #include "abstraction.h"
 
@@ -32,43 +33,52 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
     explicit_bzero(&api, sizeof(api));
 
     api.bip32_path[0] = 0x8000002c;
-    api.bip32_signing_path[0] = 0x8000002c;
+
+    // app-modes
+    // IOTA App
+    // 0x00: (107a) IOTA + Chrysalis (default, backwards compatible)
+    // 0x80:    (1) IOTA + Chrysalis Testnet
+    // 0x01: (107a) IOTA + Stardust
+    // 0x81:    (1) IOTA + Stardust Testnet
+
+    // Shimmer App
+    // 0x00: (107a) Shimmer Claiming (from IOTA) + Chrysalis
+    // 0x80:    (1) Shimmer Claiming (from IOTA) + Chrysalis (Testnet)
+    // 0x01: (107a) Shimmer Claiming (from IOTA) + Stardust
+    // 0x81:    (1) Shimmer Claiming (from IOTA) + Stardust (Testnet)
+    // 0x03: (107b) Shimmer (default)
+    // 0x83:    (1) Shimmer Testnet
 
     switch (app_mode & 0x7f) {
-#if defined(APP_IOTA)        
+#if defined(APP_IOTA)
     case APP_MODE_IOTA_CHRYSALIS:
         // iota
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
         api.protocol = PROTOCOL_CHRYSALIS;
         api.coin = COIN_IOTA;
         break;
     case APP_MODE_IOTA_STARDUST:
         // iota
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
         api.protocol = PROTOCOL_STARDUST;
         api.coin = COIN_IOTA;
         break;
-#elif defined(APP_SHIMMER)        
-    case APP_MODE_CLAIM_SHIMMER:
-        // primary shimmer
-        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
-        // bip path for claiming SMR from IOTA addresses is different
-        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+#elif defined(APP_SHIMMER)
+    case APP_MODE_SHIMMER_CLAIMING:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
         api.protocol = PROTOCOL_STARDUST;
         api.coin = COIN_SHIMMER;
         break;
     case APP_MODE_SHIMMER:
         // shimmer
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
-        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
         api.protocol = PROTOCOL_STARDUST;
         api.coin = COIN_SHIMMER;
         break;
 #else
-#error unknown app        
-#endif        
+#error unknown app
+#endif
     default:
         THROW(SW_ACCOUNT_NOT_VALID);
     }
@@ -81,21 +91,13 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
     // set bip paths for testnet
     if (app_mode & 0x80) {
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
-        api.bip32_signing_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
     }
 
     // set account indices
     // value of 0 is allowed because it tells us that no account was set
     // through the api and it is checked in every api function that uses
-    // account indices
+    // account indices.
     api.bip32_path[BIP32_ACCOUNT_INDEX] = account_index;
-    api.bip32_signing_path[BIP32_ACCOUNT_INDEX] = account_index;
-
-    if (api.app_mode == APP_MODE_CLAIM_SHIMMER && (api.app_mode & 0x80)) {
-        // we only have one possible coin type for testing (0x80000001)
-        // but we need an different BIP-path for testing claiming SMR
-        api.bip32_signing_path[BIP32_ACCOUNT_INDEX] |= 0x40000000;
-    }
 
     api.app_mode = app_mode;
 }
@@ -198,7 +200,21 @@ uint32_t api_get_app_config(uint8_t is_locked)
     resp.app_version_major = APPVERSION_MAJOR;
     resp.app_version_minor = APPVERSION_MINOR;
     resp.app_version_patch = APPVERSION_PATCH;
+
+    // bit 0: locked
+    // bit 1: blindsigning enabled
+    // bit 2: IOTA / Shimmer app
     resp.app_flags = !!is_locked;
+    resp.app_flags |= !!nv_get_blindsigning() << 1;
+
+#if defined(APP_IOTA)
+    // actually not needed because bit is cleared anyways
+    resp.app_flags &= ~(1 << 2);
+#elif defined(APP_SHIMMER)
+    resp.app_flags |= (1 << 2);
+#else
+#error unknown app
+#endif
 
 #if defined(TARGET_NANOX)
     resp.device = 1;
@@ -434,6 +450,11 @@ uint32_t api_prepare_blindsigning()
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
+    // blindsigning only allowed with shimmer app
+    if (api.app_mode != APP_MODE_SHIMMER) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
     // disable external read and write access before doing anything else
     api.data.type = LOCKED;
 
@@ -445,7 +466,12 @@ uint32_t api_prepare_blindsigning()
     // set flag for blindsigning
     api.essence.blindsigning = 1;
 
-    // the only thing we can parse and validate are the bip32 input paths
+    // we allow to prepare without blindsigning enabled but the user will only
+    // get an error message that blindsigning is not enabled on the Nano when
+    // trying to sign what is the most consistent behaviour because the outcome
+    // is the same as rejecting the signing (the flow only has a reject button
+    // in this case and accepting is not possible) and we don't have to cope
+    // with additional errors.
     if (!essence_parse_and_validate_blindsigning(&api)) {
         THROW(SW_COMMAND_INVALID_DATA);
     }

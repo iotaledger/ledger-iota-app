@@ -8,4 +8,4 @@ mkdir output
 docker build . -f Dockerfile -t codeql
 
 # run analysis
-docker run --rm -v $rpath/output:/app/output -it codeql "/app/codeql-local.sh"
+docker run --rm -v $rpath/output:/app/output -v $rpath/..:/app/ledger-iota-app -it codeql "/app/codeql-local.sh"

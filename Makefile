@@ -22,6 +22,7 @@ endif
 include $(BOLOS_SDK)/Makefile.defines
 
 APPNAME      = "Shimmer"
+#APPNAME      = "IOTA"
 APPVERSION_M = 0
 APPVERSION_N = 7
 APPVERSION_P = 5
