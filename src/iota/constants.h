@@ -5,27 +5,8 @@
  *      Author: thomas
  */
 
-#ifndef SRC_IOTA_CONSTANTS_H_
-#define SRC_IOTA_CONSTANTS_H_
+#pragma once
 
-
-//-----------------------------------------------------------------------------
-// to trick eclipse because this is defined in the Makefile
-// but is shown as error in the code editor
-// doesn't have any effect when compiled with the Makefile
-#ifndef APPVERSION
-
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
-#define APPVERSION_MAJOR 0
-#define APPVERSION_MINOR 6
-#define APPVERSION_PATCH 0
-
-#define APPVERSION                                                             \
-    STR(APPVERSION_MAJOR) "." STR(APPVERSION_MINOR) "." STR(APPVERSION_PATCH)
-
-#endif
 //-----------------------------------------------------------------------------
 
 #define NETWORK_MAINNET 1
@@ -135,4 +116,3 @@
 // this allows us to safe 100+ bytes in the essence struct
 #define API_MAX_SIGNATURE_TYPES (API_BUFFER_SIZE_BYTES / BLAKE2B_SIZE_BYTES)
 
-#endif /* SRC_IOTA_CONSTANTS_H_ */

@@ -24,7 +24,7 @@ typedef enum {
 typedef enum {
     APP_MODE_IOTA_CHRYSALIS = 0,
     APP_MODE_IOTA_STARDUST = 1,
-    APP_MODE_CLAIM_SHIMMER = 2,
+    APP_MODE_SHIMMER_CLAIMING = 2,
     APP_MODE_SHIMMER = 3
 } APP_MODE_TYPE;
 
@@ -223,10 +223,6 @@ typedef struct {
 typedef struct {
     /// primary BIP32 path used for seed derivation
     uint32_t bip32_path[BIP32_PATH_LEN];
-
-    // signing path is extra because it's different for
-    // claiming SMR from IOTA addresses
-    uint32_t bip32_signing_path[BIP32_PATH_LEN];
 
     // app_mode
     APP_MODE_TYPE app_mode;

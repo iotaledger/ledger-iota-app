@@ -153,7 +153,7 @@ uint16_t sign(API_CTX *api, uint8_t *output, uint16_t output_max_len,
     if (reference_index == 0x80) {
         signature_size = sign_signature_unlock_block(
             (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, api->essence.hash,
-            api->bip32_signing_path, &input_bip32_index);
+            api->bip32_path, &input_bip32_index);
     }
     else {
         signature_size = sign_reference_unlock_block(
