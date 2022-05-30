@@ -415,6 +415,12 @@ uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
 
     // if essence has an remainder, store the information about
     if (!!has_remainder) {
+        // not remainder for claiming shimmer allowed
+        if (api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
+            
+            THROW(SW_COMMAND_INVALID_DATA);
+        }
+        
         API_PREPARE_SIGNING_REQUEST req;
         memcpy(&req, data, sizeof(req));
 

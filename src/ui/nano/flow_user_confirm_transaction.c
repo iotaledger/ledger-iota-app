@@ -492,7 +492,8 @@ static void cb_output_preinit()
 
     switch (flow_data.type) {
     case REMAINDER:
-        strcpy(flow_data.scratch[0], "Remainder");
+        strcpy(flow_data.scratch[1], "Remainder");
+        strcpy(flow_data.scratch[0], "Output");
         break;
     case OUTPUT: {
         // how many non-remainder outputs are there?
