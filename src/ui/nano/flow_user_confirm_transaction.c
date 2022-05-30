@@ -12,6 +12,7 @@
 
 #include "api.h"
 #include "flow_user_confirm_transaction.h"
+
 #include "abstraction.h"
 
 #include "iota/constants.h"
@@ -62,9 +63,9 @@ extern flowdata_t flow_data;
 
 static void cb_value_toggle();
 
-static unsigned int cb_accept(const bagl_element_t *e);
-static unsigned int cb_reject(const bagl_element_t *e);
-static unsigned int cb_continue_claiming(const bagl_element_t *e);
+static void cb_accept();
+static void cb_reject();
+static void cb_continue_claiming();
 
 static void cb_address_preinit();
 static void cb_amount_preinit();
@@ -390,33 +391,27 @@ static void cb_back()
     ux_flow_init(0, ux_flow_base, &ux_step_amount);
 }
 
-static unsigned int cb_accept(const bagl_element_t *e)
+static void cb_accept()
 {
-    UNUSED(e);
     if (flow_data.accept_cb) {
         flow_data.accept_cb();
     }
     flow_stop();
-    return 0;
 }
 
-static unsigned int cb_reject(const bagl_element_t *e)
+static void cb_reject()
 {
-    UNUSED(e);
     if (flow_data.reject_cb) {
         flow_data.reject_cb();
     }
     flow_stop();
-    return 0;
 }
 
-static unsigned int cb_continue_claiming(const bagl_element_t *e) 
+static void cb_continue_claiming()
 {
-    UNUSED(e);
     // user acknodlwedged to continue
     // now start the actual transaction confirming flow
     ux_flow_init(0, ux_flow_base, &ux_step_review);
-    return 0;
 }
 
 static void cb_amount_preinit()
@@ -487,6 +482,13 @@ static void cb_output_preinit()
 {
     // clear buffer
     memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
+    memset(flow_data.scratch[1], 0, sizeof(flow_data.scratch[1]));
+
+    if (flow_data.api->app_mode == APP_MODE_SHIMMER_CLAIMING) {
+        strcpy(flow_data.scratch[1], "Claim SMR");
+    } else {
+        strcpy(flow_data.scratch[1], "Review");
+    }
 
     switch (flow_data.type) {
     case REMAINDER:
@@ -574,8 +576,8 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
 
     get_type_and_read_index();
     
-    if (1) {
-        // todo show claiming smr message
+    if (api->app_mode == APP_MODE_SHIMMER_CLAIMING) {
+        // show claiming smr message before starting regular flow
         ux_flow_init(0, ux_flow_smr_claiming_start, &ux_step_srm_claiming_start);
     } else {
         ux_flow_init(0, ux_flow_base, &ux_step_review);

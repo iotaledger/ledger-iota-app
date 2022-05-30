@@ -47,10 +47,8 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
     // 0x81:    (1) IOTA + Stardust Testnet
 
     // Shimmer App
-    // 0x00: (107a) Shimmer Claiming (from IOTA) + Chrysalis
-    // 0x80:    (1) Shimmer Claiming (from IOTA) + Chrysalis (Testnet)
-    // 0x01: (107a) Shimmer Claiming (from IOTA) + Stardust
-    // 0x81:    (1) Shimmer Claiming (from IOTA) + Stardust (Testnet)
+    // 0x02: (107a) Shimmer Claiming (from IOTA)
+    // 0x82:    (1) Shimmer Claiming (from IOTA) (Testnet)
     // 0x03: (107b) Shimmer (default)
     // 0x83:    (1) Shimmer Testnet
 
@@ -455,8 +453,9 @@ uint32_t api_prepare_blindsigning()
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
-    // blindsigning only allowed with shimmer app
-    if (api.app_mode != APP_MODE_SHIMMER) {
+    // blindsigning only allowed with shimmer or iota+stardust
+    if (api.app_mode != APP_MODE_SHIMMER &&
+        (api.app_mode != APP_MODE_IOTA_STARDUST)) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
