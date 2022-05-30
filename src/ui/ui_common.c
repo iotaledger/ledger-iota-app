@@ -5,9 +5,6 @@
 #include "macros.h"
 #include "os.h"
 
-#include "nano/nano_types.h"
-#define MENU_IDX_BREAK ui_state.menu_idx / 2
-
 #define BIP32_LINE_LENGTH 16
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
@@ -238,10 +235,10 @@ int format_bip32_with_line_breaks(const uint32_t *b32, char *out,
     return ofs;
 }
 
-int string_insert_chars_each(const char *src, size_t src_size, char *dst,
-                             size_t dst_size, int insert_after, int count, char c)
+int string_insert_chars_each(const char *src, uint32_t src_size, char *dst,
+                             uint32_t dst_size, int insert_after, int count, char c)
 {
-    size_t src_len = strnlen(src, src_size);
+    uint32_t src_len = strnlen(src, src_size);
     
     // enough space?
     if (dst_size < src_len  + (src_len / insert_after) + 1) {
@@ -249,7 +246,7 @@ int string_insert_chars_each(const char *src, size_t src_size, char *dst,
     }
 
     int ctr = 0;
-    for (size_t i = 0; i < src_len; i++) {
+    for (uint32_t i = 0; i < src_len; i++) {
         *dst++ = *src++;
         ctr++;
         if (count > 0 && ctr == insert_after) {

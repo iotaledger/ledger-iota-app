@@ -5,6 +5,7 @@
  *      Author: thomas
  */
 
+#include "os.h"
 #include "flow_user_confirm_transaction.h"
 #include "abstraction.h"
 #include "ux.h"

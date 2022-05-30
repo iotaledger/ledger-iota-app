@@ -24,6 +24,13 @@
 
 extern API_CTX api;
 
+#define MUST(c)                                                                \
+    {                                                                          \
+        if (!(c)) {                                                            \
+            return 0;                                                          \
+        }                                                                      \
+    }
+
 
 uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
 {

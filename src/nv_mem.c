@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "os.h"
 #include "os_pic.h"
 #include "os_nvm.h"
 #include "nv_mem.h"

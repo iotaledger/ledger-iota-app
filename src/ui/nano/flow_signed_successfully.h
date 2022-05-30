@@ -5,11 +5,6 @@
  *      Author: thomas
  */
 
-#ifndef SRC_UI_NANO_FLOW_SIGNED_SUCCESSFULLY_H_
-#define SRC_UI_NANO_FLOW_SIGNED_SUCCESSFULLY_H_
-
+#pragma once
 
 void flow_signed_successfully(void);
-
-
-#endif /* SRC_UI_NANO_FLOW_SIGNED_SUCCESSFULLY_H_ */

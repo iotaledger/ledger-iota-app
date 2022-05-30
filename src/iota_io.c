@@ -1,9 +1,9 @@
-#include "iota_io.h"
-#include "api.h"
-#include "macros.h"
-#include "os.h"
 #include <string.h>
 
+#include "os.h"
+#include "macros.h"
+
+#include "iota_io.h"
 #include "api.h"
 #include "iota/constants.h"
 

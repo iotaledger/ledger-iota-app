@@ -5,11 +5,7 @@
  *      Author: thomas
  */
 
-#ifndef SRC_UI_NANO_FLOW_GENERIC_ERROR_H_
-#define SRC_UI_NANO_FLOW_GENERIC_ERROR_H_
-
+#pragma once
 
 void flow_generic_error(void);
 
-
-#endif /* SRC_UI_NANO_FLOW_GENERIC_ERROR_H_ */

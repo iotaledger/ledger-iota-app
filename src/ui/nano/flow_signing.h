@@ -5,11 +5,7 @@
  *      Author: thomas
  */
 
-#ifndef SRC_UI_NANO_FLOW_SIGNING_H_
-#define SRC_UI_NANO_FLOW_SIGNING_H_
-
+#pragma once
 
 void flow_signing(void);
 
-
-#endif /* SRC_UI_NANO_FLOW_SIGNING_H_ */

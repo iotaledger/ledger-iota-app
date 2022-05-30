@@ -1,3 +1,4 @@
+#include "os.h"
 #include "ux.h"
 #include "glyphs.h"
 
@@ -30,6 +31,7 @@ UX_STEP_NOCB_INIT(
     }
 );
 
+#ifdef TARGET_NANOS    
 UX_STEP_NOCB_INIT(
     ux_step_new_remainder,
     bn_paging,
@@ -38,6 +40,18 @@ UX_STEP_NOCB_INIT(
         "New Remainder", (const char*) flow_data.scratch[0]
     }
 );
+#else
+UX_STEP_NOCB_INIT(
+    ux_step_new_remainder,
+    bn_paging,
+    cb_address_preinit(),
+    {
+        // in paging mode, "New Remainder" doesn't fit without 
+        // wrapping in the next line
+        "Remainder", (const char*) flow_data.scratch[0]
+    }
+);
+#endif
 
 #ifdef TARGET_NANOS    
 UX_STEP_NOCB_INIT(

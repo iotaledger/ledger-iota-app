@@ -5,6 +5,7 @@
  *      Author: thomas
  */
 
+#include "os.h"
 #include "ux.h"
 
 #include "glyphs.h"
@@ -239,7 +240,7 @@ UX_STEP_NOCB(
     ux_step_srm_claiming_start,
     pb,
     {
-        &C_x_icon_info,
+        &C_icon_warning,
         "Claim SMR"
     }
 );
@@ -249,7 +250,10 @@ UX_STEP_NOCB_INIT(
     bn_paging,
     cb_address_preinit(),
     {
-        "Claim SMR", "In order to claim the SMR token, you are now signing an IOTA transaction instead of a SMR transaction. Are you really sure you want to proceed?"
+        "Claim SMR", "In order to claim the SMR token, you are now "
+                     "signing with IOTA private keys instead of SMR "
+                     "private keys. "
+                     "Are you really sure you want to proceed?"
     }
 );
 

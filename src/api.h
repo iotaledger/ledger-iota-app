@@ -94,10 +94,6 @@ typedef IO_STRUCT
 }
 BASIC_OUTPUT;
 
-
-
-
-
 // used for blindisning
 typedef IO_STRUCT
 {

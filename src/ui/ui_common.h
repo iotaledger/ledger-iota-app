@@ -2,8 +2,6 @@
 #define UI_COMMON_H
 
 #include <stdint.h>
-#include <string.h>
-
 
 /** @brief Returns the tx index corresponding to the current menu entry.
  *  Meta transactions, i.e. transactions with 0-value, are skipped.
@@ -26,11 +24,14 @@ void format_value_full(char *s, unsigned int n, uint64_t val);
  */
 void format_value_short(char *s, unsigned int n, uint64_t val);
 
-void format_value_full_decimals(char *s, const unsigned int n, const uint64_t val);
+void format_value_full_decimals(char *s, const unsigned int n,
+                                const uint64_t val);
 
 int format_bip32_with_line_breaks(const uint32_t *b32, char *out,
-                 int out_max_len);
+                                  int out_max_len);
 
-int string_insert_chars_each(const char* src, size_t src_size, char* dst, size_t dst_size, int insert_after, int count, char c);
+int string_insert_chars_each(const char *src, uint32_t src_size, char *dst,
+                             uint32_t dst_size, int insert_after, int count,
+                             char c);
 
 #endif // UI_COMMON_H

@@ -8,10 +8,7 @@
 
 #include <stdint.h>
 
-#include "ux.h"
-
 #include "api.h"
-#include "ui_common.h"
 
 #include "flow_user_confirm.h"
 

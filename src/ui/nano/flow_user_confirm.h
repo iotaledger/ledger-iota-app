@@ -8,18 +8,13 @@
 
 #include <stdint.h>
 
-#include "ux.h"
-
 #include "api.h"
-#include "ui_common.h"
 
 // bech32: 62/63 bytes + 3 line breaks = 65/66
 // essence hash: 66 bytes + 3 line breaks = 69
 #define TMP_DATA_SIZE 80
 
-typedef enum { FLOW_ACCEPT_REJECT, FLOW_OK } FLOW_TYPES;
-
-typedef unsigned int (*ux_callback_cb_t)(const bagl_element_t *e);
+//typedef unsigned int (*ux_callback_cb_t)(const bagl_element_t *e);
 typedef void (*ux_fetch_data)();
 
 typedef void (*accept_cb_t)();
@@ -64,9 +59,6 @@ typedef struct {
 
     // flag that indicates the flow is active
     uint8_t flow_active;
-
-    FLOW_TYPES flow_type;
-    uint16_t flow_dataset_count;
 } flowdata_t;
 
 void flow_main_menu(void);

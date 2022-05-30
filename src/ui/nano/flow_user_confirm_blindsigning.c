@@ -1,3 +1,4 @@
+#include "os.h"
 #include "ui_common.h"
 
 #include "ux.h"

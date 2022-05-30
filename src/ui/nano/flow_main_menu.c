@@ -4,9 +4,11 @@
  *  Created on: 26.10.2020
  *      Author: thomas
  */
+#include "os.h"
+#include "ux.h"
+
 #include "flow_user_confirm.h"
 
-#include "ux.h"
 #include "glyphs.h"
 
 #include "api.h"
