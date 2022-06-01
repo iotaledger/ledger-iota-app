@@ -27,13 +27,6 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-
-#if INPUTS_MAX_COUNT >= 128
-#error                                                                         \
-    "assumptions violated! MSB used for marking which unlock block is needed!"
-#endif
-
-
 static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
                                const uint8_t *essence_hash,
                                uint32_t *bip32_signing_path,
@@ -122,7 +115,7 @@ static uint8_t sign_get_reference_index(API_CTX *api, uint32_t signature_index)
             }
         }
     }
-    return 0x80;
+    return 0xff;
 }
 
 static uint16_t sign_regular(API_CTX *api, uint8_t *output,
@@ -141,8 +134,8 @@ static uint16_t sign_regular(API_CTX *api, uint8_t *output,
 
     uint16_t signature_size = 0;
 
-    // 0x80 if not a reference index block
-    if (reference_index == 0x80) {
+    // 0xff if not a reference index block
+    if (reference_index == 0xff) {
         signature_size = sign_signature_unlock_block(
             (SIGNATURE_UNLOCK_BLOCK *)output, api->essence.hash,
             api->bip32_path, &input_bip32_index);

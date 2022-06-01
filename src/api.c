@@ -417,16 +417,21 @@ uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
     if (!!has_remainder) {
         // not remainder for claiming shimmer allowed
         if (api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
-            
             THROW(SW_COMMAND_INVALID_DATA);
         }
-        
+
         API_PREPARE_SIGNING_REQUEST req;
         memcpy(&req, data, sizeof(req));
 
         if (!(req.remainder_bip32_change & 0x80000000) ||
-            !(req.remainder_bip32_index & 0x80000000) ||
-            req.remainder_index >= OUTPUTS_MAX_COUNT) {
+            !(req.remainder_bip32_index & 0x80000000)) {
+            THROW(SW_COMMAND_INVALID_DATA);
+        }
+
+        if ((api.protocol == PROTOCOL_CHRYSALIS &&
+             req.remainder_index >= OUTPUTS_MAX_COUNT) ||
+            (api.protocol == PROTOCOL_STARDUST &&
+             req.remainder_index >= OUTPUTS_MAX_COUNT_STARDUST)) {
             THROW(SW_COMMAND_INVALID_DATA);
         }
 
@@ -460,7 +465,8 @@ uint32_t api_prepare_blindsigning()
     }
 
     // blindsigning only allowed with shimmer or iota+stardust
-    if (api.protocol != PROTOCOL_STARDUST || api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
+    if (api.protocol != PROTOCOL_STARDUST ||
+        api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
@@ -537,7 +543,10 @@ uint32_t api_user_confirm_essence()
             api.essence.length >= API_BUFFER_SIZE_BYTES ||
             api.data.length < api.essence.length ||
             api.essence.inputs_count < INPUTS_MIN_COUNT ||
-            api.essence.inputs_count > INPUTS_MAX_COUNT) {
+            (api.protocol == PROTOCOL_CHRYSALIS &&
+             api.essence.inputs_count > INPUTS_MAX_COUNT) ||
+            (api.protocol == PROTOCOL_STARDUST &&
+             api.essence.inputs_count > INPUTS_MAX_COUNT_STARDUST)) {
             THROW(SW_UNKNOWN);
         }
 
@@ -598,7 +607,10 @@ uint32_t api_sign(uint8_t p1)
         api.essence.length >= API_BUFFER_SIZE_BYTES ||
         api.data.length < api.essence.length ||
         api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        api.essence.inputs_count > INPUTS_MAX_COUNT) {
+        (api.protocol == PROTOCOL_CHRYSALIS &&
+         api.essence.inputs_count > INPUTS_MAX_COUNT) ||
+        (api.protocol == PROTOCOL_STARDUST &&
+         api.essence.inputs_count > INPUTS_MAX_COUNT_STARDUST)) {
         THROW(SW_UNKNOWN);
     }
 
@@ -614,8 +626,7 @@ uint32_t api_sign(uint8_t p1)
     uint32_t signature_idx = p1;
 
     uint8_t *output = io_get_buffer();
-    uint16_t signature_size_bytes =
-        sign(&api, output, signature_idx);
+    uint16_t signature_size_bytes = sign(&api, output, signature_idx);
 
     if (!signature_size_bytes) {
         THROW(SW_UNKNOWN);

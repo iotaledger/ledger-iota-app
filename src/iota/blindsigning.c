@@ -92,7 +92,7 @@ uint8_t essence_parse_and_validate_blindsigning(API_CTX *api) {
     // Inputs Count must be 0 < x < 127.
     // At least one input must be specified.
     MUST(api->essence.inputs_count >= INPUTS_MIN_COUNT &&
-         api->essence.inputs_count <= INPUTS_MAX_COUNT);
+         api->essence.inputs_count <= INPUTS_MAX_COUNT_STARDUST);
 
     // bip32 indices don't belong to the essence
     MUST(validate_inputs_bip32(api->data.buffer, &idx,

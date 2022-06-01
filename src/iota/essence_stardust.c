@@ -83,7 +83,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
     // Inputs Count must be 0 < x < 127.
     // At least one input must be specified.
     MUST(*inputs_count >= INPUTS_MIN_COUNT &&
-         *inputs_count <= INPUTS_MAX_COUNT);
+         *inputs_count <= INPUTS_MAX_COUNT_STARDUST);
 
     *inputs_ptr = (UTXO_INPUT *)&data[*idx];
 
@@ -119,7 +119,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // Outputs Count must be 0 < x < 127.
     // At least one output must be specified.
     MUST(*outputs_count >= OUTPUTS_MIN_COUNT &&
-         *outputs_count <= OUTPUTS_MAX_COUNT);
+         *outputs_count <= OUTPUTS_MAX_COUNT_STARDUST);
 
     *outputs_ptr = (BASIC_OUTPUT *)&data[*idx];
     uint64_t total_amount = 0ull;
