@@ -460,8 +460,7 @@ uint32_t api_prepare_blindsigning()
     }
 
     // blindsigning only allowed with shimmer or iota+stardust
-    if (api.app_mode != APP_MODE_SHIMMER &&
-        (api.app_mode != APP_MODE_IOTA_STARDUST)) {
+    if (api.protocol != PROTOCOL_STARDUST || api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
@@ -607,11 +606,16 @@ uint32_t api_sign(uint8_t p1)
         THROW(SW_INCORRECT_P1P2);
     }
 
+    // check the buffer size
+    if (IO_APDU_BUFFER_SIZE < sizeof(SIGNATURE_UNLOCK_BLOCK)) {
+        THROW(SW_UNKNOWN);
+    }
+
     uint32_t signature_idx = p1;
 
     uint8_t *output = io_get_buffer();
     uint16_t signature_size_bytes =
-        sign(&api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
+        sign(&api, output, signature_idx);
 
     if (!signature_size_bytes) {
         THROW(SW_UNKNOWN);

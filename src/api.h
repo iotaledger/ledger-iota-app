@@ -162,6 +162,17 @@ typedef IO_STRUCT
 }
 API_INPUT_BIP32_INDEX;
 
+// used in blindsigning
+// HARDENED flag always will be set internally
+// saves RAM or a maximum of 128 inputs on
+// nanos
+typedef IO_STRUCT
+{
+    uint32_t bip32_index;
+    uint8_t bip32_change;
+}
+API_INPUT_BIP32_INDEX_SHORT;
+
 // same struct with different name
 typedef API_INPUT_BIP32_INDEX API_REMAINDER_BIP32_INDEX;
 
@@ -186,7 +197,7 @@ typedef struct {
 
     // pointer to BIP32 array for input addresses
     // don't use this directly because data is unaligned to save space
-    API_INPUT_BIP32_INDEX *inputs_bip32_index;
+    uint8_t *inputs_bip32_index;
 
     // flag for blindsigning
     uint8_t blindsigning;

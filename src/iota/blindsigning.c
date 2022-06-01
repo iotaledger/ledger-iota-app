@@ -55,23 +55,25 @@ static uint8_t validate_essence_hash(const uint8_t *data, uint32_t *idx, uint8_t
 // validate if there are enough bip32 fragments
 static uint8_t validate_inputs_bip32(const uint8_t *data, uint32_t *idx,
                               uint16_t inputs_count,
-                              API_INPUT_BIP32_INDEX **inputs_bip32_indices)
+                              API_INPUT_BIP32_INDEX_SHORT **inputs_bip32_indices)
 {
-    *inputs_bip32_indices = (API_INPUT_BIP32_INDEX *)&data[*idx];
+    *inputs_bip32_indices = (API_INPUT_BIP32_INDEX_SHORT *)&data[*idx];
     // check if there are as many bip32-paths as inputs
     for (uint32_t i = 0; i < inputs_count; i++) {
-        MUST(*idx + sizeof(API_INPUT_BIP32_INDEX) < API_BUFFER_SIZE_BYTES);
+        MUST(*idx + sizeof(API_INPUT_BIP32_INDEX_SHORT) < API_BUFFER_SIZE_BYTES);
 
-        API_INPUT_BIP32_INDEX tmp;
+        API_INPUT_BIP32_INDEX_SHORT tmp;
         memcpy(
             &tmp, &data[*idx],
-            sizeof(API_INPUT_BIP32_INDEX)); // copy to avoid unaligned access
+            sizeof(API_INPUT_BIP32_INDEX_SHORT)); // copy to avoid unaligned access
 
         // check is MSBs set
         MUST(tmp.bip32_index & 0x80000000);
-        MUST(tmp.bip32_change & 0x80000000);
 
-        *idx = *idx + sizeof(API_INPUT_BIP32_INDEX);
+        // only allowed 0 or 1
+        MUST(!(tmp.bip32_change & 0xffffffe));
+
+        *idx = *idx + sizeof(API_INPUT_BIP32_INDEX_SHORT);
     }
     return 1;
 }
@@ -95,7 +97,7 @@ uint8_t essence_parse_and_validate_blindsigning(API_CTX *api) {
     // bip32 indices don't belong to the essence
     MUST(validate_inputs_bip32(api->data.buffer, &idx,
                                api->essence.inputs_count,
-                               &api->essence.inputs_bip32_index));
+                               (API_INPUT_BIP32_INDEX_SHORT**) &api->essence.inputs_bip32_index));
 
     // save data length
     api->data.length = idx;

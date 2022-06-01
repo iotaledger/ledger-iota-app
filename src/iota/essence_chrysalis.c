@@ -360,7 +360,7 @@ uint8_t essence_parse_and_validate_chryslis(API_CTX *api)
     // bip32 indices don't belong to the essence
     MUST(validate_inputs_bip32(api->data.buffer, &idx,
                                api->essence.inputs_count,
-                               &api->essence.inputs_bip32_index));
+                               (API_INPUT_BIP32_INDEX**) &api->essence.inputs_bip32_index));
 
     // save data length
     api->data.length = idx;

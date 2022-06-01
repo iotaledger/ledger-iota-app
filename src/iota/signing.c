@@ -29,18 +29,16 @@
 
 
 #if INPUTS_MAX_COUNT >= 128
-#error "assumptions violated! MSB used for marking which unlock block is needed!"
+#error                                                                         \
+    "assumptions violated! MSB used for marking which unlock block is needed!"
 #endif
 
 
-static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock, uint16_t output_max_len,
+static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
                                const uint8_t *essence_hash,
                                uint32_t *bip32_signing_path,
                                API_INPUT_BIP32_INDEX *input_bip32_index)
 {
-
-    MUST(output_max_len >= sizeof(SIGNATURE_BLOCK));
-
     cx_ecfp_private_key_t pk;
     cx_ecfp_public_key_t pub;
 
@@ -86,30 +84,21 @@ static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock, uint16_t output_max_len,
 }
 
 static uint16_t sign_signature_unlock_block(
-    SIGNATURE_UNLOCK_BLOCK *pBlock, uint16_t output_max_len,
-    const uint8_t *essence_hash, uint32_t *bip32_signing_path,
-    API_INPUT_BIP32_INDEX *input_bip32_index)
+    SIGNATURE_UNLOCK_BLOCK *pBlock, const uint8_t *essence_hash,
+    uint32_t *bip32_signing_path, API_INPUT_BIP32_INDEX *input_bip32_index)
 {
-    MUST(output_max_len >= sizeof(SIGNATURE_UNLOCK_BLOCK));
-
     pBlock->signature_type = SIGNATURE_TYPE_ED25519; // ED25519
     pBlock->unlock_type = UNLOCK_TYPE_SIGNATURE;     // signature
 
-    // actually isn't needed because we know the SIGNATURE_BLOCK fits
-    output_max_len -= 2;
-
-    MUST(sign_signature(&pBlock->signature, output_max_len, essence_hash,
-                        bip32_signing_path, input_bip32_index));
+    MUST(sign_signature(&pBlock->signature, essence_hash, bip32_signing_path,
+                        input_bip32_index));
 
     return (uint16_t)sizeof(SIGNATURE_UNLOCK_BLOCK);
 }
 
 static uint16_t sign_reference_unlock_block(REFERENCE_UNLOCK_BLOCK *pBlock,
-                                            uint16_t output_max_len,
                                             uint8_t reference_index)
 {
-    MUST(output_max_len >= sizeof(REFERENCE_UNLOCK_BLOCK));
-
     pBlock->reference = (uint16_t)reference_index;
     pBlock->unlock_type = UNLOCK_TYPE_REFERENCE; // reference
 
@@ -118,14 +107,16 @@ static uint16_t sign_reference_unlock_block(REFERENCE_UNLOCK_BLOCK *pBlock,
 
 static uint8_t sign_get_reference_index(API_CTX *api, uint32_t signature_index)
 {
+    API_INPUT_BIP32_INDEX *essence_inputs =
+        (API_INPUT_BIP32_INDEX *)api->essence.inputs_bip32_index;
+
     // reference unlock block is only possible if signature_index != 0 and
     // it's not in blind_signing mode
     if (signature_index && !api->essence.blindsigning) {
         // check if it is a reference unlock block
         for (uint32_t i = 0; i < signature_index; i++) {
             // if there is a match, we found the reference block index
-            if (!memcmp(&api->essence.inputs_bip32_index[signature_index],
-                        &api->essence.inputs_bip32_index[i],
+            if (!memcmp(&essence_inputs[signature_index], &essence_inputs[i],
                         sizeof(API_INPUT_BIP32_INDEX))) {
                 return i;
             }
@@ -134,14 +125,16 @@ static uint8_t sign_get_reference_index(API_CTX *api, uint32_t signature_index)
     return 0x80;
 }
 
-uint16_t sign(API_CTX *api, uint8_t *output, uint16_t output_max_len,
-              uint32_t signature_index)
+static uint16_t sign_regular(API_CTX *api, uint8_t *output,
+                             uint32_t signature_index)
 {
     MUST(signature_index < api->essence.inputs_count);
 
     API_INPUT_BIP32_INDEX input_bip32_index;
-    memcpy(&input_bip32_index,
-           &api->essence.inputs_bip32_index[signature_index],
+    API_INPUT_BIP32_INDEX *essence_inputs =
+        (API_INPUT_BIP32_INDEX *)api->essence.inputs_bip32_index;
+
+    memcpy(&input_bip32_index, &essence_inputs[signature_index],
            sizeof(API_INPUT_BIP32_INDEX)); // avoid unaligned access
 
     uint8_t reference_index = sign_get_reference_index(api, signature_index);
@@ -149,22 +142,63 @@ uint16_t sign(API_CTX *api, uint8_t *output, uint16_t output_max_len,
     uint16_t signature_size = 0;
 
     // 0x80 if not a reference index block
-    // also used for blindsigning
     if (reference_index == 0x80) {
         signature_size = sign_signature_unlock_block(
-            (SIGNATURE_UNLOCK_BLOCK *)output, output_max_len, api->essence.hash,
+            (SIGNATURE_UNLOCK_BLOCK *)output, api->essence.hash,
             api->bip32_path, &input_bip32_index);
     }
     else {
         signature_size = sign_reference_unlock_block(
-            (REFERENCE_UNLOCK_BLOCK *)output, output_max_len, reference_index);
+            (REFERENCE_UNLOCK_BLOCK *)output, reference_index);
     }
 
-    // mark block as blindsigned
+    MUST(signature_size);
+
+    return signature_size;
+}
+
+static uint16_t sign_blindsigning(API_CTX *api, uint8_t *output,
+                                  uint32_t signature_index)
+{
+    MUST(signature_index < api->essence.inputs_count);
+
+    // we need to convert the short version to the long version
+    // with HARDENED flag set
+    API_INPUT_BIP32_INDEX_SHORT input_bip32_index_short;
+    API_INPUT_BIP32_INDEX_SHORT *essence_inputs =
+        (API_INPUT_BIP32_INDEX_SHORT *)api->essence.inputs_bip32_index;
+
+    memcpy(&input_bip32_index_short, &essence_inputs[signature_index],
+           sizeof(API_INPUT_BIP32_INDEX_SHORT)); // avoid unaligned access
+
+    API_INPUT_BIP32_INDEX input_bip32_index;
+
+    input_bip32_index.bip32_index = input_bip32_index_short.bip32_index;
+    input_bip32_index.bip32_change =
+        input_bip32_index_short.bip32_change | 0x80000000;
+
+    uint16_t signature_size = sign_signature_unlock_block(
+        (SIGNATURE_UNLOCK_BLOCK *)output, api->essence.hash, api->bip32_path,
+        &input_bip32_index);
+
+    MUST(signature_size);
+
+    return signature_size;
+}
+
+uint16_t sign(API_CTX *api, uint8_t *output,
+                                  uint32_t signature_index)
+{                                  
+    uint16_t signature_size = 0;
+
     if (api->essence.blindsigning) {
-        output[0] |= 0x80;
+        signature_size = sign_blindsigning(
+            api, output, signature_index);
     }
-
+    else {
+        signature_size =
+            sign_regular(api, output, signature_index);
+    }
     MUST(signature_size);
 
     return signature_size;
