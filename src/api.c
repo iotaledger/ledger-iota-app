@@ -86,11 +86,6 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
         THROW(SW_ACCOUNT_NOT_VALID);
     }
 
-#ifdef APP_DEBUG
-    // always set testnet if app was compiled with additional debug define
-    app_mode |= 0x80;
-#endif
-
     // set bip paths for testnet
     if (app_mode & 0x80) {
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
@@ -255,7 +250,7 @@ uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len)
         THROW(SW_INCORRECT_LENGTH);
     }
 
-    if (app_mode > APP_MODE_SHIMMER) {
+    if ((app_mode & 0x7f) > APP_MODE_SHIMMER) {
         THROW(SW_INCORRECT_P1P2);
     }
 
