@@ -4,7 +4,7 @@
 
 #include "api.h"
 
-uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index);
+const uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index);
 
 uint64_t get_output_amount(const API_CTX *api, uint8_t index);
 

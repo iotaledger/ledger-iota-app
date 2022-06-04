@@ -32,7 +32,7 @@ extern API_CTX api;
     }
 
 
-uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
+const uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
 {
     MUST(index < api->essence.outputs_count);
 
