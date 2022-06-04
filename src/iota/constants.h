@@ -30,7 +30,7 @@
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #define DATA_BLOCK_COUNT 32 // approx 8kB
 #else
-#define DATA_BLOCK_COUNT 3 // 753Byte
+#define DATA_BLOCK_COUNT 6 // approx 1.5kB
 #endif
 
 #define API_BUFFER_SIZE_BYTES (DATA_BLOCK_COUNT * DATA_BLOCK_SIZE)
