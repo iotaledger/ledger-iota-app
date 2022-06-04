@@ -7,7 +7,7 @@
 
 // validation based on:
 //  https://github.com/luca-moser/protocol-rfcs/blob/signed-tx-payload/text/0018-transaction-payload/0018-transaction-payload.md
-//	https://github.com/lzpap/tips/blob/master/tips/TIP-0018/tip-0018.md 
+//	https://github.com/lzpap/tips/blob/master/tips/TIP-0018/tip-0018.md
 
 #include <stdint.h>
 #include <string.h>
@@ -16,7 +16,8 @@
 #include "cx.h"
 #include "api.h"
 
-#include "essence.h"
+#include "essence_stardust.h"
+#include "internal_transfer.h"
 
 #ifndef FUZZING
 #include "iota_io.h"
@@ -109,9 +110,8 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
 
 // --- validate outputs ---
 static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
-                                         BASIC_OUTPUT **outputs_ptr,
-                                         uint16_t *outputs_count,
-                                         uint8_t coin_type)
+                                BASIC_OUTPUT **outputs_ptr,
+                                uint16_t *outputs_count, uint8_t coin_type)
 {
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
@@ -286,7 +286,6 @@ static void essence_hash(API_CTX *api)
 #endif
 }
 
-
 uint8_t essence_parse_and_validate_stardust(API_CTX *api)
 {
     uint32_t idx = 0;
@@ -309,8 +308,8 @@ uint8_t essence_parse_and_validate_stardust(API_CTX *api)
     MUST(validate_skip_bytes(&idx, BLAKE2B_SIZE_BYTES));
 
     MUST(validate_outputs(api->data.buffer, &idx,
-                                   (BASIC_OUTPUT **)&api->essence.outputs,
-                                   &api->essence.outputs_count, api->coin));
+                          (BASIC_OUTPUT **)&api->essence.outputs,
+                          &api->essence.outputs_count, api->coin));
 
     MUST(validate_payload(api->data.buffer, &idx));
 
@@ -318,9 +317,9 @@ uint8_t essence_parse_and_validate_stardust(API_CTX *api)
     api->essence.length = idx;
 
     // bip32 indices don't belong to the essence
-    MUST(validate_inputs_bip32(api->data.buffer, &idx,
-                               api->essence.inputs_count,
-                               (API_INPUT_BIP32_INDEX**) &api->essence.inputs_bip32_index));
+    MUST(validate_inputs_bip32(
+        api->data.buffer, &idx, api->essence.inputs_count,
+        (API_INPUT_BIP32_INDEX **)&api->essence.inputs_bip32_index));
 
     // save data length
     api->data.length = idx;
@@ -344,6 +343,11 @@ uint8_t essence_parse_and_validate_stardust(API_CTX *api)
 
     // everything fine - calculate the hash
     essence_hash(api);
+
+    // check if it's a sweeping transaction
+    if (check_for_sweeping(api)) {
+        api->essence.is_internal_transfer = 1;
+    }
 
     return 1;
 }

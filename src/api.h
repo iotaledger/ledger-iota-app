@@ -208,6 +208,9 @@ typedef struct {
     // flag that signals if essence has a remainder
     uint8_t has_remainder;
 
+    // flag that signals that it's a sweeping transaction
+    uint8_t is_internal_transfer;
+
     // hash of the essence
     uint8_t hash[BLAKE2B_SIZE_BYTES];
 } ESSENCE;

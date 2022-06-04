@@ -15,7 +15,8 @@
 #include "cx.h"
 #include "api.h"
 
-#include "essence.h"
+#include "essence_chrysalis.h"
+#include "internal_transfer.h"
 
 #ifndef FUZZING
 #include "iota_io.h"
@@ -165,12 +166,12 @@ validate_outputs(const uint8_t *data, uint32_t *idx,
         *idx = *idx + sizeof(SIG_LOCKED_SINGLE_OUTPUT);
     }
 
+    // Accumulated output balance must not exceed the total supply of tokens
     // 2'779'530'283'277'761.
     MUST(total_amount <= TOTAL_AMOUNT_MAX);
 
     return 1;
 }
-
 
 // validate payload
 static uint8_t validate_payload(const uint8_t *data, uint32_t *idx)
@@ -282,7 +283,6 @@ static uint8_t validate_outputs_lexical_order(
     return 1;
 }
 
-
 static uint8_t essence_verify_remainder_address(
     uint32_t *bip32_path, SIG_LOCKED_SINGLE_OUTPUT *outputs,
     uint32_t outputs_count, uint16_t remainder_index,
@@ -317,7 +317,6 @@ static uint8_t essence_verify_remainder_address(
 #endif
     return 1;
 }
-
 
 static void essence_hash(API_CTX *api)
 {
@@ -394,6 +393,11 @@ uint8_t essence_parse_and_validate_chryslis(API_CTX *api)
 
     // everything fine - calculate the hash
     essence_hash(api);
+
+    // check if it's a sweeping transaction
+    if (check_for_sweeping(api)) {
+        api->essence.is_internal_transfer = 1;
+    }
 
     return 1;
 }
