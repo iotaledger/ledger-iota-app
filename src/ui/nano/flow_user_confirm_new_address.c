@@ -21,7 +21,7 @@ static void cb_bip32_preinit();
 static void cb_accept();
 
 // clang-format off
-
+#ifdef TARGET_NANOS    
 UX_STEP_NOCB_INIT(
     ux_step_new_address,
     bn_paging,
@@ -30,6 +30,16 @@ UX_STEP_NOCB_INIT(
         "Receive Address", (const char*) flow_data.scratch[0]
     }
 );
+#else
+UX_STEP_NOCB_INIT(
+    ux_step_new_address,
+    bn_paging,
+    cb_address_preinit(),
+    {
+        "Address", (const char*) flow_data.scratch[0]
+    }
+);
+#endif
 
 #ifdef TARGET_NANOS    
 UX_STEP_NOCB_INIT(
@@ -37,7 +47,7 @@ UX_STEP_NOCB_INIT(
     bn_paging,
     cb_address_preinit(),
     {
-        "New Remainder", (const char*) flow_data.scratch[0]
+        "Remainder", (const char*) flow_data.scratch[0]
     }
 );
 #else
@@ -48,7 +58,7 @@ UX_STEP_NOCB_INIT(
     {
         // in paging mode, "New Remainder" doesn't fit without 
         // wrapping in the next line
-        "Remainder", (const char*) flow_data.scratch[0]
+        "New Remainder", (const char*) flow_data.scratch[0]
     }
 );
 #endif
