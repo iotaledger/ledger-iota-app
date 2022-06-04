@@ -5,7 +5,6 @@
 #include "cx.h"
 #include "api.h"
 
-#include "essence.h"
 #include "signing.h"
 
 #ifndef FUZZING

@@ -14,8 +14,7 @@
 #include "abstraction.h"
 
 #include "iota/constants.h"
-#include "iota/essence.h"
-#include "iota/blindsigning.h"
+#include "iota/blindsigning_stardust.h"
 #include "iota/signing.h"
 
 #include "ui/nano/flow_user_confirm_transaction.h"
@@ -410,7 +409,7 @@ uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
 
     // if essence has an remainder, store the information about
     if (!!has_remainder) {
-        // not remainder for claiming shimmer allowed
+        // no remainder for claiming shimmer allowed
         if (api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
             THROW(SW_COMMAND_INVALID_DATA);
         }
@@ -459,7 +458,7 @@ uint32_t api_prepare_blindsigning()
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
-    // blindsigning only allowed with shimmer or iota+stardust
+    // blindsigning only allowed with stardust protocol but not SMR claiming
     if (api.protocol != PROTOCOL_STARDUST ||
         api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
         THROW(SW_COMMAND_NOT_ALLOWED);
@@ -482,7 +481,7 @@ uint32_t api_prepare_blindsigning()
     // is the same as rejecting the signing (the flow only has a reject button
     // in this case and accepting is not possible) and we don't have to cope
     // with additional errors.
-    if (!essence_parse_and_validate_blindsigning(&api)) {
+    if (!parse_and_validate_blindsigning(&api)) {
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
