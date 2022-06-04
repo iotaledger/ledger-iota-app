@@ -287,6 +287,36 @@ UX_FLOW(
     FLOW_LOOP
 );
 
+//--------------------------------------------
+// Sweeping Transaction
+
+UX_STEP_NOCB(
+    ux_step_sweeping_start,
+    pbb,
+    {
+        &C_x_icon_info,
+        "Internal",
+        "Transfer"
+    }
+);
+
+UX_STEP_NOCB_INIT(
+    ux_step_sweeping_info,
+    nn,
+    cb_address_preinit(),
+    {
+        "Info: All coins ", "remain on the wallet"
+    }
+);
+
+UX_FLOW(
+    ux_flow_sweeping,
+    &ux_step_sweeping_start,
+    &ux_step_sweeping_info,
+    &ux_step_accept,
+    &ux_step_reject,
+    FLOW_LOOP
+);
 // clang-format on
 
 
@@ -450,7 +480,7 @@ static void cb_address_preinit()
     memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
     memset(flow_data.scratch[1], 0, sizeof(flow_data.scratch[1]));
 
-    uint8_t *address_with_type_ptr = 0;
+    const uint8_t *address_with_type_ptr = 0;
 
     MUST_THROW(address_with_type_ptr =
                    get_output_address_ptr(flow_data.api, flow_data.read_index));
@@ -580,7 +610,16 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
     if (api->app_mode == APP_MODE_SHIMMER_CLAIMING) {
         // show claiming smr message before starting regular flow
         ux_flow_init(0, ux_flow_smr_claiming_start, &ux_step_srm_claiming_start);
-    } else {
-        ux_flow_init(0, ux_flow_base, &ux_step_review);
+        return;
     }
+    
+    if (api->essence.is_internal_transfer) {
+        // if it's a different flow, we only show some info
+        // there is no security risk because coins remain on the wallet
+        ux_flow_init(0, ux_flow_sweeping, &ux_step_sweeping_start);
+        return;
+    }
+
+    // start regular flow
+    ux_flow_init(0, ux_flow_base, &ux_step_review);
 }
