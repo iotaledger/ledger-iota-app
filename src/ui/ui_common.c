@@ -5,7 +5,7 @@
 #include "macros.h"
 #include "os.h"
 
-#define BIP32_LINE_LENGTH 16
+#define BIP32_LINE_LENGTH 22
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
@@ -118,7 +118,7 @@ void format_value_full_decimals(char *s, const unsigned int n,
     char *dst = s;
     for (size_t i = 0; i < num_len; i++) {
         if (i == num_len - 6) {
-            *dst++ = ',';
+            *dst++ = '.';
         }
         *dst++ = *src++;
     }
