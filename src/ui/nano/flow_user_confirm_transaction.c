@@ -97,7 +97,7 @@ UX_STEP_NOCB_INIT(
     bb,
     cb_output_preinit(),
     {
-        "Review", (const char*) flow_data.scratch[0]
+        (const char*) flow_data.scratch[1], (const char*) flow_data.scratch[0]
     }
 );
 
