@@ -1,4 +1,4 @@
-# IOTA Chrysalis App for Ledger Nano S/X Hardware Wallets
+# IOTA Chrysalis/Stardust App for Ledger Nano S(+)/X Hardware Wallets
 
 ## Date Buffer States
 
@@ -68,9 +68,16 @@ Returns information about the App and the Device.
 | `app_version_major` | 1 | Major version number  |  
 | `app_version_minor` | 1 | Minor version number  |  
 | `app_version_patch` | 1 | Patch level  | 
-| `app_flags` | 1 | unused  | 
-| `device` | 1 | 0: Nano S <br />1: Nano X |
+| `app_flags` | 1 | Flags  | 
+| `device` | 1 | 0: Nano S <br />1: Nano X <br/> 2: Nano S Plus |
 | `debug`| 1 | 0: Not compiled in debug mode<br /> 1: compiled in debug mode|
+
+Flags:
+| Bit | Function |
+|-----|----------|
+| 0 | Ledger locked |
+| 1 | Blindsigning enabled (only Stardust) |
+| 2 | App (0: IOTA, 1: Shimmer) |
 
 **Errors**: \-
 
@@ -91,6 +98,16 @@ All private keys are derived from the bip32-path `2c'/107a'/address'/change'/ind
 | Field | Bytes | Description |
 |-------------------|---|---|
 | `account` | 4 | Hardened BIP32 account index  |  
+| `p1` | 1 | App mode |
+
+App-Mode:
+
+| Mode | Coin Type | Function |
+|-|-|-|
+| 0x00 | 0x107a | IOTA + Chrysalis (default, backwards compatible) |
+| 0x80 |    0x1 | IOTA + Chrysalis Testnet |
+| 0x01 | 0x107a | IOTA + Stardust |
+| 0x81 |    0x1 | IOTA + Stardust Testnet |
 
 **Response**: \-
 
@@ -174,7 +191,7 @@ Reads a block of data from the data buffer. Reading only is allowed if the data 
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | number of block to be read
+|`p1` | number of block to be read
 
 
 **Request**: \-
@@ -225,7 +242,7 @@ Shows a flow on the UI. This instruction is for showing informative screens on t
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | 0: `FLOW_MAIN_MENU` <br/> 1: `FLOW_GENERATING_ADDRESSES` <br/> 2: `FLOW_GENERIC_ERROR` <br/> 3: `FLOW_REJECTED` <br/> 4: `FLOW_SIGNED_SUCCESSFULLY` <br/> 5: `FLOW_SIGNING`
+|`p1` | 0: `FLOW_MAIN_MENU` <br/> 1: `FLOW_GENERATING_ADDRESSES` <br/> 2: `FLOW_GENERIC_ERROR` <br/> 3: `FLOW_REJECTED` <br/> 4: `FLOW_SIGNED_SUCCESSFULLY` <br/> 5: `FLOW_SIGNING`
 
 
 **Request**: \-
@@ -241,7 +258,7 @@ Shows a flow on the UI. This instruction is for showing informative screens on t
 ---
 #### 0xa0 - Prepare Signing
 
-Prepare signing in single-signing or normal signing mode. The former should be used for the Nano S (needs less memory), the latter should be used for the Nano X (is faster). It is not enforced to use the one or another depending on the device the app is compiled for. 
+Prepare signing parses and validates the uploaded essence for a following signing call.
 
 In additionally to the essence also an array of input BIP32 indices (consisting of 32bit BIP32-index and 32bit BIP32-Change per input) is needed. The size of the essence is determined by the data and is calculated during validation. The array of input indices is directly appended after.  
 
@@ -253,8 +270,8 @@ In additionally to the essence also an array of input BIP32 indices (consisting 
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | 0: not prepare for single signing<br/>1: prepare for single signing
-|`p1` | 0: Essence doesn't have an Remainder<br/>1: Essence has an Remainder
+|`p1` | (set to 1, compatibility)
+|`p2` | 0: Essence doesn't have an Remainder<br/>1: Essence has an Remainder
 
 **Request**: 
 
@@ -280,7 +297,7 @@ In additionally to the essence also an array of input BIP32 indices (consisting 
 ---
 #### 0xa1 - Generate Address
 
-Generates addresses. If `p0` is set, the new address is shown to the user on the UI. In this mode, the data buffer states switches to `GENERATED_ADDRESSES` when the user confirmed the new address and only one single address is allowed to generate (for Remainder addresses). 
+Generates addresses. If `p1` is set, the new address is shown to the user on the UI. In this mode, the data buffer states switches to `GENERATED_ADDRESSES` when the user confirmed the new address and only one single address is allowed to generate (for Remainder addresses). 
 
 The addresses are saved (including the ED25519 address type) in the data buffer one after another.
 
@@ -292,7 +309,7 @@ The addresses are saved (including the ED25519 address type) in the data buffer 
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | 0: don't show to the user as interactive flow<br/>1: show to the user as interactive flow (for Remainders).
+|`p1` | 0: don't show to the user as interactive flow<br/>1: show to the user as interactive flow (for Remainders).
 
 **Request**: 
 
@@ -314,29 +331,6 @@ The addresses are saved (including the ED25519 address type) in the data buffer 
 |`SW_INCORRECT_LENGTH`| request data has unexpected size
 |`SW_COMMAND_INVALID_DATA`|too many addresses to generate, `show_on_screen` set but more than one address to generate, invalid BIP32 index or BIP32 index would wrap around during generation|
 |`SW_COMMAND_TIMEOUT`| Timeout happened in interactive mode
-
----
-#### 0xa2 - Sign
-
-Sign the essence in normal signing mode. In this mode, the signatures are temporarily appended at the end of the input indices in the data buffer but are copied to the start of the data buffer after signing. This is faster (less API calls) but needs more RAM and only is recommended for the Nano X. The Nano S should use single signing mode. 
-
-
-**Preconditions**: `USER_CONFIRMED_ESSENCE`
-
-**After**: `SIGNATURES`
-
-**Parameters**: \-
-
-**Request**: \-
-
-**Response**: \-
-
-**Errors**: 
-
-| Error | Description |
-|-------|-------------|
-|`SW_COMMAND_NOT_ALLOWED`|data buffer state is not `USER_CONFIRMED_ESSENCE`.|
-|`SW_UNKNOWN`|some basic validation checks failed although validated prior by `Prepare Signing` or there was an unknown error during signing
 
 ---
 #### 0xa3 - User Confirm Essence
@@ -365,7 +359,8 @@ Presents the validated and parsed essence in clear way on the UI and asks the us
 ---
 #### 0xa4 - Sign Single
 
-Signs a single input and returns the signature in the APDU buffer.
+Signs a single input and returns the signature in the APDU buffer. 
+
 
 **Preconditions**: `USER_CONFIRMED_ESSENCE`
 
@@ -375,7 +370,7 @@ Signs a single input and returns the signature in the APDU buffer.
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | Index of input to sign
+|`p1` | Index of input to sign
 
 **Request**: \-
 
@@ -431,7 +426,7 @@ This command can be useful to verify how much stack in the device is used.
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | Number of page to dump
+|`p1` | Number of page to dump
 
 **Request**: \-
 
@@ -458,7 +453,7 @@ This command only is available in debug mode.
 
 | Parameter | Description |
 |-------|-------------|
-|`p0` | 0: Non-Interactive Mode disabled <br/>1: Non-Interactive Mode enabled
+|`p1` | 0: Non-Interactive Mode disabled <br/>1: Non-Interactive Mode enabled
 
 **Request**: \-
 
