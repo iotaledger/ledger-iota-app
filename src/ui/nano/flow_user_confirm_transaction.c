@@ -179,7 +179,7 @@ UX_STEP_INIT(
 UX_STEP_CB(
     ux_step_accept,
     pb,
-    cb_accept(NULL),
+    cb_accept(),
     {
         &C_x_icon_check,
         "Accept"
@@ -189,7 +189,7 @@ UX_STEP_CB(
 UX_STEP_CB(
     ux_step_reject,
     pb,
-    cb_reject(NULL),
+    cb_reject(),
     {
         &C_x_icon_cross,
         "Reject"
@@ -261,7 +261,7 @@ UX_STEP_NOCB_INIT(
 UX_STEP_CB(
     ux_step_continue,
     pb,
-    cb_continue_claiming(NULL),
+    cb_continue_claiming(),
     {
         &C_x_icon_check,
         "Continue"
@@ -271,7 +271,7 @@ UX_STEP_CB(
 UX_STEP_CB(
     ux_step_cancel,
     pb,
-    cb_reject(NULL),
+    cb_reject(),
     {
         &C_x_icon_cross,
         "Cancel"
