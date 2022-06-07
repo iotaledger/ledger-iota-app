@@ -5,10 +5,7 @@
  *      Author: thomas
  */
 
-#ifndef SRC_UI_NANO_FLOW_REJECTED_H_
-#define SRC_UI_NANO_FLOW_REJECTED_H_
+#pragma once
 
 void flow_rejected(void);
 
-
-#endif /* SRC_UI_NANO_FLOW_REJECTED_H_ */

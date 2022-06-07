@@ -10,3 +10,6 @@
 [submodule "dev/blue-loader-python"]
 	path = dev/blue-loader-python
 	url = https://github.com/LedgerHQ/blue-loader-python
+[submodule "dev/sdk/nanosplus-secure-sdk"]
+	path = dev/sdk/nanosplus-secure-sdk
+	url = https://github.com/LedgerHQ/nanosplus-secure-sdk

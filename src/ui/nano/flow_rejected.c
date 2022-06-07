@@ -5,6 +5,7 @@
  *      Author: thomas
  */
 
+#include "os.h"
 #include "ux.h"
 #include "glyphs.h"
 #include "flow_main_menu.h"

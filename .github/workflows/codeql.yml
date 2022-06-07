@@ -3,7 +3,7 @@ name: "CodeQL"
 on:
   push:
     branches:
-      - develop
+      - "feat/stardust+shimmer"
   pull_request:
   schedule:
     - cron: '0 0 * * *'
@@ -16,10 +16,7 @@ jobs:
       actions: read
       packages: read
     container:
-      image: docker.pkg.github.com/iotaledger/ledger-iota-app/build-app:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
 
     steps:
       - name: Install git
@@ -32,20 +29,18 @@ jobs:
       
       - name: Set env vars
         run: |
-          echo "DEVICE=nanos" >> $GITHUB_ENV
-          echo "BOLOS_SDK=/root/git/ledger-iota-app/dev/sdk/nanos-secure-sdk" >> $GITHUB_ENV
-          echo "CLANGPATH=/usr/bin/" >> $GITHUB_ENV
-          echo "GCCPATH=/usr/bin/" >> $GITHUB_ENV
+          echo "BOLOS_SDK=${GITHUB_WORKSPACE}/dev/sdk/nanos-secure-sdk" >> $GITHUB_ENV
+          echo "TARGET_NAME=TARGET_NANOS" >> $GITHUB_ENV
 
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@v2
         with:
           languages: cpp
           config-file: ./.github/codeql/codeql-config.yml
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v1
+      - name: Build app
+        run: make clean && make
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@v2

@@ -5,13 +5,7 @@
 #include "macros.h"
 #include "os.h"
 
-#ifdef TARGET_BLUE
-#include "blue/blue_types.h"
-#define MENU_IDX_BREAK blue_ui_state.menu_idx
-#else
-#include "nano/nano_types.h"
-#define MENU_IDX_BREAK ui_state.menu_idx / 2
-#endif // TARGET_BLUE
+#define BIP32_LINE_LENGTH 22
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werror"
@@ -87,9 +81,10 @@ void format_value_full(char *s, const unsigned int n, const uint64_t val)
     char buffer[n];
 
     const size_t num_len = format_s64(buffer, sizeof(buffer), val);
-    const size_t num_len_comma = num_len + (num_len - (val < 0 ? 2 : 1)) / 3;
+    const size_t num_len_comma = num_len + (num_len - 1) / 3;
 
     // if the length with commas plus the unit does not fit
+    // +3 = max unit length (i, Mi, Gi, Ti)
     if (num_len_comma + 3 > n) {
         snprintf(s, n, "%s %s", buffer, IOTA_UNITS[0]);
     }
@@ -98,6 +93,38 @@ void format_value_full(char *s, const unsigned int n, const uint64_t val)
         snprintf(s + chars_written, n - chars_written, " %s", IOTA_UNITS[0]);
     }
 }
+
+void format_value_full_decimals(char *s, const unsigned int n,
+                                const uint64_t val)
+{
+    char buffer[n];
+
+    const size_t num_len = format_s64(buffer, sizeof(buffer), val);
+
+    // not enough space
+    if (n < num_len + 2) {
+        THROW(SW_UNKNOWN);
+    }
+
+    // format 0,xxxxxx
+    if (val < 1000000ull) {
+        snprintf(s, n, "0.%s", buffer);
+        return;
+    }
+
+    // format yyyy,xxxxxx
+    // insert comma at the right spot during copying
+    char *src = buffer;
+    char *dst = s;
+    for (size_t i = 0; i < num_len; i++) {
+        if (i == num_len - 6) {
+            *dst++ = '.';
+        }
+        *dst++ = *src++;
+    }
+    *dst = 0;
+}
+
 
 void format_value_short(char *s, const unsigned int n, uint64_t val)
 {
@@ -119,8 +146,6 @@ void format_value_short(char *s, const unsigned int n, uint64_t val)
              IOTA_UNITS[base]);
 }
 
-#define LINELENGTH 16
-
 // returns the length of hex string
 static int hex_len(uint32_t v)
 {
@@ -138,8 +163,8 @@ static int hex_len(uint32_t v)
 // format bip path to string
 // doesn't use a local buffer but generates the string
 // fitting in LINE_WIDTH characters directly
-int format_bip32(const uint32_t *b32, int linenr, char *out,
-                 uint32_t out_max_len)
+static int format_bip32(const uint32_t *b32, int linenr, char *out,
+                        uint32_t out_max_len)
 {
     int len[BIP32_PATH_LEN] = {0};
     for (int i = 0; i < BIP32_PATH_LEN; i++) {
@@ -160,7 +185,7 @@ int format_bip32(const uint32_t *b32, int linenr, char *out,
         out[0] = 0;
     }
     for (int i = 0; i < BIP32_PATH_LEN; i++) {
-        if (curlen + len[i] > LINELENGTH) {
+        if (curlen + len[i] > BIP32_LINE_LENGTH) {
             curlen = 0;
             lines++;
         }
@@ -175,5 +200,61 @@ int format_bip32(const uint32_t *b32, int linenr, char *out,
         }
         curlen += len[i];
     }
-    return !!ofs;
+    return ofs;
+}
+
+int format_bip32_with_line_breaks(const uint32_t *b32, char *out,
+                                  int out_max_len)
+{
+    int ofs = 0;
+    int written = 0;
+    int last_zero = 0;
+
+    // maximum of 3 lines
+    for (int i = 0; i < 3; i++) {
+        written = format_bip32(b32, i, &out[ofs], out_max_len);
+
+        if (!written) {
+            break;
+        }
+        if (last_zero) {
+            // if previously something was written, we have to replace \0 with
+            // \n
+            out[last_zero] = '\n';
+        }
+        ofs += written;
+        out_max_len -= written;
+
+        last_zero = ofs;
+
+        // skip \0
+        ofs++;
+        out_max_len--;
+    }
+    out[ofs] = 0;
+    return ofs;
+}
+
+int string_insert_chars_each(const char *src, uint32_t src_size, char *dst,
+                             uint32_t dst_size, int insert_after, int count, char c)
+{
+    uint32_t src_len = strnlen(src, src_size);
+    
+    // enough space?
+    if (dst_size < src_len  + (src_len / insert_after) + 1) {
+        return 0;
+    }
+
+    int ctr = 0;
+    for (uint32_t i = 0; i < src_len; i++) {
+        *dst++ = *src++;
+        ctr++;
+        if (count > 0 && ctr == insert_after) {
+            ctr = 0;
+            count--;
+            *dst++ = c;
+        }
+    }
+    *dst = 0;
+    return 1;
 }

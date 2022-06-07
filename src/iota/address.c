@@ -31,12 +31,12 @@
     }
 
 
-uint8_t address_encode_bech32(const uint8_t *addr_with_type, char *bech32,
-                              uint32_t bech32_max_length)
+uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
+                              uint32_t bech32_max_length, const char* hrp, const size_t hrp_len)
 {
     // at least this space is needed - bech32_encode adds a zero-terminator
     // byte!
-    if (bech32_max_length < ADDRESS_SIZE_BECH32 + 1)
+    if (bech32_max_length < ADDRESS_SIZE_BECH32_MAX + 1)
         return 0;
 
     uint32_t base32_length = ADDRESS_SIZE_BASE32;
@@ -50,7 +50,7 @@ uint8_t address_encode_bech32(const uint8_t *addr_with_type, char *bech32,
 
     // and encode base32 to bech32
     uint32_t bech32_length = bech32_max_length;
-    ret = bech32_encode(bech32, &bech32_length, ADDRESS_HRP, ADDRESS_HRP_LENGTH,
+    ret = bech32_encode(bech32, &bech32_length, hrp, hrp_len,
                         base32, base32_length);
     MUST(ret);
 
