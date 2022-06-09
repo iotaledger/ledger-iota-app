@@ -516,7 +516,8 @@ static void cb_output_preinit()
 
     if (flow_data.api->app_mode == APP_MODE_SHIMMER_CLAIMING) {
         strcpy(flow_data.scratch[1], "Claim SMR");
-    } else {
+    }
+    else {
         strcpy(flow_data.scratch[1], "Review");
     }
 
@@ -606,13 +607,14 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
     flow_start_user_confirm(api, accept_cb, reject_cb, timeout_cb);
 
     get_type_and_read_index();
-    
+
     if (api->app_mode == APP_MODE_SHIMMER_CLAIMING) {
         // show claiming smr message before starting regular flow
-        ux_flow_init(0, ux_flow_smr_claiming_start, &ux_step_srm_claiming_start);
+        ux_flow_init(0, ux_flow_smr_claiming_start,
+                     &ux_step_srm_claiming_start);
         return;
     }
-    
+
     if (api->essence.is_internal_transfer) {
         // if it's a different flow, we only show some info
         // there is no security risk because coins remain on the wallet

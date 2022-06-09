@@ -23,7 +23,7 @@
     }
 
 // checks if all coins remain on the wallet
-// generate or each input bip32-path the address and compare it 
+// generate or each input bip32-path the address and compare it
 // with the output address
 // if a match is found, no coins are leaving the wallet
 uint8_t check_for_sweeping(const API_CTX *api)
@@ -37,12 +37,13 @@ uint8_t check_for_sweeping(const API_CTX *api)
     // get the first (and only) output address
     const uint8_t *output = get_output_address_ptr(api, 0);
 
-    API_INPUT_BIP32_INDEX *input_indices = (API_INPUT_BIP32_INDEX *) api->essence.inputs_bip32_index;
+    API_INPUT_BIP32_INDEX *input_indices =
+        (API_INPUT_BIP32_INDEX *)api->essence.inputs_bip32_index;
 
     uint32_t bip32_tmp_path[BIP32_PATH_LEN];
     memcpy(bip32_tmp_path, api->bip32_path, sizeof(bip32_tmp_path));
 
-    for (uint16_t i=0; i<api->essence.inputs_count; i++) {
+    for (uint16_t i = 0; i < api->essence.inputs_count; i++) {
 
         // set bip32 index
         bip32_tmp_path[BIP32_ADDRESS_INDEX] = input_indices[i].bip32_index;
