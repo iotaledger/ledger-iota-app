@@ -14,7 +14,7 @@
 // essence hash: 66 bytes + 3 line breaks = 69
 #define TMP_DATA_SIZE 80
 
-//typedef unsigned int (*ux_callback_cb_t)(const bagl_element_t *e);
+// typedef unsigned int (*ux_callback_cb_t)(const bagl_element_t *e);
 typedef void (*ux_fetch_data)();
 
 typedef void (*accept_cb_t)();
@@ -45,7 +45,8 @@ typedef struct {
     int read_index;
     uint8_t type;
 
-    // buffer for renderings of bech32 addresses, hashs, as temporary buffer, ...
+    // buffer for renderings of bech32 addresses, hashs, as temporary buffer,
+    // ...
     char scratch[2][TMP_DATA_SIZE + 1]; // +1 zero terminator
 
     // total number of lines

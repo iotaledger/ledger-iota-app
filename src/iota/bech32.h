@@ -15,4 +15,3 @@ int bech32_encode(char *const output, size_t *const out_len,
 
 int base32_encode(uint8_t *const out, size_t *out_len, const uint8_t *const in,
                   const size_t in_len);
-

@@ -7,4 +7,3 @@
 #pragma once
 
 void flow_generating_addresses(void);
-

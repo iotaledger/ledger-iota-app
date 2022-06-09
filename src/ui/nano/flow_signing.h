@@ -8,4 +8,3 @@
 #pragma once
 
 void flow_signing(void);
-
