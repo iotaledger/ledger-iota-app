@@ -125,10 +125,9 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
 }
 
 // --- validate outputs ---
-static uint8_t
-validate_outputs(const uint8_t *data, uint32_t *idx,
-                           SIG_LOCKED_SINGLE_OUTPUT **outputs_ptr,
-                           uint16_t *outputs_count)
+static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
+                                SIG_LOCKED_SINGLE_OUTPUT **outputs_ptr,
+                                uint16_t *outputs_count)
 {
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
@@ -265,8 +264,9 @@ static uint8_t validate_inputs_lexical_order(const UTXO_INPUT *inputs,
 }
 
 // --- CHECK OUTPUTS FOR LEXICOGRAPHICAL ORDER
-static uint8_t validate_outputs_lexical_order(
-    const SIG_LOCKED_SINGLE_OUTPUT *outputs, uint16_t outputs_count)
+static uint8_t
+validate_outputs_lexical_order(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
+                               uint16_t outputs_count)
 {
     // at least 2 needed for check
     if (outputs_count < 2) {
@@ -346,10 +346,9 @@ uint8_t essence_parse_and_validate_chryslis(API_CTX *api)
     MUST(validate_inputs(api->data.buffer, &idx, &api->essence.inputs,
                          &api->essence.inputs_count));
 
-    MUST(validate_outputs(
-        api->data.buffer, &idx,
-        (SIG_LOCKED_SINGLE_OUTPUT **)&api->essence.outputs,
-        &api->essence.outputs_count));
+    MUST(validate_outputs(api->data.buffer, &idx,
+                          (SIG_LOCKED_SINGLE_OUTPUT **)&api->essence.outputs,
+                          &api->essence.outputs_count));
 
     MUST(validate_payload(api->data.buffer, &idx));
 
@@ -359,7 +358,7 @@ uint8_t essence_parse_and_validate_chryslis(API_CTX *api)
     // bip32 indices don't belong to the essence
     MUST(validate_inputs_bip32(api->data.buffer, &idx,
                                api->essence.inputs_count,
-                               (API_INPUT_BIP32_INDEX**) &api->essence.inputs_bip32_index));
+                               &api->essence.inputs_bip32_index));
 
     // save data length
     api->data.length = idx;

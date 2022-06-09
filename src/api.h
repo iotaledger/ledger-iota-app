@@ -28,15 +28,9 @@ typedef enum {
     APP_MODE_SHIMMER = 3
 } APP_MODE_TYPE;
 
-typedef enum {
-    PROTOCOL_CHRYSALIS = 0,
-    PROTOCOL_STARDUST = 1
-} PROTOCOL_TYPE;
+typedef enum { PROTOCOL_CHRYSALIS = 0, PROTOCOL_STARDUST = 1 } PROTOCOL_TYPE;
 
-typedef enum {
-    COIN_IOTA = 0,
-    COIN_SHIMMER = 1
-} COIN_TYPE;
+typedef enum { COIN_IOTA = 0, COIN_SHIMMER = 1 } COIN_TYPE;
 
 typedef IO_STRUCT
 {
@@ -60,7 +54,7 @@ typedef IO_STRUCT
 }
 SIG_LOCKED_SINGLE_OUTPUT;
 
-typedef IO_STRUCT 
+typedef IO_STRUCT
 {
     // 3 enforced in validation
     uint8_t output_type;
@@ -70,7 +64,7 @@ typedef IO_STRUCT
     // 0 enforced in validation
     uint8_t native_tokens_count;
 
-    // "none" enforced in validation   
+    // "none" enforced in validation
     // NATIVE_TOKENS native_tokens
 
     // 1 enforced in validation
@@ -162,17 +156,6 @@ typedef IO_STRUCT
 }
 API_INPUT_BIP32_INDEX;
 
-// used in blindsigning
-// HARDENED flag always will be set internally
-// saves RAM or a maximum of 128 inputs on
-// nanos
-typedef IO_STRUCT
-{
-    uint32_t bip32_index;
-    uint8_t bip32_change;
-}
-API_INPUT_BIP32_INDEX_SHORT;
-
 // same struct with different name
 typedef API_INPUT_BIP32_INDEX API_REMAINDER_BIP32_INDEX;
 
@@ -197,7 +180,7 @@ typedef struct {
 
     // pointer to BIP32 array for input addresses
     // don't use this directly because data is unaligned to save space
-    uint8_t *inputs_bip32_index;
+    API_INPUT_BIP32_INDEX *inputs_bip32_index;
 
     // flag for blindsigning
     uint8_t blindsigning;
@@ -290,8 +273,8 @@ void api_clear_data(void);
 // clear data buffer
 uint32_t api_clear_data_buffer(void);
 
-uint32_t api_prepare_signing(uint8_t has_remainder,
-                             const uint8_t *data, uint32_t len);
+uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
+                             uint32_t len);
 
 uint32_t api_prepare_blindsigning(void);
 
