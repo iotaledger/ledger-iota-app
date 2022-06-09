@@ -24,8 +24,11 @@
   - [FAQ](#faq)
       - [I lost my ledger, what should I do now?](#i-lost-my-ledger-what-should-i-do-now)
   - [Development](#development)
-    - [Preparing development environment](#preparing-development-environment)
-    - [Compile and load the IOTA Ledger app](#compile-and-load-the-iota-ledger-app)
+    - [Prepare repository and submodules](#prepare-repository-and-submodules)
+    - [Using Docker](#using-docker)
+      - [Building the app](#building-the-app)
+      - [Running the Speculos simulator](#running-the-speculos-simulator)
+      - [Loading the IOTA Ledger app](#loading-the-iota-ledger-app)
   - [Specification](#specification)
 
 ---
@@ -137,33 +140,49 @@ After installation of the IOTA Ledger app, all your funds are restored. Take car
 
 You either can
 
-- run the app in a Ledger Nano S/X simulator or
-- load the app on your read Ledger Nano S
+- run the app in a Ledger Nano S/X/S+ simulator or
+- load the app on your read Ledger Nano S/S+
 
-In both cases, you find instructions here: [Ledger-IOTA-App-Docker Repository](docker)
-
-### Preparing development environment
-
-For active development it might be easier to install the development environment locally instead of using Docker:
+### Prepare repository and submodules 
 
 - Clone this repo
 - Ensure that all git submodules are initialized
-    ```
-    git submodule update --init --recursive
-    ```
-- Set up your development environment according to [Ledger Documentation - Getting Started](https://ledger.readthedocs.io/en/latest/userspace/setup.html).
+  ```
+  git submodule update --init --recursive
+  ```
 
-### Compile and load the IOTA Ledger app
+### Using Docker 
 
-After the development environment has been installed, the app can be build and installed in the following way:
+Using the `build.sh` script is highly recommended because it uses official Docker images for building the app and running the Speculos simulator.
+
+#### Building the app
+
+```
+./build.sh -m (nanos*|nanox|nanosplus)
+```
+
+#### Running the Speculos simulator
+
+The app can be build by:
+```
+./build.sh -m (nanos*|nanox|nanosplus) -s
+```
+
+The simulator will open the port `9999` for APDU commands and provide a web-interface on port `5000`.
+
+#### Loading the IOTA Ledger app
+
+The app can be build and installed in the following way:
 
 - Connect your Ledger to the PC and unlock it
 - To load the app, be sure that the dashboard is opened in the Ledger
-- Run the following commands to compile the app from source and load it
-    ```
-    make load
-    ```
+- Run the following command to compile the app from source and load it
+  ```
+  ./build.sh -m (nanos*|nanox|nanosplus) -l
+  ```
 - Accept all the messages on the Ledger
+
+*: Default is `nanos` if parameter is not specified
 
 ## Specification
 
