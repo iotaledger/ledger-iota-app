@@ -104,12 +104,6 @@ endif
 
 CC      := $(CLANGPATH)clang
 
-ifeq ($(DEBUG),1)
-CFLAGS += -O0 -g3
-else
-CFLAGS += -O2
-endif
-
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=
 

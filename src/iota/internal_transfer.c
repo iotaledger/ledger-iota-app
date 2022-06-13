@@ -26,7 +26,7 @@
 // generate or each input bip32-path the address and compare it
 // with the output address
 // if a match is found, no coins are leaving the wallet
-uint8_t check_for_sweeping(const API_CTX *api)
+uint8_t check_for_internal_transfer(const API_CTX *api)
 {
     // for sweeping only a single output and no remainder
     MUST(api->essence.outputs_count == 1 && !api->essence.has_remainder);

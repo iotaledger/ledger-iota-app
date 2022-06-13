@@ -345,7 +345,7 @@ uint8_t essence_parse_and_validate_stardust(API_CTX *api)
     essence_hash(api);
 
     // check if it's a sweeping transaction
-    if (check_for_sweeping(api)) {
+    if (check_for_internal_transfer(api)) {
         api->essence.is_internal_transfer = 1;
     }
 
