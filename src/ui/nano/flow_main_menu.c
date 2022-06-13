@@ -67,7 +67,7 @@ UX_STEP_NOCB(
 
 UX_STEP_CB(
     ux_settings,
-    pn,
+    pb,
     cb_settings_enter(),
     {
         &C_icon_coggle, "Settings",
