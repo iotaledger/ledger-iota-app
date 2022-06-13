@@ -82,11 +82,12 @@ UX_FLOW(
     FLOW_LOOP
 );
 
-UX_STEP_NOCB(
+UX_STEP_CB(
     ux_step_bs_not_enabled,
-    nn,
+    pbb,
+    cb_bs_reject(),
     {
-        "Blind Signing", "is not enabled!"
+        &C_x_icon_cross, "Blind Signing", "not enabled!"
     }
 );
 
