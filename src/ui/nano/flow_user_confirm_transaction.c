@@ -488,24 +488,8 @@ static void cb_address_preinit()
 
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
-    address_encode_bech32(address_with_type_ptr, flow_data.scratch[1],
-                          sizeof(flow_data.scratch[1]));
-
-    // insert max 3 line-breaks
-    MUST_THROW(string_insert_chars_each(
-        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
-        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 16, 3, '\n'));
-
-#ifdef TARGET_NANOS
-    // NOP - paging of nanos is fine
-#else
-    memcpy(flow_data.scratch[1], flow_data.scratch[0],
-           sizeof(flow_data.scratch[1]));
-    // insert another line-break (2 lines per page)
-    MUST_THROW(string_insert_chars_each(
-        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
-        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 33, 1, '\n'));
-#endif
+    address_encode_bech32(address_with_type_ptr, flow_data.scratch[0],
+                          sizeof(flow_data.scratch[0]));
 }
 
 static void cb_output_preinit()
