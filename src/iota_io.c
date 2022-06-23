@@ -9,9 +9,6 @@
 
 #include "ui/nano/flow_user_confirm.h"
 
-// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
-//#pragma GCC diagnostic error "-Werr"
-#pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
