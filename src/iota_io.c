@@ -11,7 +11,7 @@
 
 // gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
 //#pragma GCC diagnostic error "-Werr"
-#pragma GCC diagnostic error "-Wpedantic"
+//#pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
@@ -26,7 +26,6 @@ void io_initialize()
 
 void io_send(const void *ptr, unsigned int length, unsigned short sw)
 {
-
     if (length > IO_APDU_BUFFER_SIZE - 2) {
         THROW(SW_UNKNOWN);
     }
