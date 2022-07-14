@@ -43,8 +43,9 @@ uint8_t check_for_internal_transfer(const API_CTX *api)
     for (uint16_t i = 0; i < api->essence.inputs_count; i++) {
 
         // set bip32 index
-        bip32_tmp_path[BIP32_ADDRESS_INDEX] = input_indices[i].bip32_index;
-        bip32_tmp_path[BIP32_CHANGE_INDEX] = input_indices[i].bip32_change;
+        // avoid unalighed access
+        memcpy(&bip32_tmp_path[BIP32_ADDRESS_INDEX], &input_indices[i].bip32_index, sizeof(uint32_t));
+        memcpy(&bip32_tmp_path[BIP32_CHANGE_INDEX], &input_indices[i].bip32_change, sizeof(uint32_t));
 
         uint8_t input[ADDRESS_WITH_TYPE_SIZE_BYTES];
 
