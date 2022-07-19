@@ -302,7 +302,8 @@ typedef struct {
     const ux_flow_step_t *const step;
 } jump_table_t;
 
-static uint8_t is_last_output() {
+static uint8_t is_last_output()
+{
     uint8_t last = !!(flow_data.flow_outputs_index_current ==
                       flow_data.api->essence.outputs_count - 1);
 

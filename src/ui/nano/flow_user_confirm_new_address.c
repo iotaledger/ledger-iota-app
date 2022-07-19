@@ -20,6 +20,7 @@ static void cb_accept();
 static void cb_na_fix();
 static void cb_na_fix2();
 
+// clang-format off
 UX_STEP_NOCB_INIT(
     ux_step_new_address,
     bn_paging,
@@ -96,25 +97,27 @@ static void cb_address_preinit()
     // header
     if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
 #ifdef TARGET_NANOS
-        strncpy(flow_data.scratch[1], "Remainder", sizeof(flow_data.scratch[1])-1);
+        strncpy(flow_data.scratch[1], "Remainder",
+                sizeof(flow_data.scratch[1]) - 1);
 #else
-        strncpy(flow_data.scratch[1], "New Remainder", sizeof(flow_data.scratch[1])-1);
-#endif        
+        strncpy(flow_data.scratch[1], "New Remainder",
+                sizeof(flow_data.scratch[1]) - 1);
+#endif
     }
     else {
 #ifdef TARGET_NANOS
-        strncpy(flow_data.scratch[1], "Address", sizeof(flow_data.scratch[1])-1);
+        strncpy(flow_data.scratch[1], "Address",
+                sizeof(flow_data.scratch[1]) - 1);
 #else
-        strncpy(flow_data.scratch[1], "Receive Address", sizeof(flow_data.scratch[1])-1);
-#endif        
+        strncpy(flow_data.scratch[1], "Receive Address",
+                sizeof(flow_data.scratch[1]) - 1);
+#endif
     }
 
     // generate bech32 address including the address_type
     // we only have a single address in the buffer starting at index 0
     address_encode_bech32(flow_data.api->data.buffer, flow_data.scratch[0],
                           sizeof(flow_data.scratch[0]));
-
-
 }
 
 static void cb_bip32_preinit()
