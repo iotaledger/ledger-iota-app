@@ -480,15 +480,23 @@ static void cb_output_preinit()
     }
 
     // how many non-remainder outputs are there?
-    // this is safe because the an essence with only one remainder address
-    // is not allowed in validation
+    // this is safe because essence with only one remainder is covered by
+    // "internal transfer" flow
     int non_remainder_outputs = flow_data.api->essence.outputs_count -
                                 !!flow_data.api->essence.has_remainder;
 
     // more than one? Show with numbers on the UI
     if (non_remainder_outputs > 1) {
+        short output_no = flow_data.flow_outputs_index_current;
+
+        // we don't want to count the remainder as output
+        if (flow_data.api->essence.has_remainder &&
+            flow_data.flow_outputs_index_current >
+                flow_data.api->essence.remainder_index) {
+            output_no--;
+        }
         snprintf(flow_data.scratch[0], sizeof(flow_data.scratch[0]) - 1,
-                 "Output [%d]", flow_data.flow_outputs_index_current + 1);
+                 "Output [%d]", output_no + 1);
     }
     else {
         strcpy(flow_data.scratch[0], "Output");
@@ -525,7 +533,8 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
     if (api->essence.is_internal_transfer ||
         (api->essence.has_remainder && api->essence.outputs_count == 1)) {
         // there is no security risk because coins remain on the wallet
-        ux_flow_init(0, ux_flow_internal_transfer, &ux_step_internal_transfer_start);
+        ux_flow_init(0, ux_flow_internal_transfer,
+                     &ux_step_internal_transfer_start);
         return;
     }
 
