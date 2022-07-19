@@ -17,48 +17,19 @@ static void cb_bip32_preinit();
 
 static void cb_accept();
 
-// clang-format off
-#ifdef TARGET_NANOS    
-UX_STEP_NOCB_INIT(
-    ux_step_new_address,
-    bn_paging,
-    cb_address_preinit(),
-    {
-        "Receive Address", (const char*) flow_data.scratch[0]
-    }
-);
-#else
-UX_STEP_NOCB_INIT(
-    ux_step_new_address,
-    bn_paging,
-    cb_address_preinit(),
-    {
-        "Address", (const char*) flow_data.scratch[0]
-    }
-);
-#endif
+static void cb_na_fix();
+static void cb_na_fix2();
 
-#ifdef TARGET_NANOS    
 UX_STEP_NOCB_INIT(
-    ux_step_new_remainder,
-    bn_paging,
-    cb_address_preinit(),
-    {
-        "Remainder", (const char*) flow_data.scratch[0]
-    }
-);
-#else
-UX_STEP_NOCB_INIT(
-    ux_step_new_remainder,
+    ux_step_new_address,
     bn_paging,
     cb_address_preinit(),
     {
         // in paging mode, "New Remainder" doesn't fit without 
         // wrapping in the next line
-        "New Remainder", (const char*) flow_data.scratch[0]
+        (const char*) flow_data.scratch[1], (const char*) flow_data.scratch[0]
     }
 );
-#endif
 
 #ifdef TARGET_NANOS    
 UX_STEP_NOCB_INIT(
@@ -90,19 +61,27 @@ UX_STEP_CB(
     }
 );
 
-UX_FLOW(
-    ux_flow_new_address,
-    &ux_step_new_address,
-    &ux_step_na_bip32,
-    &ux_step_ok,
-    FLOW_LOOP
+UX_STEP_INIT(
+    ux_step_na_fix,
+    NULL,
+    NULL,
+    cb_na_fix()
+);
+
+UX_STEP_INIT(
+    ux_step_na_fix2,
+    NULL,
+    NULL,
+    cb_na_fix2()
 );
 
 UX_FLOW(
-    ux_flow_new_remainder,
-    &ux_step_new_remainder,
+    ux_flow_new_address,
+    &ux_step_na_fix2,
+    &ux_step_new_address,
     &ux_step_na_bip32,
     &ux_step_ok,
+    &ux_step_na_fix,
     FLOW_LOOP
 );
 
@@ -114,26 +93,28 @@ static void cb_address_preinit()
     memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
     memset(flow_data.scratch[1], 0, sizeof(flow_data.scratch[1]));
 
+    // header
+    if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
+#ifdef TARGET_NANOS
+        strncpy(flow_data.scratch[1], "Remainder", sizeof(flow_data.scratch[1])-1);
+#else
+        strncpy(flow_data.scratch[1], "New Remainder", sizeof(flow_data.scratch[1])-1);
+#endif        
+    }
+    else {
+#ifdef TARGET_NANOS
+        strncpy(flow_data.scratch[1], "Address", sizeof(flow_data.scratch[1])-1);
+#else
+        strncpy(flow_data.scratch[1], "Receive Address", sizeof(flow_data.scratch[1])-1);
+#endif        
+    }
+
     // generate bech32 address including the address_type
     // we only have a single address in the buffer starting at index 0
-    address_encode_bech32(flow_data.api->data.buffer, flow_data.scratch[1],
-                          sizeof(flow_data.scratch[1]));
+    address_encode_bech32(flow_data.api->data.buffer, flow_data.scratch[0],
+                          sizeof(flow_data.scratch[0]));
 
-    // insert line-breaks
-    MUST_THROW(string_insert_chars_each(
-        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
-        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 16, 3, '\n'));
 
-#ifdef TARGET_NANOS
-    // NOP - paging of nanos is fine
-#else
-    memcpy(flow_data.scratch[1], flow_data.scratch[0],
-           sizeof(flow_data.scratch[1]));
-    // insert another line-break (2 lines per page)
-    MUST_THROW(string_insert_chars_each(
-        flow_data.scratch[1], sizeof(flow_data.scratch[1]),
-        flow_data.scratch[0], sizeof(flow_data.scratch[0]), 33, 1, '\n'));
-#endif
 }
 
 static void cb_bip32_preinit()
@@ -154,15 +135,22 @@ static void cb_accept()
     flow_stop();
 }
 
+// fixes some weird paging issues (stepping forward, skips pages)
+static void cb_na_fix()
+{
+    ux_flow_init(0, ux_flow_new_address, &ux_step_new_address);
+}
+
+// fixes some weird paging issues (stepping forward, skips pages)
+static void cb_na_fix2()
+{
+    ux_flow_init(0, ux_flow_new_address, &ux_step_ok);
+}
+
 void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,
                             timeout_cb_t timeout_cb)
 {
     flow_start_user_confirm(api, accept_cb, 0, timeout_cb);
 
-    if (flow_data.api->bip32_path[BIP32_CHANGE_INDEX] & 0x1) {
-        ux_flow_init(0, ux_flow_new_remainder, &ux_step_new_remainder);
-    }
-    else {
-        ux_flow_init(0, ux_flow_new_address, &ux_step_new_address);
-    }
+    ux_flow_init(0, ux_flow_new_address, &ux_step_new_address);
 }
