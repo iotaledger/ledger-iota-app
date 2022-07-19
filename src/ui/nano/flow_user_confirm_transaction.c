@@ -302,13 +302,32 @@ typedef struct {
     const ux_flow_step_t *const step;
 } jump_table_t;
 
-
-static void cb_switch()
-{
+static uint8_t is_last_output() {
     uint8_t last = !!(flow_data.flow_outputs_index_current ==
                       flow_data.api->essence.outputs_count - 1);
 
-    if (!last) {
+    // in case it is not last, the next one could be the remainder but
+    // the remainder will be skipped, so actually it's the last^^
+    // safe because essence with only one remainder is handled in
+    // "internal transfer" flow
+    if (
+        // has it a remainder?
+        flow_data.api->essence.has_remainder &&
+        // and is the remainder the last output?
+        flow_data.api->essence.remainder_index ==
+            flow_data.api->essence.outputs_count - 1 &&
+        // and we are currently at the position before the remainder?
+        flow_data.flow_outputs_index_current ==
+            flow_data.api->essence.outputs_count - 2) {
+        last = 1;
+    }
+    return last;
+}
+
+
+static void cb_switch()
+{
+    if (!is_last_output()) {
         ux_flow_init(0, ux_flow_base, &ux_step_data_next);
     }
     else {
@@ -372,10 +391,7 @@ static void cb_prev_dataset()
     // reset toggle flag
     flow_data.amount_toggle = 0;
 
-    uint8_t last = !!(flow_data.flow_outputs_index_current ==
-                      flow_data.api->essence.outputs_count - 1);
-
-    if (!last) {
+    if (!is_last_output()) {
         ux_flow_init(0, ux_flow_base, &ux_step_amount);
     }
     else {
@@ -537,6 +553,13 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
                      &ux_step_internal_transfer_start);
         return;
     }
+
+    // if remainder is the first, skip it when starting the flow
+    flow_data.flow_outputs_index_current =
+        (flow_data.api->essence.has_remainder &&
+         flow_data.api->essence.remainder_index == 0)
+            ? 1
+            : 0;
 
     // start regular flow
     ux_flow_init(0, ux_flow_base, &ux_step_review);
