@@ -77,9 +77,6 @@ static void cb_prev_dataset();
 
 static void ui_confirm_output_value_toggle();
 
-static void get_type_and_read_index();
-
-
 //------------------------------------------------------------------------
 // clang-format off
 
@@ -205,26 +202,8 @@ UX_FLOW(
 );
 
 UX_FLOW(
-    ux_flow_has_remainder,
-    &ux_step_back,
-    &ux_step_remainder,
-    &ux_step_data_next,
-    FLOW_LOOP
-);
-
-UX_FLOW(
     ux_flow_has_accept_reject,
     &ux_step_back,
-    &ux_step_accept,
-    &ux_step_reject,
-    &ux_step_data_next,
-    FLOW_LOOP
-);
-
-UX_FLOW(
-    ux_flow_has_remainder_accept_reject,
-    &ux_step_back,
-    &ux_step_remainder,
     &ux_step_accept,
     &ux_step_reject,
     &ux_step_data_next,
@@ -285,10 +264,10 @@ UX_FLOW(
 );
 
 //--------------------------------------------
-// Sweeping Transaction
+// internal_transfer Transaction
 
 UX_STEP_NOCB(
-    ux_step_sweeping_start,
+    ux_step_internal_transfer_start,
     pbb,
     {
         &C_x_icon_info,
@@ -298,7 +277,7 @@ UX_STEP_NOCB(
 );
 
 UX_STEP_NOCB_INIT(
-    ux_step_sweeping_info,
+    ux_step_internal_transfer_info,
     nn,
     cb_address_preinit(),
     {
@@ -307,9 +286,9 @@ UX_STEP_NOCB_INIT(
 );
 
 UX_FLOW(
-    ux_flow_sweeping,
-    &ux_step_sweeping_start,
-    &ux_step_sweeping_info,
+    ux_flow_internal_transfer,
+    &ux_step_internal_transfer_start,
+    &ux_step_internal_transfer_info,
     &ux_step_accept,
     &ux_step_reject,
     FLOW_LOOP
@@ -323,62 +302,50 @@ typedef struct {
     const ux_flow_step_t *const step;
 } jump_table_t;
 
-static const jump_table_t jump_table_switch[4] = {
-    // !last && !remainder
-    {ux_flow_base, &ux_step_data_next},
-    // !last &&  remainder
-    {ux_flow_has_remainder, &ux_step_remainder},
-    //  last && !remainder
-    {ux_flow_has_accept_reject, &ux_step_accept},
-    //  last &&  remainder
-    {ux_flow_has_remainder_accept_reject, &ux_step_remainder}};
-
-static const jump_table_t jump_table_prev[4] = {
-    // !last && !remainder
-    {ux_flow_base, &ux_step_amount},
-    // !last &&  remainder
-    {ux_flow_has_remainder, &ux_step_remainder},
-    //  last && !remainder
-    {ux_flow_has_accept_reject, &ux_step_reject},
-    //  last &&  remainder
-    {ux_flow_has_remainder_accept_reject, &ux_step_reject}};
 
 static void cb_switch()
 {
-    uint8_t remainder = !!(flow_data.type == REMAINDER);
     uint8_t last = !!(flow_data.flow_outputs_index_current ==
                       flow_data.api->essence.outputs_count - 1);
 
-    uint8_t m = (last << 1) | remainder;
-    ux_flow_init(0, jump_table_switch[m].flow, jump_table_switch[m].step);
-#if 0    
-    switch (m) {
-        case 0x0:   // no remainder, not last
-            ux_flow_init(0, ux_flow_base, &ux_step_data_next);
-            break;
-        case 0x1:   // remainder, not last
-            ux_flow_init(0, ux_step_remainder, &ux_step_remainder);
-            break;
-        case 0x2:   // no remainder, last
-            ux_flow_init(0, ux_flow_accept_reject, &ux_step_accept);
-            break;
-        case 0x3:   // remainder, last
-            ux_flow_init(0, ux_flow_remainder_accept_reject, &ux_step_remainder);
-            break;
-        default:
-            THROW(SW_UNKNOWN);
+    if (!last) {
+        ux_flow_init(0, ux_flow_base, &ux_step_data_next);
     }
-#endif
+    else {
+        ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_accept);
+    }
 }
 
-static void cb_next_dataset()
+static void check_and_wrap_around_index()
 {
-    flow_data.flow_outputs_index_current++;
+    // this is safe because essence with only one remainder is covered by
+    // "internal transfer" flow
+    // validation wrap around if index >= outputs_count
     if (flow_data.flow_outputs_index_current >=
         flow_data.api->essence.outputs_count) {
         flow_data.flow_outputs_index_current = 0;
     }
-    get_type_and_read_index();
+    // wrap around if index < 0
+    if (flow_data.flow_outputs_index_current < 0) {
+        flow_data.flow_outputs_index_current =
+            flow_data.api->essence.outputs_count - 1;
+    }
+}
+static void cb_next_dataset()
+{
+    flow_data.flow_outputs_index_current++;
+    check_and_wrap_around_index();
+
+    // is the next output the remainder?
+    // if yes, skip it
+    // this is safe because essence with only one remainder is covered by
+    // "internal transfer" flow
+    if (flow_data.api->essence.has_remainder &&
+        flow_data.flow_outputs_index_current ==
+            flow_data.api->essence.remainder_index) {
+        flow_data.flow_outputs_index_current++;
+        check_and_wrap_around_index();
+    }
 
     // reset toggle flag
     flow_data.amount_toggle = 0;
@@ -389,21 +356,31 @@ static void cb_next_dataset()
 static void cb_prev_dataset()
 {
     flow_data.flow_outputs_index_current--;
-    if (flow_data.flow_outputs_index_current < 0) {
-        flow_data.flow_outputs_index_current =
-            flow_data.api->essence.outputs_count - 1;
+    check_and_wrap_around_index();
+
+    // is the previous output the remainder?
+    // if yes, skip it
+    // this is safe because essence with only one remainder is covered by
+    // "internal transfer" flow
+    if (flow_data.api->essence.has_remainder &&
+        flow_data.flow_outputs_index_current ==
+            flow_data.api->essence.remainder_index) {
+        flow_data.flow_outputs_index_current--;
+        check_and_wrap_around_index();
     }
-    get_type_and_read_index();
 
     // reset toggle flag
     flow_data.amount_toggle = 0;
 
-    uint8_t remainder = !!(flow_data.type == REMAINDER);
     uint8_t last = !!(flow_data.flow_outputs_index_current ==
                       flow_data.api->essence.outputs_count - 1);
 
-    uint8_t m = (last << 1) | remainder;
-    ux_flow_init(0, jump_table_prev[m].flow, jump_table_prev[m].step);
+    if (!last) {
+        ux_flow_init(0, ux_flow_base, &ux_step_amount);
+    }
+    else {
+        ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_reject);
+    }
 }
 
 // gets called by a timer to toggle the short and full view
@@ -446,7 +423,7 @@ static void cb_amount_preinit()
     // clear buffer
     memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
-    MUST_THROW(get_amount(flow_data.api, flow_data.read_index,
+    MUST_THROW(get_amount(flow_data.api, flow_data.flow_outputs_index_current,
                           flow_data.scratch[0], sizeof(flow_data.scratch[0]),
                           flow_data.amount_toggle));
 
@@ -479,8 +456,8 @@ static void cb_address_preinit()
 
     const uint8_t *address_with_type_ptr = 0;
 
-    MUST_THROW(address_with_type_ptr =
-                   get_output_address_ptr(flow_data.api, flow_data.read_index));
+    MUST_THROW(address_with_type_ptr = get_output_address_ptr(
+                   flow_data.api, flow_data.flow_outputs_index_current));
 
 
     // generate bech32 address including the address_type
@@ -502,73 +479,19 @@ static void cb_output_preinit()
         strcpy(flow_data.scratch[1], "Review");
     }
 
-    switch (flow_data.type) {
-    case REMAINDER:
-        strcpy(flow_data.scratch[1], "Remainder");
+    // how many non-remainder outputs are there?
+    // this is safe because the an essence with only one remainder address
+    // is not allowed in validation
+    int non_remainder_outputs = flow_data.api->essence.outputs_count -
+                                !!flow_data.api->essence.has_remainder;
+
+    // more than one? Show with numbers on the UI
+    if (non_remainder_outputs > 1) {
+        snprintf(flow_data.scratch[0], sizeof(flow_data.scratch[0]) - 1,
+                 "Output [%d]", flow_data.flow_outputs_index_current + 1);
+    }
+    else {
         strcpy(flow_data.scratch[0], "Output");
-        break;
-    case OUTPUT: {
-        // how many non-remainder outputs are there?
-        // this is safe because the case of an essence with only one
-        // remainder address as output is already covered
-        // (is_bip32_remainder flag would be set).
-        int non_remainder_outputs = flow_data.api->essence.outputs_count -
-                                    !!flow_data.api->essence.has_remainder;
-
-        // more than one? Show with numbers on the UI
-        if (non_remainder_outputs > 1) {
-            snprintf(flow_data.scratch[0], sizeof(flow_data.scratch[0]) - 1,
-                     "Output [%d]", flow_data.flow_outputs_index_current + 1);
-        }
-        else {
-            strcpy(flow_data.scratch[0], "Output");
-        }
-        break;
-    }
-    default:
-        THROW(SW_UNKNOWN);
-        break;
-    }
-}
-
-static void get_type_and_read_index()
-{
-    // default is normal output
-    flow_data.type = OUTPUT;
-
-    // translate the index of the data if needed
-    // in user-confirm-mode reorder the datasets in a way that remainder always
-    // is the last dateset
-    flow_data.read_index = flow_data.flow_outputs_index_current;
-
-    // does essence contain a remainder?
-    if (flow_data.api->essence.has_remainder) {
-        // is the remainder the last output in the essence?
-        if (flow_data.api->essence.remainder_index ==
-            flow_data.api->essence.outputs_count - 1) {
-            // yes, but current index only is the remainder if it's the
-            // remainder_index in case of an essence with only one remainder
-            // output, this also would be true
-            if (flow_data.read_index ==
-                flow_data.api->essence.remainder_index) {
-                flow_data.type = REMAINDER;
-            }
-        }
-        else {
-            // no it's not - we have to take care about switching indices
-            // for displaying on the UI current read_index is the last
-            // dataset? -> display remainder current read_index is the
-            // remainder? -> display last dataset
-            if (flow_data.read_index ==
-                flow_data.api->essence.outputs_count - 1) {
-                flow_data.read_index = flow_data.api->essence.remainder_index;
-                flow_data.type = REMAINDER;
-            }
-            else if (flow_data.read_index ==
-                     flow_data.api->essence.remainder_index) {
-                flow_data.read_index = flow_data.api->essence.outputs_count - 1;
-            }
-        }
     }
 }
 
@@ -587,8 +510,6 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
 {
     flow_start_user_confirm(api, accept_cb, reject_cb, timeout_cb);
 
-    get_type_and_read_index();
-
     if (api->app_mode == APP_MODE_SHIMMER_CLAIMING) {
         // show claiming smr message before starting regular flow
         ux_flow_init(0, ux_flow_smr_claiming_start,
@@ -596,10 +517,15 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
         return;
     }
 
-    if (api->essence.is_internal_transfer) {
-        // if it's a different flow, we only show some info
+    // internal transfer means that no coins leave the wallet.
+    // - essence with a single output address that matches one of the input
+    // addresses or
+    // - essence with only one single remainder output (special case because no
+    // IOTA library generates such essences, but it is valid)
+    if (api->essence.is_internal_transfer ||
+        (api->essence.has_remainder && api->essence.outputs_count == 1)) {
         // there is no security risk because coins remain on the wallet
-        ux_flow_init(0, ux_flow_sweeping, &ux_step_sweeping_start);
+        ux_flow_init(0, ux_flow_internal_transfer, &ux_step_internal_transfer_start);
         return;
     }
 
