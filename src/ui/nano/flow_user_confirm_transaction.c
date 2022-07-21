@@ -306,8 +306,6 @@ typedef struct {
 } jump_table_t;
 
 
-
-
 static void cb_switch()
 {
     uint8_t last = !!(flow_data.flow_outputs_index_current ==
@@ -511,9 +509,10 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
     // how many non-remainder outputs are there?
     // this is safe because essence with only one remainder is covered by
     // "internal transfer" flow
-	flow_data.flow_outputs_index_current = 0;
-    flow_data.num_non_remainder_outputs = flow_data.api->essence.outputs_count -
-                                !!flow_data.api->essence.has_remainder;
+    flow_data.flow_outputs_index_current = 0;
+    flow_data.num_non_remainder_outputs =
+        flow_data.api->essence.outputs_count -
+        !!flow_data.api->essence.has_remainder;
 
     get_read_index();
 

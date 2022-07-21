@@ -43,7 +43,7 @@ typedef struct {
     timeout_cb_t timeout_cb;
 
     int read_index;
-	int num_non_remainder_outputs;
+    int num_non_remainder_outputs;
 
     // buffer for renderings of bech32 addresses, hashs, as temporary buffer,
     // ...
