@@ -279,10 +279,9 @@ UX_STEP_NOCB(
     }
 );
 
-UX_STEP_NOCB_INIT(
+UX_STEP_NOCB(
     ux_step_internal_transfer_info,
     nn,
-    cb_address_preinit(),
     {
         "Info: All coins ", "remain on the wallet"
     }
@@ -298,24 +297,14 @@ UX_FLOW(
 );
 // clang-format on
 
-
-//--- callbacks for ux components ---
-typedef struct {
-    const ux_flow_step_t *const *flow;
-    const ux_flow_step_t *const step;
-} jump_table_t;
-
-
 static void cb_switch()
 {
-    uint8_t last = !!(flow_data.flow_outputs_index_current ==
-                      flow_data.num_non_remainder_outputs - 1);
-
-    if (!last) {
-        ux_flow_init(0, ux_flow_base, &ux_step_data_next);
+    if (flow_data.flow_outputs_index_current ==
+        flow_data.num_non_remainder_outputs - 1) {
+        ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_accept);
     }
     else {
-        ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_accept);
+        ux_flow_init(0, ux_flow_base, &ux_step_data_next);
     }
 }
 
@@ -346,14 +335,12 @@ static void cb_prev_dataset()
     // reset toggle flag
     flow_data.amount_toggle = 0;
 
-    uint8_t last = !!(flow_data.flow_outputs_index_current ==
-                      flow_data.num_non_remainder_outputs - 1);
-
-    if (!last) {
-        ux_flow_init(0, ux_flow_base, &ux_step_amount);
+    if (flow_data.flow_outputs_index_current ==
+        flow_data.num_non_remainder_outputs - 1) {
+        ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_reject);
     }
     else {
-        ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_reject);
+        ux_flow_init(0, ux_flow_base, &ux_step_amount);
     }
 }
 
@@ -493,6 +480,14 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
 {
     flow_start_user_confirm(api, accept_cb, reject_cb, timeout_cb);
 
+    // how many non-remainder outputs are there?
+    // this is safe because essence with only one remainder is covered by
+    // "internal transfer" flow
+    flow_data.flow_outputs_index_current = 0;
+    flow_data.num_non_remainder_outputs =
+        flow_data.api->essence.outputs_count -
+        !!flow_data.api->essence.has_remainder;
+
     // internal transfer means that no coins leave the wallet.
     // - essence with a single output address that matches one of the input
     // addresses or
@@ -505,14 +500,6 @@ void flow_start_user_confirm_transaction(const API_CTX *api,
                      &ux_step_internal_transfer_start);
         return;
     }
-
-    // how many non-remainder outputs are there?
-    // this is safe because essence with only one remainder is covered by
-    // "internal transfer" flow
-    flow_data.flow_outputs_index_current = 0;
-    flow_data.num_non_remainder_outputs =
-        flow_data.api->essence.outputs_count -
-        !!flow_data.api->essence.has_remainder;
 
     get_read_index();
 
