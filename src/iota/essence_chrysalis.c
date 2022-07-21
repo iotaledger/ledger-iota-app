@@ -99,7 +99,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
     // Inputs Count must be 0 < x < 127.
     // At least one input must be specified.
     MUST(*inputs_count >= INPUTS_MIN_COUNT &&
-         *inputs_count <= INPUTS_MAX_COUNT);
+         *inputs_count <= INPUTS_MAX_COUNT_CHRYSALIS);
 
     *inputs_ptr = (UTXO_INPUT *)&data[*idx];
 
@@ -115,7 +115,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
 
         // Transaction Output Index must be 0 ≤ x < 127.
         MUST(/*tmp.transaction_output_id >= 0 &&*/ tmp.transaction_output_id <
-             127);
+             OUTPUTS_MAX_COUNT_CHRYSALIS);
 
         *idx = *idx + sizeof(UTXO_INPUT);
     }
@@ -133,7 +133,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // Outputs Count must be 0 < x < 127.
     // At least one output must be specified.
     MUST(*outputs_count >= OUTPUTS_MIN_COUNT &&
-         *outputs_count <= OUTPUTS_MAX_COUNT);
+         *outputs_count <= OUTPUTS_MAX_COUNT_CHRYSALIS);
 
     *outputs_ptr = (SIG_LOCKED_SINGLE_OUTPUT *)&data[*idx];
     uint64_t total_amount = 0ull;
