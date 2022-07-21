@@ -97,7 +97,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
 
         // Transaction Output Index must be 0 ≤ x < 127.
         MUST(/*tmp.transaction_output_id >= 0 &&*/ tmp.transaction_output_id <
-             127);
+             OUTPUTS_MAX_COUNT_STARDUST);
 
         *idx = *idx + sizeof(UTXO_INPUT);
     }
