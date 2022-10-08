@@ -70,6 +70,9 @@ else
     DEFINES += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
 endif
 
+# default disable DEBUG build
+DEBUG = 0
+
 # if speculos simulator is selected enable debuging features
 ifeq ($(SPECULOS), 1)
 DEFINES += SPECULOS
