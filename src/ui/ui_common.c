@@ -105,7 +105,7 @@ void format_value_full_decimals(char *s, const unsigned int n,
 
     // format 0,xxxxxx
     if (val < 1000000ull) {
-        snprintf(s, n, "0.%06u", (uint32_t) val);
+        snprintf(s, n, "0.%06u", (uint32_t)val);
         return;
     }
 
