@@ -110,7 +110,7 @@ static void IOTA_main()
                     break;
                 default:
                     // reset states and UI
-                    api_initialize(APP_MODE_IOTA_CHRYSALIS, 0);
+                    api_initialize(APP_MODE_INIT, 0);
                     ui_reset();
                 }
 
