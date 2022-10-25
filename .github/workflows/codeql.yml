@@ -16,7 +16,7 @@ jobs:
       actions: read
       packages: read
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:sha-d864950
 
     steps:
       - name: Install git

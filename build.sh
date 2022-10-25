@@ -36,6 +36,7 @@ function usage {
     echo "-c|--cxlib:    don't autodetect cx-lib version (for speculos)"
     echo "-g|--gdb:      start speculos with -d (waiting for gdb debugger)"
     echo "-a|--analyze   run static code analysis"
+    echo "-v|--variant   build for 'iota' or 'shimmer'"
     exit 1
 }
 
@@ -77,6 +78,7 @@ debug=0
 gdb=0
 analysis=0
 cxlib=""
+variant=""
 while (( $# ))
 do
     case "$1" in
@@ -105,6 +107,10 @@ do
         ;;
     "-a" | "--analyze")
         analysis=1
+        ;;
+    "-v" | "--variant")
+        shift
+        variant="$1"
         ;;
     *)
         error "unknown parameter: $1"
@@ -186,6 +192,10 @@ build_flags=""
 # if debug requested, add the flag
 (( $debug )) && {
     build_flags+="DEBUG=1 "
+}
+
+[ ! -z "$variant" ] && {
+    build_flags+="CHAIN=$variant "
 }
 
 extra_args=""

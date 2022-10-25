@@ -21,22 +21,23 @@ endif
 
 include $(BOLOS_SDK)/Makefile.defines
 
-APPNAME      = "IOTA"
 APPVERSION_M = 0
 APPVERSION_N = 8
-APPVERSION_P = 0
+APPVERSION_P = 3
 APPVERSION   = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 APP_LOAD_PARAMS = --path "44'/1'" --curve ed25519 --appFlags 0x240 $(COMMON_LOAD_PARAMS)
 
-DEFINES += APP_IOTA
-# IOTA BIP-path
-APP_LOAD_PARAMS += --path "44'/4218'"
 
-ifeq ($(TARGET_NAME),TARGET_NANOS)
-    ICONNAME=icons/nanos_app_iota.gif
+ifeq ($(CHAIN),)
+CHAIN=iota
+endif
+
+# Check if chain is available
+ifeq ($(shell test -s ./makefile_conf/chain/$(CHAIN).mk && echo -n yes), yes)
+include ./makefile_conf/chain/$(CHAIN).mk
 else
-    ICONNAME=icons/nanox_app_iota.gif
+$(error Unsupported CHAIN - use $(SUPPORTED_CHAINS))
 endif
 
 all: default
@@ -145,4 +146,4 @@ include $(BOLOS_SDK)/Makefile.rules
 dep/%.d: %.c Makefile
 
 listvariants:
-	@echo VARIANTS COIN iota
+	@echo VARIANTS COIN iota shimmer
