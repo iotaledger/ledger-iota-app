@@ -16,11 +16,11 @@ jobs:
       actions: read
       packages: read
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:sha-d864950
 
     steps:
-#      - name: Install git
-#        run: apt-get update && apt-get install -y git
+      - name: Install git
+        run: apt-get update && apt-get install -y git
 
       - name: Checkout repository
         uses: actions/checkout@v2
