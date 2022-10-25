@@ -21,6 +21,14 @@ endif
 
 include $(BOLOS_SDK)/Makefile.defines
 
+APPVERSION_M = 0
+APPVERSION_N = 8
+APPVERSION_P = 3
+APPVERSION   = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
+
+APP_LOAD_PARAMS = --path "44'/1'" --curve ed25519 --appFlags 0x240 $(COMMON_LOAD_PARAMS)
+
+
 ifeq ($(CHAIN),)
 CHAIN=iota
 endif
