@@ -6,7 +6,7 @@
  */
 
 // validation based on:
-//	https://github.com/luca-moser/protocol-rfcs/blob/signed-tx-payload/text/0000-transaction-payload/0000-transaction-payload.md
+//	https://wiki.iota.org/tips/tips/TIP-0007/#utxo
 
 #include <stdint.h>
 #include <string.h>
@@ -45,22 +45,6 @@
     }
 
 
-// own memcmp because we also need to check lexical order and
-// common memcmp implementations only specify an return value != 0 if
-// inputs are different but don't give back which of the inputs was
-// bigger / smaller
-static int memcmp_bytewise(const uint8_t *p1, const uint8_t *p2, uint32_t len)
-{
-    for (uint32_t i = 0; i < len; i++) {
-        if (p1[i] > p2[i]) {
-            return 1;
-        }
-        if (p1[i] < p2[i]) {
-            return -1;
-        }
-    }
-    return 0;
-}
 
 static inline uint8_t get_uint32(const uint8_t *data, uint32_t *idx,
                                  uint32_t *v)
@@ -97,7 +81,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, inputs_count));
 
-    // Inputs Count must be 0 < x < 127.
+    // Inputs Count must be 0 < x < 128.
     // At least one input must be specified.
     MUST(*inputs_count >= INPUTS_MIN_COUNT &&
          *inputs_count <= INPUTS_MAX_COUNT);
@@ -130,7 +114,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
 
-    // Outputs Count must be 0 < x < 127.
+    // Outputs Count must be 0 < x < 128.
     // At least one output must be specified.
     MUST(*outputs_count >= OUTPUTS_MIN_COUNT &&
          *outputs_count <= OUTPUTS_MAX_COUNT);
@@ -318,8 +302,8 @@ static uint8_t validate_inputs_lexical_order(const UTXO_INPUT *inputs,
 
     for (uint32_t i = 0; i < inputs_count - 1; i++) {
         // Inputs must be in lexicographical order of their serialized form.
-        if (memcmp_bytewise((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
-                            sizeof(UTXO_INPUT)) != -1) {
+        if (memcmp((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
+                            sizeof(UTXO_INPUT)) >= 0) {
             return 0;
         }
     }
@@ -338,8 +322,8 @@ validate_outputs_lexical_order(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
 
     for (uint32_t i = 0; i < outputs_count - 1; i++) {
         // Outputs must be in lexicographical order by their serialized form.
-        if (memcmp_bytewise((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
-                            sizeof(SIG_LOCKED_SINGLE_OUTPUT)) != -1) {
+        if (memcmp((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
+                            sizeof(SIG_LOCKED_SINGLE_OUTPUT)) >= 0) {
             return 0;
         }
     }
@@ -483,27 +467,14 @@ static uint16_t essence_sign_signature_unlock_block(
     uint32_t signature_length = 0;
 
     uint8_t ret = 0;
-    BEGIN_TRY
-    {
-        TRY
-        {
-            // create key pair and convert pub key to bytes
-            ret = ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub);
 
-            ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
-                                      pBlock->signature, &signature_length);
-        }
-        CATCH_OTHER(e)
-        {
-            THROW(e);
-        }
-        FINALLY
-        {
-            // always delete from stack
-            explicit_bzero(&pk, sizeof(pk));
-        }
-    }
-    END_TRY;
+    // create key pair and convert pub key to bytes
+    ret = ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub);
+    ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
+                                pBlock->signature, &signature_length);
+
+    // always delete from stack
+    explicit_bzero(&pk, sizeof(pk));
 
     // ed25519_get_key_pair and ed25519_sign must succeed
     MUST(ret);

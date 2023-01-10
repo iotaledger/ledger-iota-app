@@ -34,10 +34,10 @@
 
 #define TOTAL_AMOUNT_MAX 2779530283277761ull
 
-#define INPUTS_MAX_COUNT 126
+#define INPUTS_MAX_COUNT 127
 #define INPUTS_MIN_COUNT 1
 
-#define OUTPUTS_MAX_COUNT 126
+#define OUTPUTS_MAX_COUNT 127
 #define OUTPUTS_MIN_COUNT 1
 
 #define DATA_BLOCK_SIZE 251 // cla + ins + p1 + p2 + p3 + data max 256 bytes

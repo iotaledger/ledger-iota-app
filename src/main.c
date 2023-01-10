@@ -72,7 +72,7 @@ static void IOTA_main()
 
                 // when no APDU received, trigger a reset
                 if (rx == 0) {
-                    THROW(EXCEPTION_IO_RESET);
+                    break;
                 }
 
                 // check header validity
@@ -91,7 +91,7 @@ static void IOTA_main()
             }
             CATCH(EXCEPTION_IO_RESET)
             {
-                THROW(EXCEPTION_IO_RESET);
+                break;
             }
             CATCH_OTHER(e)
             {
