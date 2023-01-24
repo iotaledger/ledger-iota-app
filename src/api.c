@@ -335,7 +335,9 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     }
 
     // show "generating addresses ..."
-    flow_generating_addresses();
+    if (!show_on_screen) {
+        flow_generating_addresses();
+    }
 
     api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
     api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
