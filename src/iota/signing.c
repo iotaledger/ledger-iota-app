@@ -38,28 +38,13 @@ static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
     uint32_t signature_length = 0;
 
     uint8_t ret = 0;
-    BEGIN_TRY
-    {
-        TRY
-        {
-            // create key pair and convert pub key to bytes
-            ret = ed25519_get_key_pair(bip32_signing_path, BIP32_PATH_LEN, &pk,
-                                       &pub);
+    // create key pair and convert pub key to bytes
+    ret = ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub);
+    ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
+                                pBlock->signature, &signature_length);
 
-            ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
-                                      pBlock->signature, &signature_length);
-        }
-        CATCH_OTHER(e)
-        {
-            THROW(e);
-        }
-        FINALLY
-        {
-            // always delete from stack
-            explicit_bzero(&pk, sizeof(pk));
-        }
-    }
-    END_TRY;
+    // always delete from stack
+    explicit_bzero(&pk, sizeof(pk));
 
     // ed25519_get_key_pair and ed25519_sign must succeed
     MUST(ret);

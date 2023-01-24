@@ -62,24 +62,11 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     cx_ecfp_public_key_t pub;
 
     uint8_t ret = 0;
-    BEGIN_TRY
-    {
-        TRY
-        {
-            ret =
-                ed25519_get_key_pair(bip32_path, bip32_path_length, &pk, &pub);
-        }
-        CATCH_OTHER(e)
-        {
-            THROW(e);
-        }
-        FINALLY
-        {
-            // always delete from stack
-            explicit_bzero(&pk, sizeof(pk));
-        }
-    }
-    END_TRY;
+
+    ret = ed25519_get_key_pair(bip32_path, bip32_path_length, &pk, &pub);
+
+    // always delete from stack
+    explicit_bzero(&pk, sizeof(pk));
 
     // ed25519_get_key_pair must succeed
     MUST(ret);
