@@ -36,16 +36,19 @@ uint8_t ed25519_get_key_pair(uint32_t *bip32_path, uint32_t bip32_path_length,
         {
             // initializing the private key and public key instance
             // with selected curve ED25519
-            cx_ecfp_init_private_key(CX_CURVE_Ed25519, keySeed, sizeof(keySeed), pk);
+            cx_ecfp_init_private_key(CX_CURVE_Ed25519, keySeed, sizeof(keySeed),
+                                     pk);
             cx_ecfp_init_public_key(CX_CURVE_Ed25519, NULL, 0, pub);
 
             // generating the key pair
             cx_ecfp_generate_pair(CX_CURVE_Ed25519, pub, pk, 1);
         }
-        CATCH_ALL {
+        CATCH_ALL
+        {
             ret = 0;
         }
-        FINALLY {
+        FINALLY
+        {
             // resetting the variables to avoid leak
             explicit_bzero(keySeed, sizeof(keySeed));
         }
@@ -77,14 +80,17 @@ uint8_t ed25519_sign(cx_ecfp_private_key_t *privateKey, const uint8_t *msg,
     {
         TRY
         {
-            *output_length = cx_eddsa_sign(privateKey, 0, CX_SHA512, msg, msg_length,
-                                        NULL, 0, output, CX_SHA512_SIZE, NULL);
+            *output_length =
+                cx_eddsa_sign(privateKey, 0, CX_SHA512, msg, msg_length, NULL,
+                              0, output, CX_SHA512_SIZE, NULL);
         }
         CATCH_ALL
         {
             ret = 0;
         }
-        FINALLY {}
+        FINALLY
+        {
+        }
     }
     END_TRY;
 

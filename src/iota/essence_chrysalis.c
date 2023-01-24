@@ -235,8 +235,8 @@ static uint8_t validate_inputs_lexical_order(const UTXO_INPUT *inputs,
 
     for (uint32_t i = 0; i < inputs_count - 1; i++) {
         // Inputs must be in lexicographical order of their serialized form.
-		if (memcmp((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
-							sizeof(UTXO_INPUT)) >= 0) {
+        if (memcmp((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
+                   sizeof(UTXO_INPUT)) >= 0) {
             return 0;
         }
     }
@@ -255,8 +255,8 @@ validate_outputs_lexical_order(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
 
     for (uint32_t i = 0; i < outputs_count - 1; i++) {
         // Outputs must be in lexicographical order by their serialized form.
-		if (memcmp((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
-                            sizeof(SIG_LOCKED_SINGLE_OUTPUT)) >= 0) {
+        if (memcmp((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
+                   sizeof(SIG_LOCKED_SINGLE_OUTPUT)) >= 0) {
             return 0;
         }
     }
