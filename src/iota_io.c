@@ -97,7 +97,7 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return api_read_data_block(p1);
 
     case INS_SHOW_FLOW:
-        return api_show_flow(p1);
+        return api_show_flow();
 
 #ifdef APP_DEBUG
     case INS_DUMP_MEMORY:

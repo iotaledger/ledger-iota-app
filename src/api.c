@@ -20,6 +20,8 @@
 #include "ui/nano/flow_user_confirm_transaction.h"
 #include "ui/nano/flow_user_confirm_new_address.h"
 #include "ui/nano/flow_user_confirm_blindsigning.h"
+#include "ui/nano/flow_generating_addresses.h"
+#include "ui/nano/flow_signing.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
@@ -229,12 +231,8 @@ uint32_t api_get_app_config(uint8_t is_locked)
 }
 
 
-uint32_t api_show_flow(uint8_t flow)
+uint32_t api_show_flow()
 {
-    if (!ui_show(flow)) {
-        THROW(SW_INCORRECT_P1P2);
-    }
-
     io_send(NULL, 0, SW_OK);
     return 0;
 }
@@ -335,6 +333,9 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     if (!((req.bip32_index + req.count) & 0x80000000)) {
         THROW(SW_COMMAND_INVALID_DATA);
     }
+
+	// show "generating addresses ..."
+    flow_generating_addresses();
 
     api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
     api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
@@ -615,6 +616,9 @@ uint32_t api_sign(uint8_t p1)
     }
 
     uint32_t signature_idx = p1;
+
+	// show "signing ..."
+    flow_signing();
 
     uint8_t *output = io_get_buffer();
     uint16_t signature_size_bytes = sign(&api, output, signature_idx);
