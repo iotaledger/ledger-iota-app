@@ -39,7 +39,7 @@ static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
 
     uint8_t ret = 0;
     // create key pair and convert pub key to bytes
-    ret = ed25519_get_key_pair(bip32_path, BIP32_PATH_LEN, &pk, &pub);
+    ret = ed25519_get_key_pair(bip32_signing_path, BIP32_PATH_LEN, &pk, &pub);
     ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
                               pBlock->signature, &signature_length);
 
