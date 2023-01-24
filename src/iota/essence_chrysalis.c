@@ -6,7 +6,7 @@
  */
 
 // validation based on:
-//	https://github.com/luca-moser/protocol-rfcs/blob/signed-tx-payload/text/0018-transaction-payload/0018-transaction-payload.md
+//	https://github.com/iotaledger/tips/blob/main/tips/TIP-0007/tip-0007.md
 
 #include <stdint.h>
 #include <string.h>
@@ -43,24 +43,6 @@
         }                                                                      \
     }
 
-
-// own memcmp because we also need to check lexical order and
-// common memcmp implementations only specify an return value != 0 if
-// inputs are different but don't give back which of the inputs was
-// bigger / smaller
-static int memcmp_bytewise(const uint8_t *p1, const uint8_t *p2, uint32_t len)
-{
-    for (uint32_t i = 0; i < len; i++) {
-        if (p1[i] > p2[i]) {
-            return 1;
-        }
-        if (p1[i] < p2[i]) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
 static inline uint8_t get_uint32(const uint8_t *data, uint32_t *idx,
                                  uint32_t *v)
 {
@@ -96,7 +78,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, inputs_count));
 
-    // Inputs Count must be 0 < x < 127.
+    // Inputs Count must be 0 < x ≤ 127.
     // At least one input must be specified.
     MUST(*inputs_count >= INPUTS_MIN_COUNT &&
          *inputs_count <= INPUTS_MAX_COUNT_CHRYSALIS);
@@ -130,7 +112,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
 
-    // Outputs Count must be 0 < x < 127.
+    // Outputs Count must be 0 < x ≤ 127.
     // At least one output must be specified.
     MUST(*outputs_count >= OUTPUTS_MIN_COUNT &&
          *outputs_count <= OUTPUTS_MAX_COUNT_CHRYSALIS);
@@ -253,8 +235,8 @@ static uint8_t validate_inputs_lexical_order(const UTXO_INPUT *inputs,
 
     for (uint32_t i = 0; i < inputs_count - 1; i++) {
         // Inputs must be in lexicographical order of their serialized form.
-        if (memcmp_bytewise((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
-                            sizeof(UTXO_INPUT)) != -1) {
+        if (memcmp((uint8_t *)&inputs[i], (uint8_t *)&inputs[i + 1],
+                   sizeof(UTXO_INPUT)) >= 0) {
             return 0;
         }
     }
@@ -273,8 +255,8 @@ validate_outputs_lexical_order(const SIG_LOCKED_SINGLE_OUTPUT *outputs,
 
     for (uint32_t i = 0; i < outputs_count - 1; i++) {
         // Outputs must be in lexicographical order by their serialized form.
-        if (memcmp_bytewise((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
-                            sizeof(SIG_LOCKED_SINGLE_OUTPUT)) != -1) {
+        if (memcmp((uint8_t *)&outputs[i], (uint8_t *)&outputs[i + 1],
+                   sizeof(SIG_LOCKED_SINGLE_OUTPUT)) >= 0) {
             return 0;
         }
     }
