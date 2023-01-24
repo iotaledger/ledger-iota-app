@@ -16,7 +16,7 @@
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 
-extern const ux_flow_step_t* const ux_main_menu;
+extern const ux_flow_step_t *const ux_main_menu;
 
 // clang-format off
 UX_STEP_TIMEOUT(

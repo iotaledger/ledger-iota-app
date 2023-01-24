@@ -25,5 +25,3 @@ void ui_timer_event()
 {
     flow_timer_event();
 }
-
-

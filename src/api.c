@@ -334,7 +334,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
-	// show "generating addresses ..."
+    // show "generating addresses ..."
     flow_generating_addresses();
 
     api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
@@ -617,7 +617,7 @@ uint32_t api_sign(uint8_t p1)
 
     uint32_t signature_idx = p1;
 
-	// show "signing ..."
+    // show "signing ..."
     flow_signing();
 
     uint8_t *output = io_get_buffer();
