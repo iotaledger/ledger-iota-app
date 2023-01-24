@@ -6,8 +6,7 @@
  */
 
 // validation based on:
-//  https://github.com/luca-moser/protocol-rfcs/blob/signed-tx-payload/text/0018-transaction-payload/0018-transaction-payload.md
-//	https://github.com/lzpap/tips/blob/master/tips/TIP-0018/tip-0018.md
+//  https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md
 
 #include <stdint.h>
 #include <string.h>
@@ -78,7 +77,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, inputs_count));
 
-    // Inputs Count must be 0 < x < 127.
+    // Inputs Count must be 0 < x ≤ 128.
     // At least one input must be specified.
     MUST(*inputs_count >= INPUTS_MIN_COUNT &&
          *inputs_count <= INPUTS_MAX_COUNT_STARDUST);
@@ -95,7 +94,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
         // Input Type value must be 0, denoting an UTXO Input.
         MUST(tmp.input_type == INPUT_TYPE_UTXO);
 
-        // Transaction Output Index must be 0 ≤ x < 127.
+        // Transaction Output Index must be 0 ≤ x < 128.
         MUST(/*tmp.transaction_output_id >= 0 &&*/ tmp.transaction_output_id <
              OUTPUTS_MAX_COUNT_STARDUST);
 
@@ -113,7 +112,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
 
-    // Outputs Count must be 0 < x < 127.
+    // Outputs Count must be 0 < x ≤ 128.
     // At least one output must be specified.
     MUST(*outputs_count >= OUTPUTS_MIN_COUNT &&
          *outputs_count <= OUTPUTS_MAX_COUNT_STARDUST);

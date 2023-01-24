@@ -78,7 +78,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, inputs_count));
 
-    // Inputs Count must be 0 < x < 128.
+    // Inputs Count must be 0 < x ≤ 127.
     // At least one input must be specified.
     MUST(*inputs_count >= INPUTS_MIN_COUNT &&
          *inputs_count <= INPUTS_MAX_COUNT_CHRYSALIS);
@@ -112,7 +112,7 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
 
-    // Outputs Count must be 0 < x < 128.
+    // Outputs Count must be 0 < x ≤ 127.
     // At least one output must be specified.
     MUST(*outputs_count >= OUTPUTS_MIN_COUNT &&
          *outputs_count <= OUTPUTS_MAX_COUNT_CHRYSALIS);
