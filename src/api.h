@@ -255,7 +255,7 @@ uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len);
 // reset api
 uint32_t api_reset(void);
 
-uint32_t api_show_flow(uint8_t flow);
+uint32_t api_show_flow(void);
 
 // write block of data to device memory
 uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
