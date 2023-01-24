@@ -3,9 +3,6 @@
 
 #include "nano/flow_user_confirm.h"
 #include "nano/flow_main_menu.h"
-#include "nano/flow_generating_addresses.h"
-#include "nano/flow_signed_successfully.h"
-#include "nano/flow_signing.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
