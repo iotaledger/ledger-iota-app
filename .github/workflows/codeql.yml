@@ -3,10 +3,18 @@ name: "CodeQL"
 on:
   push:
     branches:
-      - "feat/stardust+shimmer"
+      - "develop"
   pull_request:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'CodeQL manual dispatch'
 
 jobs:
   CodeQL-Build:
@@ -16,22 +24,16 @@ jobs:
       actions: read
       packages: read
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-legacy:latest
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
 
     steps:
       - name: Install git
-        run: apt-get update && apt-get install -y git
+        run: apk update && apk add git
 
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
           submodules: true
-
-      - name: Set env vars
-        run: |
-          echo "BOLOS_SDK=${GITHUB_WORKSPACE}/dev/sdk/nanos-secure-sdk" >> $GITHUB_ENV
-          echo "TARGET_NAME=TARGET_NANOS" >> $GITHUB_ENV
-
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -40,7 +42,7 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Build app
-        run: make clean && make
+        run: make clean && BOLOS_SDK=/opt/nanos-secure-sdk make
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
