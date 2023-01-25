@@ -1,6 +1,6 @@
 # ****************************************************************************
-#    Ledger App Boilerplate
-#    (c) 2020 Ledger SAS.
+#   Ledger App
+#   (c) 2017 Ledger
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ endif
 
 ifneq ($(DEBUG),0)
     APP_LOAD_PARAMS += --path "44'/01'"
-	DEFINES += HAVE_BOLOS_APP_STACK_CANARY
+    DEFINES += HAVE_BOLOS_APP_STACK_CANARY
     DEFINES += APP_DEBUG
 
     # we don't need printf
@@ -126,7 +126,6 @@ include $(BOLOS_SDK)/Makefile.glyphs
 
 APP_SOURCE_PATH += src
 SDK_SOURCE_PATH += lib_stusb lib_stusb_impl lib_ux
-#lib_bagl
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
     SDK_SOURCE_PATH += lib_blewbxx lib_blewbxx_impl
