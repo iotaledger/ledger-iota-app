@@ -3,10 +3,11 @@ name: "CodeQL"
 on:
   push:
     branches:
-      - "feat/stardust+shimmer"
+      - "develop"
   pull_request:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   CodeQL-Build:
@@ -27,12 +28,6 @@ jobs:
         with:
           submodules: true
 
-      - name: Set env vars
-        run: |
-          echo "BOLOS_SDK=${GITHUB_WORKSPACE}/dev/sdk/nanos-secure-sdk" >> $GITHUB_ENV
-          echo "TARGET_NAME=TARGET_NANOS" >> $GITHUB_ENV
-
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
@@ -40,7 +35,7 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Build app
-        run: make clean && make
+        run: make clean && BOLOS_SDK=/opt/nanos-secure-sdk make
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
