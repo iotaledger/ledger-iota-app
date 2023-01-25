@@ -32,6 +32,7 @@ function usage {
     echo "-d|--debug:    build app with DEBUG=1"
     echo "-m|--model:    nanos (default), nanox, nanosplus"
     echo "-l|--load:     load app to device"
+    echo "-p|--pull:     force pull docker images before using them"
     echo "-s|--speculos: run app after building with the speculos simulator"
     echo "-c|--cxlib:    don't autodetect cx-lib version (for speculos)"
     echo "-g|--gdb:      start speculos with -d (waiting for gdb debugger)"
@@ -43,7 +44,7 @@ function usage {
 # pull and tag image
 function pull_image {
     # already pulled?
-    docker inspect --type=image "$2" >& /dev/null && return 0
+    (( !pull )) && docker inspect --type=image "$2" >& /dev/null && return 0
 
     docker image pull "$1" && \
     docker image tag "$1" "$2"
@@ -77,6 +78,7 @@ speculos=0
 debug=0
 gdb=0
 analysis=0
+pull=0
 cxlib=""
 variant=""
 while (( $# ))
@@ -112,6 +114,9 @@ do
         shift
         variant="$1"
         ;;
+    "-p" | "--pull")
+        pull=1
+        ;;
     *)
         error "unknown parameter: $1"
         ;;
@@ -139,50 +144,13 @@ case "$device" in
         ;;
 esac
 
-# find SDK version number
-BOLOS_SDK="$device-secure-sdk"
-
-[ ! -f "./dev/sdk/$device-secure-sdk/Makefile.defines" ] && error "sdk not found. Are the submodules initialized?"
-
-# get sdk version from sdk
-sdk="$( grep '^#define BOLOS_VERSION' ./dev/sdk/${device}-secure-sdk/include/bolos_version.h | awk '{ print $ 3}' | tr -d '"' )"
-
-# if the first character is a digit, we are convinced it's a valid version number
-grep -q '^[[:digit:]]' <<< "$sdk" || error "$sdk not a valid version"
-
-# find the fitting cxlib of speculos
-[ -z "$cxlib" ] && {
-    # we assume we have the same cxlib as the sdk
-    cxlib="$sdk"
-
-    while [ ! -z "$cxlib" ]
-    do
-        cxlib_fn="./dev/speculos/speculos/cxlib/$model-cx-$cxlib.elf"
-        [ -f "$cxlib_fn" ] && {
-            # we found something matching
-            break
-        }
-        # we iteratively remove the last component of the version
-        # 1.0.2 -> 1.0
-        # 1.0 -> 1
-        # 1 -> ""
-        cxlib="$( awk -F'.' 'BEGIN{OFS="."} NF{NF--};1' <<< "$cxlib" )"
-    done
-}
-
-# if it is zero, we didn't find something matching
-[ -z "$cxlib" ] && error "no fitting cxlib found. Try -c|--cxlib."
-
-# yay, finally we can start
-echo "device $device selected, sdk $sdk found, using cx-lib $cxlib"
-
 # build the app
 # pull and tag image
 pull_image \
     "$IMAGE_BUILD" \
     ledger-app-builder || error "couldn't pull image"
 
-build_flags=""
+build_flags="BOLOS_SDK=/opt/$device-secure-sdk "
 
 # if speculos requested, add the flag
 (( $speculos )) && {
@@ -215,7 +183,7 @@ cmd="make clean && $build_flags make "
 }
 
 docker run \
-    -e BOLOS_SDK="/app/dev/sdk/$BOLOS_SDK" $extra_args \
+    $extra_args \
     --rm -v "$rpath:/app" \
     ledger-app-builder \
         bash -c "$cmd" || error "building failed"
@@ -263,7 +231,7 @@ docker run \
             --apdu-port 9999 \
             --display headless \
             --seed "$seed" \
-            --sdk "$cxlib" $extra_args \
+            $extra_args \
             -m "$model" /speculos/apps/bin/app.elf
 }
 
