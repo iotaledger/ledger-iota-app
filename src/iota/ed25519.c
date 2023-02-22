@@ -15,7 +15,7 @@
 
 
 // bip-path
-// 		0x2c'/0x107a'/account'/change'/index'
+// 		0x2c'/coin_type'/account'/change'/index'
 
 
 uint8_t ed25519_get_key_pair(uint32_t *bip32_path, uint32_t bip32_path_length,

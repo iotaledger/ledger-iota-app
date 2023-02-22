@@ -85,7 +85,7 @@ Flags:
 ---
 #### 0x11 - Set Account
 
-All private keys are derived from the bip32-path `2c'/107a'/address'/change'/index'`. This command sets the address bip32 index. The MSB must be set to indicate a *hardened* index. When executing `Set Account` the API and data buffer is initialized. The data buffer state is set to `EMPTY`. In the following documentation, `BIP32 index` always means the 5th part of the BIP32 path and `BIP32 change` always the 4th.
+All private keys are derived from the bip32-path `2c'/coin_type'/address'/change'/index'`. This command sets the address bip32 index. The MSB must be set to indicate a *hardened* index. When executing `Set Account` the API and data buffer is initialized. The data buffer state is set to `EMPTY`. In the following documentation, `BIP32 index` always means the 5th part of the BIP32 path and `BIP32 change` always the 4th.
 
 **Precondition**: \-
 
