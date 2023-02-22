@@ -1,9 +1,9 @@
-# IOTA Chrysalis/Stardust App for Ledger Nano S(+)/X Hardware Wallets
+# IOTA/Shimmer Chrysalis/Stardust App for Ledger Nano S(+)/X Hardware Wallets
 
 ## Date Buffer States
 
 <a name="anchor-data-buffer-states"></a>
-The app uses an data buffer of 753 bytes on the Nano S / 8032 bytes on the Nano X for exchanging data with the client. 
+The app uses an data buffer of 1506 bytes on the Nano S / 8032 bytes on the Nano X for exchanging data with the client.
 
 Read and write permissions are dependent from the current state the data buffer is in. Reading only is allowed if the buffer contains generated addresses or signatures. Writing only is allowed after it was cleared.
 
@@ -25,7 +25,7 @@ A transfer consists of an Header and a Body.
 
 | Field Name	| Length (bytes)| Description									|
 |---------------|---------------|-----------------------------------------------|
-| CLA			| 1				| Instruction Class - 0x7b for IOTA Chrysalis	|
+| CLA			| 1				| Instruction Class (0x7b)                   	|
 | INS			| 1				| Instruction Code								|
 | P1-P2			| 1				| Instruction Parameters						|
 | LEN			| 1				| Length of data to be sent						|
@@ -65,10 +65,10 @@ Returns information about the App and the Device.
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `app_version_major` | 1 | Major version number  |  
-| `app_version_minor` | 1 | Minor version number  |  
-| `app_version_patch` | 1 | Patch level  | 
-| `app_flags` | 1 | Flags  | 
+| `app_version_major` | 1 | Major version number  |
+| `app_version_minor` | 1 | Minor version number  |
+| `app_version_patch` | 1 | Patch level  |
+| `app_flags` | 1 | Flags  |
 | `device` | 1 | 0: Nano S <br />1: Nano X <br/> 2: Nano S Plus |
 | `debug`| 1 | 0: Not compiled in debug mode<br /> 1: compiled in debug mode|
 
@@ -85,7 +85,7 @@ Flags:
 ---
 #### 0x11 - Set Account
 
-All private keys are derived from the bip32-path `2c'/107a'/address'/change'/index'`. This command sets the address bip32 index. The MSB must be set to indicate a *hardened* index. When executing `Set Account` the API and data buffer is initialized. The data buffer state is set to `EMPTY`. In the following documentation, `BIP32 index` always means the 5th part of the BIP32 path and `BIP32 change` always the 4th.
+All private keys are derived from the bip32-path `2c'/coin_type'/address'/change'/index'`. This command sets the address bip32 index. The MSB must be set to indicate a *hardened* index. When executing `Set Account` the API and data buffer is initialized. The data buffer state is set to `EMPTY`. In the following documentation, `BIP32 index` always means the 5th part of the BIP32 path and `BIP32 change` always the 4th.
 
 **Precondition**: \-
 
@@ -97,11 +97,12 @@ All private keys are derived from the bip32-path `2c'/107a'/address'/change'/ind
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `account` | 4 | Hardened BIP32 account index  |  
+| `account` | 4 | Hardened BIP32 account index  |
 | `p1` | 1 | App mode |
 
 App-Mode:
 
+IOTA-Variant:
 | Mode | Coin Type | Function |
 |-|-|-|
 | 0x00 | 0x107a | IOTA + Chrysalis (default, backwards compatible) |
@@ -109,9 +110,17 @@ App-Mode:
 | 0x01 | 0x107a | IOTA + Stardust |
 | 0x81 |    0x1 | IOTA + Stardust Testnet |
 
+Shimmer-Variant:
+| Mode | Coin Type | Function |
+|-|-|-|
+| 0x02 | 0x107a | Shimmer Claiming (from IOTA addresses) |
+| 0x82 |    0x1 | Shimmer Claiming Testnet |
+| 0x03 | 0x107b | Shimmer + Stardust |
+| 0x83 |    0x1 | Shimmer + Stardust Testnet |
+
 **Response**: \-
 
-**Errors**: 
+**Errors**:
 
 | Error | Description |
 |-------|-------------|
@@ -137,13 +146,13 @@ Get current state of the data buffer.
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `data_length` | 2 | Length of bytes of valid data in the buffer |  
-| `data_type` | 1 | 0: `EMPTY` <br /> 1: `GENERATED_ADDRESSES` <br /> 2: `VALIDATED_ESSENCE` <br/> 3: `USER_CONFIRMED_ESSENCE` <br/> 4: `SIGNATURES` <br/> 5: `LOCKED` |  
-| `data_block_size` | 1 | Size of one block in bytes |  
-| `data_block_count` | 1 | Total number of usable data blocks |  
-  
+| `data_length` | 2 | Length of bytes of valid data in the buffer |
+| `data_type` | 1 | 0: `EMPTY` <br /> 1: `GENERATED_ADDRESSES` <br /> 2: `VALIDATED_ESSENCE` <br/> 3: `USER_CONFIRMED_ESSENCE` <br/> 4: `SIGNATURES` <br/> 5: `LOCKED` |
+| `data_block_size` | 1 | Size of one block in bytes |
+| `data_block_count` | 1 | Total number of usable data blocks |
+
 **Errors**: \-
-  
+
 ---
 #### 0x81 - Write Data Block
 
@@ -159,11 +168,11 @@ Writes a block of data into the data buffer. The (current) only usage is for tra
 |-------|-------------|
 |`p0` | number of block to be written
 
-**Request**: 
+**Request**:
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `data` | `data_block_size` | Data to be written to the data buffer |  
+| `data` | `data_block_size` | Data to be written to the data buffer |
 
 
 **Response**:
@@ -196,11 +205,11 @@ Reads a block of data from the data buffer. Reading only is allowed if the data 
 
 **Request**: \-
 
-**Response**: 
+**Response**:
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `data` | `data_block_size` | Data read from the data buffer |  
+| `data` | `data_block_size` | Data read from the data buffer |
 
 **Errors**:
 
@@ -232,13 +241,13 @@ Clears the API and data buffer and sets it to `EMPTY`. The set bip32 account ind
 ---
 #### 0x90 - Show Flow
 
-Shows a flow on the UI. This instruction is for showing informative screens on the UI or switching back to the main menu. 
+Shows a flow on the UI. This instruction is for showing informative screens on the UI or switching back to the main menu.
 
 **Preconditions**: \-
 
 **After**: unchanged
 
-**Parameters**: 
+**Parameters**:
 
 | Parameter | Description |
 |-------|-------------|
@@ -249,7 +258,7 @@ Shows a flow on the UI. This instruction is for showing informative screens on t
 
 **Response**: \-
 
-**Errors**: 
+**Errors**:
 
 | Error | Description |
 |-------|-------------|
@@ -260,44 +269,79 @@ Shows a flow on the UI. This instruction is for showing informative screens on t
 
 Prepare signing parses and validates the uploaded essence for a following signing call.
 
-In additionally to the essence also an array of input BIP32 indices (consisting of 32bit BIP32-index and 32bit BIP32-Change per input) is needed. The size of the essence is determined by the data and is calculated during validation. The array of input indices is directly appended after.  
+In additionally to the essence also an array of input BIP32 indices (consisting of 32bit BIP32-index and 32bit BIP32-Change per input) is needed. The size of the essence is determined by the data and is calculated during validation. The array of input indices is directly appended after.
 
 **Preconditions**: `EMPTY`
 
 **After**: `VALIDATED_ESSENCE`
 
-**Parameters**: 
+**Parameters**:
 
 | Parameter | Description |
 |-------|-------------|
 |`p1` | (set to 1, compatibility)
 |`p2` | 0: Essence doesn't have an Remainder<br/>1: Essence has an Remainder
 
-**Request**: 
+**Request**:
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `remainder_index` | 2 | Output index in essence of Remainder address |  
-| `remainder_bip32_index` | 4 | BIP32 index of remainder address in essence |  
-| `remainder_bip32_change` | 4 | BIP32 change of remainder address in essence |  
+| `remainder_index` | 2 | Output index in essence of Remainder address |
+| `remainder_bip32_index` | 4 | BIP32 index of remainder address in essence |
+| `remainder_bip32_change` | 4 | BIP32 change of remainder address in essence |
 
 
 
 **Response**: \-
 
-**Errors**: 
+**Errors**:
 
 | Error | Description |
 |-------|-------------|
 |`SW_COMMAND_NOT_ALLOWED`|data buffer state is not `EMPTY`.|
 |`SW_ACCOUNT_NOT_VALID`|Account bip32 index is not hardened|
-|`SW_COMMAND_INVALID_DATA`|invalid BIP32 remainder or essence [validation](https://github.com/luca-moser/protocol-rfcs/blob/signed-tx-payload/text/0000-transaction-payload/0000-transaction-payload.md) fails|
+|`SW_COMMAND_INVALID_DATA`|- invalid BIP32 remainder<br>- essence validation failed|
 |`SW_INCORRECT_LENGTH`| request data has unexpected size
+
+---
+#### 0xa0 - Prepare Blindsigning
+
+Prepare blindsigning parses and validates the uploaded essence for a following signing call.
+
+The call expects an essence-hash, a 16bit value for the number of inputs and an array of input BIP32 indices (consisting of 32bit BIP32-index and 32bit BIP32-Change per input).
+
+Blindsigning is only supported with Stardust protocol.
+
+**Databuffer**:
+| Field | Bytes | Description |
+|-------------------|---|---|
+| `essence-hash` | 32 | Hash of the essence to sign |
+| `inputs_count` | 2 | Number of BIP32 input indices to follow |
+| `bip32 input indices` | `inputs_count*8` | BIP32 input indices |
+
+
+**Preconditions**: `EMPTY`
+
+**After**: `VALIDATED_ESSENCE`
+
+**Parameters**: \-
+
+**Parameters**: \-
+
+**Response**: \-
+
+**Errors**:
+
+| Error | Description |
+|-------|-------------|
+|`SW_COMMAND_NOT_ALLOWED`|- data buffer state is not `EMPTY`<br>- App is not used in Stardust protocol mode.|
+|`SW_ACCOUNT_NOT_VALID`|Account bip32 index is not hardened|
+|`SW_COMMAND_INVALID_DATA`|Essence validation failed|
 
 ---
 #### 0xa1 - Generate Address
 
-Generates addresses. If `p1` is set, the new address is shown to the user on the UI. In this mode, the data buffer states switches to `GENERATED_ADDRESSES` when the user confirmed the new address and only one single address is allowed to generate (for Remainder addresses). 
+Generates addresses. If `p1` is set, the new address is shown to the user on the UI. In this mode, the data buffer states switches to `GENERATED_ADDRESSES` when the user confirmed the new address and only one single address is allowed to generate (for Remainder addresses).
 
 The addresses are saved (including the ED25519 address type) in the data buffer one after another.
 
@@ -305,24 +349,24 @@ The addresses are saved (including the ED25519 address type) in the data buffer 
 
 **After**: `GENERATED_ADDRESSS`*
 
-**Parameters**: 
+**Parameters**:
 
 | Parameter | Description |
 |-------|-------------|
 |`p1` | 0: don't show to the user as interactive flow<br/>1: show to the user as interactive flow (for Remainders).
 
-**Request**: 
+**Request**:
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `bip32_index` | 4 | BIP32 index of first address |  
-| `bip32_change` | 4 | BIP32 change of first address |  
-| `count` | 4 | Count of addresses to generate |  
+| `bip32_index` | 4 | BIP32 index of first address |
+| `bip32_change` | 4 | BIP32 change of first address |
+| `count` | 4 | Count of addresses to generate |
 
 
 **Response**: \-
 
-**Errors**: 
+**Errors**:
 
 | Error | Description |
 |-------|-------------|
@@ -347,7 +391,7 @@ Presents the validated and parsed essence in clear way on the UI and asks the us
 
 **Response**: \-
 
-**Errors**: 
+**Errors**:
 
 | Error | Description |
 |-------|-------------|
@@ -359,14 +403,14 @@ Presents the validated and parsed essence in clear way on the UI and asks the us
 ---
 #### 0xa4 - Sign Single
 
-Signs a single input and returns the signature in the APDU buffer. 
+Signs a single input and returns the signature in the APDU buffer.
 
 
 **Preconditions**: `USER_CONFIRMED_ESSENCE`
 
 **After**: unchanged
 
-**Parameters**: 
+**Parameters**:
 
 | Parameter | Description |
 |-------|-------------|
@@ -374,14 +418,14 @@ Signs a single input and returns the signature in the APDU buffer.
 
 **Request**: \-
 
-**Response**: 
+**Response**:
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `data` | sizeof(`SIGNATURE_UNLOCK_BLOCK`) or<br/>sizeof(`REFERENCE_UNLOCK_BLOCK`) | Signature |  
+| `data` | sizeof(`SIGNATURE_UNLOCK_BLOCK`) or<br/>sizeof(`REFERENCE_UNLOCK_BLOCK`) | Signature |
 
 
-**Errors**: 
+**Errors**:
 
 | Error | Description |
 |-------|-------------|
@@ -405,7 +449,7 @@ Resets API and data buffer completly (also resets account and non-interactive fl
 **Request**: \-
 
 **Response**: \-
- 
+
 **Errors**: \-
 
 
@@ -414,7 +458,7 @@ Resets API and data buffer completly (also resets account and non-interactive fl
 ---
 #### 0x66 - Dump Memory
 
-Dumps a 128 byte memory page. The Nano S has 4kB, the Nano X has 32kB of internal RAM. Only is available in Debug-Mode. 
+Dumps a 128 byte memory page. The Nano S has 4kB, the Nano X has 32kB of internal RAM. Only is available in Debug-Mode.
 
 This command can be useful to verify how much stack in the device is used.
 
@@ -422,7 +466,7 @@ This command can be useful to verify how much stack in the device is used.
 
 **After**: unchanged
 
-**Parameters**: 
+**Parameters**:
 
 | Parameter | Description |
 |-------|-------------|
@@ -430,11 +474,11 @@ This command can be useful to verify how much stack in the device is used.
 
 **Request**: \-
 
-**Response**: 
+**Response**:
 
 | Field | Bytes | Description |
 |-------------------|---|---|
-| `data` | 128 | One memory page |  
+| `data` | 128 | One memory page |
 
 **Errors**: \-
 
@@ -449,7 +493,7 @@ This command only is available in debug mode.
 
 **After**: unchanged
 
-**Parameters**: 
+**Parameters**:
 
 | Parameter | Description |
 |-------|-------------|
