@@ -12,18 +12,12 @@
 #include "cx.h"
 #include "api.h"
 
+#include "macros.h"
 #include "blindsigning_stardust.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
-
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
 
 static inline uint8_t get_uint16(const uint8_t *data, uint32_t *idx,
                                  uint16_t *v)

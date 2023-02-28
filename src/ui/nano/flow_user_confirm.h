@@ -21,14 +21,6 @@ typedef void (*accept_cb_t)();
 typedef void (*reject_cb_t)();
 typedef void (*timeout_cb_t)();
 
-#define MUST_THROW(c)                                                          \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            THROW(SW_UNKNOWN);                                                 \
-        }                                                                      \
-    }
-
-
 // struct that contains the data to be displayed on the screen
 // during confirming the outputs
 typedef struct {

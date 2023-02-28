@@ -5,6 +5,7 @@
 #include "cx.h"
 #include "api.h"
 
+#include "macros.h"
 #include "signing.h"
 
 #ifndef FUZZING
@@ -12,12 +13,6 @@
 #include "iota/ed25519.h"
 #endif
 
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"

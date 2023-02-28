@@ -11,14 +11,6 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
-
-
 /// the largest power of 10 that still fits into int32
 #define MAX_INT_DEC UINT64_C(1000000000)
 

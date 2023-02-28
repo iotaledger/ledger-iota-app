@@ -11,6 +11,7 @@
 #include "abstraction.h"
 #include "ui_common.h"
 
+#include "macros.h"
 #include "api.h"
 #include "iota_io.h"
 #include "iota/address.h"
@@ -20,14 +21,6 @@
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
 extern API_CTX api;
-
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
-
 
 const uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
 {
