@@ -13,20 +13,13 @@
 #include "bech32.h"
 #include "address.h"
 #include "ed25519.h"
+#include "macros.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
 #include "debugprintf.h"
-
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
-
 
 uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
                                   uint32_t bech32_max_length, const char *hrp,

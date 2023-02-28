@@ -3,6 +3,7 @@
 
 #include "os.h"
 
+#include "macros.h"
 #include "iota/constants.h"
 #include "api.h"
 #include "abstraction.h"
@@ -11,13 +12,6 @@
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
-
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
 
 // checks if all coins remain on the wallet
 // generate or each input bip32-path the address and compare it

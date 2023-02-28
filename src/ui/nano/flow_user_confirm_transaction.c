@@ -11,6 +11,7 @@
 #include "glyphs.h"
 
 #include "api.h"
+#include "macros.h"
 #include "flow_user_confirm_transaction.h"
 
 #include "abstraction.h"
@@ -25,13 +26,6 @@
 #define NEW_ADDRESS 1
 #define REMAINDER 2
 #define OUTPUT 3
-
-#define MUST_THROW(c)                                                          \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            THROW(SW_UNKNOWN);                                                 \
-        }                                                                      \
-    }
 
 
 /**
@@ -124,7 +118,7 @@ UX_STEP_NOCB_INIT(
     }
 );
 
-#ifdef TARGET_NANOS    
+#ifdef TARGET_NANOS
 UX_STEP_NOCB_INIT(
     ux_step_remainder,
     bn_paging,
