@@ -219,10 +219,9 @@ UX_STEP_NOCB(
     }
 );
 
-UX_STEP_NOCB_INIT(
+UX_STEP_NOCB(
     ux_step_smr_claiming_message,
     bn_paging,
-    cb_address_preinit(),
     {
         "Claim SMR", "In order to claim SMR coins, you are now "
                      "signing with IOTA private keys instead of SMR "
