@@ -39,7 +39,7 @@ validate_essence_hash(const uint8_t *data, uint32_t *idx,
 
     // not much we can validate here since an hash are arbitrary bytes
     // copy from buffer to essence
-    memcpy(&essence_hash[0], &data[*idx], ESSENCE_HASH_SIZE_BYTES);
+    memcpy(essence_hash, &data[*idx], ESSENCE_HASH_SIZE_BYTES);
 
     *idx = *idx + ESSENCE_HASH_SIZE_BYTES;
     return 1;
@@ -74,14 +74,14 @@ uint8_t parse_and_validate_blindsigning(API_CTX *api)
     uint32_t idx = 0;
 
     // parse data
-    MUST(validate_essence_hash(api->data.buffer, &idx, &api->essence.hash[0]));
+    MUST(validate_essence_hash(api->data.buffer, &idx, api->essence.hash));
 
     // save essence length
     api->essence.length = idx;
 
     MUST(get_uint16(api->data.buffer, &idx, &api->essence.inputs_count));
 
-    // Inputs Count must be 0 < x < 127.
+    // Inputs Count must be 0 < x <= 128.
     // At least one input must be specified.
     MUST(api->essence.inputs_count >= INPUTS_MIN_COUNT &&
          api->essence.inputs_count <= INPUTS_MAX_COUNT_STARDUST);
