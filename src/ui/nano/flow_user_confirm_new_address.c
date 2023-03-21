@@ -17,22 +17,19 @@ static void cb_bip32_preinit();
 
 static void cb_accept();
 
-static void cb_na_fix();
-static void cb_na_fix2();
-
 // clang-format off
 UX_STEP_NOCB_INIT(
     ux_step_new_address,
     bn_paging,
     cb_address_preinit(),
     {
-        // in paging mode, "New Remainder" doesn't fit without 
+        // in paging mode, "New Remainder" doesn't fit without
         // wrapping in the next line
         (const char*) flow_data.scratch[1], (const char*) flow_data.scratch[0]
     }
 );
 
-#ifdef TARGET_NANOS    
+#ifdef TARGET_NANOS
 UX_STEP_NOCB_INIT(
     ux_step_na_bip32,
     bn_paging,
@@ -62,27 +59,11 @@ UX_STEP_CB(
     }
 );
 
-UX_STEP_INIT(
-    ux_step_na_fix,
-    NULL,
-    NULL,
-    cb_na_fix()
-);
-
-UX_STEP_INIT(
-    ux_step_na_fix2,
-    NULL,
-    NULL,
-    cb_na_fix2()
-);
-
 UX_FLOW(
     ux_flow_new_address,
-    &ux_step_na_fix2,
     &ux_step_new_address,
     &ux_step_na_bip32,
     &ux_step_ok,
-    &ux_step_na_fix,
     FLOW_LOOP
 );
 
@@ -136,18 +117,6 @@ static void cb_accept()
         flow_data.accept_cb();
     }
     flow_stop();
-}
-
-// fixes some weird paging issues (stepping forward, skips pages)
-static void cb_na_fix()
-{
-    ux_flow_init(0, ux_flow_new_address, &ux_step_new_address);
-}
-
-// fixes some weird paging issues (stepping forward, skips pages)
-static void cb_na_fix2()
-{
-    ux_flow_init(0, ux_flow_new_address, &ux_step_ok);
 }
 
 void flow_start_new_address(const API_CTX *api, accept_cb_t accept_cb,

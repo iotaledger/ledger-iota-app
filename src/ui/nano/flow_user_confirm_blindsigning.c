@@ -19,9 +19,6 @@ static void cb_hash_preinit();
 static void cb_bs_accept();
 static void cb_bs_reject();
 
-static void cb_bs_fix();
-static void cb_bs_fix2();
-
 static void cb_hash_preinit();
 
 // clang-format off
@@ -55,27 +52,12 @@ UX_STEP_CB(
     }
 );
 
-UX_STEP_INIT(
-    ux_step_bs_fix,
-    NULL,
-    NULL,
-    cb_bs_fix()
-);
-
-UX_STEP_INIT(
-    ux_step_bs_fix2,
-    NULL,
-    NULL,
-    cb_bs_fix2()
-);
 
 UX_FLOW(
     ux_flow_blindsigning,
-    &ux_step_bs_fix2,
     &ux_step_hash,
     &ux_step_bs_accept,
     &ux_step_bs_reject,
-    &ux_step_bs_fix,
     FLOW_LOOP
 );
 
@@ -134,18 +116,6 @@ static void cb_bs_reject()
         flow_data.reject_cb();
     }
     flow_stop();
-}
-
-// fixes some weird paging issues (stepping forward, skips pages)
-static void cb_bs_fix()
-{
-    ux_flow_init(0, ux_flow_blindsigning, &ux_step_hash);
-}
-
-// fixes some weird paging issues (stepping forward, skips pages)
-static void cb_bs_fix2()
-{
-    ux_flow_init(0, ux_flow_blindsigning, &ux_step_bs_reject);
 }
 
 void flow_start_blindsigning(const API_CTX *api, accept_cb_t accept_cb,
