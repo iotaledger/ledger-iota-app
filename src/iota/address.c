@@ -13,30 +13,21 @@
 #include "bech32.h"
 #include "address.h"
 #include "ed25519.h"
+#include "macros.h"
 
-// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
-//#pragma GCC diagnostic error "-Werror"
-//#pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
 #include "debugprintf.h"
 
-#define MUST(c)                                                                \
-    {                                                                          \
-        if (!(c)) {                                                            \
-            return 0;                                                          \
-        }                                                                      \
-    }
-
-
-uint8_t address_encode_bech32(const uint8_t *addr_with_type, char *bech32,
-                              uint32_t bech32_max_length)
+uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
+                                  uint32_t bech32_max_length, const char *hrp,
+                                  const size_t hrp_len)
 {
     // at least this space is needed - bech32_encode adds a zero-terminator
     // byte!
-    if (bech32_max_length < ADDRESS_SIZE_BECH32 + 1)
+    if (bech32_max_length < ADDRESS_SIZE_BECH32_MAX + 1)
         return 0;
 
     uint32_t base32_length = ADDRESS_SIZE_BASE32;
@@ -50,8 +41,8 @@ uint8_t address_encode_bech32(const uint8_t *addr_with_type, char *bech32,
 
     // and encode base32 to bech32
     uint32_t bech32_length = bech32_max_length;
-    ret = bech32_encode(bech32, &bech32_length, ADDRESS_HRP, ADDRESS_HRP_LENGTH,
-                        base32, base32_length);
+    ret = bech32_encode(bech32, &bech32_length, hrp, hrp_len, base32,
+                        base32_length);
     MUST(ret);
 
     return 1;
@@ -64,24 +55,11 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     cx_ecfp_public_key_t pub;
 
     uint8_t ret = 0;
-    BEGIN_TRY
-    {
-        TRY
-        {
-            ret =
-                ed25519_get_key_pair(bip32_path, bip32_path_length, &pk, &pub);
-        }
-        CATCH_OTHER(e)
-        {
-            THROW(e);
-        }
-        FINALLY
-        {
-            // always delete from stack
-            explicit_bzero(&pk, sizeof(pk));
-        }
-    }
-    END_TRY;
+
+    ret = ed25519_get_key_pair(bip32_path, bip32_path_length, &pk, &pub);
+
+    // always delete from stack
+    explicit_bzero(&pk, sizeof(pk));
 
     // ed25519_get_key_pair must succeed
     MUST(ret);

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "os.h"
+
 #include "iota/constants.h"
 
 void io_initialize(void);
@@ -35,6 +37,8 @@ enum {
 
     INS_SHOW_FLOW = 0x90,
 
+    INS_PREPARE_BLINDSIGNING = 0x91,
+
     INS_PREPARE_SIGNING = 0xa0,
     INS_GENERATE_ADDRESS = 0xa1,
     INS_SIGN = 0xa2,
@@ -62,6 +66,7 @@ enum {
     SW_ACCOUNT_NOT_VALID = 0x6388,
 
     SW_COMMAND_NOT_ALLOWED = 0x6900,
+    SW_FEATURE_NOT_SUPPORTED = 0x6901,
     SW_SECURITY_STATUS_NOT_SATISFIED = 0x6982,
     SW_CONDITIONS_OF_USE_NOT_SATISFIED = 0x6985,
 

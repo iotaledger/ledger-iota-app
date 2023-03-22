@@ -5,19 +5,25 @@
  *      Author: thomas
  */
 
+#include "os.h"
 #include "ux.h"
 #include "glyphs.h"
 
-// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
-//#pragma GCC diagnostic error "-Werror"
-//#pragma GCC diagnostic error "-Wpedantic"
+#include "os_io_seproxyhal.h"
+
+#include "flow_main_menu.h"
+
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 
+extern const ux_flow_step_t *const ux_main_menu;
+
 // clang-format off
-UX_STEP_NOCB(
+UX_STEP_TIMEOUT(
     ux_signed_successfully,
     pbb,
+    2000,
+    &ux_main_menu,
     {
     &C_x_icon_check,
     "Signed",
@@ -35,4 +41,7 @@ UX_FLOW(
 void flow_signed_successfully()
 {
     ux_flow_init(0, ux_flow_signed_successfully, NULL);
+
+    // show flow immediately
+    UX_WAIT_DISPLAYED();
 }

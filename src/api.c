@@ -1,18 +1,28 @@
-#include "api.h"
-#include <string.h>
-#include "iota_io.h"
-#include "macros.h"
 #include "os.h"
+
+#include <string.h>
+
+#include "iota_io.h"
+#include "api.h"
+
+#include "macros.h"
+
 #include "ui/ui.h"
 
+#include "nv_mem.h"
+
+#include "abstraction.h"
+
 #include "iota/constants.h"
-#include "iota/essence.h"
+#include "iota/blindsigning_stardust.h"
+#include "iota/signing.h"
 
-#include "ui/nano/flow_user_confirm.h"
+#include "ui/nano/flow_user_confirm_transaction.h"
+#include "ui/nano/flow_user_confirm_new_address.h"
+#include "ui/nano/flow_user_confirm_blindsigning.h"
+#include "ui/nano/flow_generating_addresses.h"
+#include "ui/nano/flow_signing.h"
 
-// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
-//#pragma GCC diagnostic error "-Werror"
-//#pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
@@ -20,38 +30,98 @@
 /// global variable storing all data needed across multiple api calls
 API_CTX api;
 
-void api_initialize()
+void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
 {
     // wipe all data
     explicit_bzero(&api, sizeof(api));
 
     api.bip32_path[0] = 0x8000002c;
-#ifdef APP_DEBUG
-    api.bip32_path[1] = 0x80000001;
+
+    // app-modes
+    // IOTA App
+    // 0x00: (107a) IOTA + Chrysalis (default, backwards compatible)
+    // 0x80:    (1) IOTA + Chrysalis Testnet
+    // 0x01: (107a) IOTA + Stardust
+    // 0x81:    (1) IOTA + Stardust Testnet
+
+    // Shimmer App
+    // 0x02: (107a) Shimmer Claiming (from IOTA)
+    // 0x82:    (1) Shimmer Claiming (from IOTA) (Testnet)
+    // 0x03: (107b) Shimmer (default)
+    // 0x83:    (1) Shimmer Testnet
+
+    switch (app_mode & 0x7f) {
+#if defined(APP_IOTA)
+    case APP_MODE_IOTA_CHRYSALIS:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_CHRYSALIS;
+        api.coin = COIN_IOTA;
+        break;
+    case APP_MODE_IOTA_STARDUST:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_IOTA;
+        break;
+#elif defined(APP_SHIMMER)
+    case APP_MODE_SHIMMER_CLAIMING:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_SHIMMER;
+        break;
+    case APP_MODE_SHIMMER:
+        // shimmer
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
+        api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_SHIMMER;
+        break;
 #else
-    api.bip32_path[1] = 0x8000107a;
+#error unknown app
 #endif
-    api.bip32_path[BIP32_ACCOUNT_INDEX] = 0;
-    api.bip32_path[BIP32_CHANGE_INDEX] = 0;
-    api.bip32_path[BIP32_ADDRESS_INDEX] = 0;
+    default:
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
+
+    // set bip paths for testnet
+    if (app_mode & 0x80) {
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_TESTNET;
+    }
+
+    // set account indices
+    // value of 0 is allowed because it tells us that no account was set
+    // through the api and it is checked in every api function that uses
+    // account indices.
+    api.bip32_path[BIP32_ACCOUNT_INDEX] = account_index;
+
+    api.app_mode = app_mode;
 }
+
+uint32_t api_reset()
+{
+    // also resets the account index
+    api_initialize(APP_MODE_INIT, 0);
+
+    ui_reset();
+
+    io_send(NULL, 0, SW_OK);
+    return 0;
+}
+
 
 void api_clear_data()
 {
-    // the only thing we shouldn't clear out is the account index
-    uint32_t tmp_bip32_account = api.bip32_path[BIP32_ACCOUNT_INDEX];
-
 #ifdef APP_DEBUG
-    // and the non-interactive flag if compiled in DEBUG mode
+    // save the non-interactive flag if compiled in DEBUG mode
     uint8_t tmp_non_interactive = api.non_interactive_mode;
 #endif
 
-    api_initialize();
-
-    // set saved account index and network
-    api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+    // initialize with previously set app-mode and account index
+    api_initialize(api.app_mode, api.bip32_path[BIP32_ACCOUNT_INDEX]);
 
 #ifdef APP_DEBUG
+    // restore non-interactive flag
     api.non_interactive_mode = tmp_non_interactive;
 #endif
 }
@@ -74,7 +144,7 @@ uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
     }
 
     memcpy(&api.data.buffer[block_number * DATA_BLOCK_SIZE], input_data,
-              DATA_BLOCK_SIZE);
+           DATA_BLOCK_SIZE);
 
     io_send(NULL, 0, SW_OK);
 
@@ -109,6 +179,7 @@ uint32_t api_get_data_buffer_state()
     io_send(&resp, sizeof(resp), SW_OK);
     return 0;
 }
+
 uint32_t api_clear_data_buffer()
 {
     // wipe all including other api-flags
@@ -125,10 +196,26 @@ uint32_t api_get_app_config(uint8_t is_locked)
     resp.app_version_major = APPVERSION_MAJOR;
     resp.app_version_minor = APPVERSION_MINOR;
     resp.app_version_patch = APPVERSION_PATCH;
-    resp.app_flags = !!is_locked;
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+    // bit 0: locked
+    // bit 1: blindsigning enabled
+    // bit 2: IOTA / Shimmer app
+    resp.app_flags = !!is_locked;
+    resp.app_flags |= !!nv_get_blindsigning() << 1;
+
+#if defined(APP_IOTA)
+    // actually not needed because bit is cleared anyways
+    resp.app_flags &= ~(1 << 2);
+#elif defined(APP_SHIMMER)
+    resp.app_flags |= (1 << 2);
+#else
+#error unknown app
+#endif
+
+#if defined(TARGET_NANOX)
     resp.device = 1;
+#elif defined(TARGET_NANOS2)
+    resp.device = 2;
 #else
     resp.device = 0;
 #endif
@@ -143,34 +230,23 @@ uint32_t api_get_app_config(uint8_t is_locked)
     return 0;
 }
 
-uint32_t api_reset()
+
+uint32_t api_show_flow()
 {
-    // also resets the account index
-    api_initialize();
-
-    ui_reset();
-
     io_send(NULL, 0, SW_OK);
     return 0;
 }
 
-uint32_t api_show_flow(uint8_t flow)
-{
-    if (!ui_show(flow)) {
-        THROW(SW_INCORRECT_P1P2);
-    }
-
-    io_send(NULL, 0, SW_OK);
-    return 0;
-}
-
-uint32_t api_set_account(const uint8_t *data, uint32_t len)
+uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len)
 {
     // check if a uint32_t was sent as data
     if (len != sizeof(uint32_t)) {
         THROW(SW_INCORRECT_LENGTH);
     }
 
+    if ((app_mode & 0x7f) > APP_MODE_SHIMMER) {
+        THROW(SW_INCORRECT_P1P2);
+    }
 
     uint32_t tmp_bip32_account;
     memcpy(&tmp_bip32_account, data, sizeof(uint32_t));
@@ -180,11 +256,8 @@ uint32_t api_set_account(const uint8_t *data, uint32_t len)
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
-    // delete all data
-    api_initialize();
-
-    // set account index
-    api.bip32_path[BIP32_ACCOUNT_INDEX] = tmp_bip32_account;
+    // delete all data, set app_mode and account index
+    api_initialize(app_mode, tmp_bip32_account);
 
     io_send(NULL, 0, SW_OK);
 
@@ -261,6 +334,11 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
+    // show "generating addresses ..."
+    if (!show_on_screen) {
+        flow_generating_addresses();
+    }
+
     api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
     api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
 
@@ -293,17 +371,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
         return 0;
     }
 
-    // use api buffer and essence to show new address on the screen
-    // buffer is free after index 32
-    // writing to the buffer from external is not allowed, so data 
-    // can't be changed after the flow is started
-    SIG_LOCKED_SINGLE_OUTPUT *tmp =
-        (SIG_LOCKED_SINGLE_OUTPUT *)&api.data.buffer[64];
-    memcpy(&tmp->address_type, api.data.buffer,
-              ADDRESS_WITH_TYPE_SIZE_BYTES);
-
     api.essence.outputs_count = 1;
-    api.essence.outputs = tmp;
     api.essence.remainder_bip32.bip32_index = req.bip32_index;
     api.essence.remainder_bip32.bip32_change = req.bip32_change;
     api.essence.remainder_index = 0;
@@ -315,12 +383,12 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     api.flow_locked = 1; // mark flow locked
 
     flow_start_new_address(&api, api_generate_address_accepted,
-                           api_generate_address_timeout, api.bip32_path);
+                           api_generate_address_timeout);
     return IO_ASYNCH_REPLY;
 }
 
-uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
-                             const uint8_t *data, uint32_t len)
+uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
+                             uint32_t len)
 {
     // when calling validation the buffer still is marked as empty
     if (api.data.type != EMPTY) {
@@ -341,12 +409,23 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
 
     // if essence has an remainder, store the information about
     if (!!has_remainder) {
+        // no remainder for claiming shimmer allowed
+        if (api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
+            THROW(SW_COMMAND_INVALID_DATA);
+        }
+
         API_PREPARE_SIGNING_REQUEST req;
         memcpy(&req, data, sizeof(req));
 
         if (!(req.remainder_bip32_change & 0x80000000) ||
-            !(req.remainder_bip32_index & 0x80000000) ||
-            req.remainder_index >= OUTPUTS_MAX_COUNT) {
+            !(req.remainder_bip32_index & 0x80000000)) {
+            THROW(SW_COMMAND_INVALID_DATA);
+        }
+
+        if ((api.protocol == PROTOCOL_CHRYSALIS &&
+             req.remainder_index >= OUTPUTS_MAX_COUNT_CHRYSALIS) ||
+            (api.protocol == PROTOCOL_STARDUST &&
+             req.remainder_index >= OUTPUTS_MAX_COUNT_STARDUST)) {
             THROW(SW_COMMAND_INVALID_DATA);
         }
 
@@ -359,10 +438,50 @@ uint32_t api_prepare_signing(uint8_t single_sign, uint8_t has_remainder,
         api.essence.has_remainder = 0;
     }
 
-    // save into variable if single-sign mode will be used
-    api.essence.single_sign_mode = !!single_sign;
+    // no blindsigning
+    api.essence.blindsigning = 0;
 
     if (!essence_parse_and_validate(&api)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
+    api.data.type = VALIDATED_ESSENCE;
+
+    io_send(NULL, 0, SW_OK);
+    return 0;
+}
+
+uint32_t api_prepare_blindsigning()
+{
+    // when calling validation the buffer still is marked as empty
+    if (api.data.type != EMPTY) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
+    // blindsigning only allowed with stardust protocol but not SMR claiming
+    if (api.protocol != PROTOCOL_STARDUST ||
+        api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
+    // disable external read and write access before doing anything else
+    api.data.type = LOCKED;
+
+    // was account selected?
+    if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
+
+    // set flag for blindsigning
+    api.essence.blindsigning = 1;
+
+    // we allow to prepare without blindsigning enabled but the user will only
+    // get an error message that blindsigning is not enabled on the Nano when
+    // trying to sign what is the most consistent behaviour because the outcome
+    // is the same as rejecting the signing (the flow only has a reject button
+    // in this case and accepting is not possible) and we don't have to cope
+    // with additional errors.
+    if (!parse_and_validate_blindsigning(&api)) {
         THROW(SW_COMMAND_INVALID_DATA);
     }
 
@@ -409,93 +528,71 @@ uint32_t api_user_confirm_essence()
         THROW(SW_ACCOUNT_NOT_VALID);
     }
 
-    // some basic checks - actually data should be 100% validated already
-    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
-        api.essence.length >= API_BUFFER_SIZE_BYTES ||
-        api.data.length < api.essence.length ||
-        api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        api.essence.inputs_count > INPUTS_MAX_COUNT) {
-        THROW(SW_UNKNOWN);
-    }
+    if (!api.essence.blindsigning) {
+        // normal flow without blindsigning
 
-    // set correct bip32 path for showing the remainder address on the UI
-    api.bip32_path[BIP32_ADDRESS_INDEX] =
-        api.essence.remainder_bip32.bip32_index;
-    api.bip32_path[BIP32_CHANGE_INDEX] =
-        api.essence.remainder_bip32.bip32_change;
+        // some basic checks - actually data should be 100% validated
+        // already
+        if (api.data.length >= API_BUFFER_SIZE_BYTES ||
+            api.essence.length >= API_BUFFER_SIZE_BYTES ||
+            api.data.length < api.essence.length ||
+            api.essence.inputs_count < INPUTS_MIN_COUNT ||
+            (api.protocol == PROTOCOL_CHRYSALIS &&
+             api.essence.inputs_count > INPUTS_MAX_COUNT_CHRYSALIS) ||
+            (api.protocol == PROTOCOL_STARDUST &&
+             api.essence.inputs_count > INPUTS_MAX_COUNT_STARDUST)) {
+            THROW(SW_UNKNOWN);
+        }
+
+        // set correct bip32 path for showing the remainder address on the
+        // UI
+        api.bip32_path[BIP32_ADDRESS_INDEX] =
+            api.essence.remainder_bip32.bip32_index;
+        api.bip32_path[BIP32_CHANGE_INDEX] =
+            api.essence.remainder_bip32.bip32_change;
 
 #ifdef APP_DEBUG
-    if (api.non_interactive_mode) {
-        api.data.type = USER_CONFIRMED_ESSENCE;
+        if (api.non_interactive_mode) {
+            api.data.type = USER_CONFIRMED_ESSENCE;
 
-        io_send(NULL, 0, SW_OK);
-        return 0;
-    }
+            io_send(NULL, 0, SW_OK);
+            return 0;
+        }
 #endif
-    api.flow_locked = 1; // mark flow locked
+        api.flow_locked = 1; // mark flow locked
 
-    flow_start_user_confirm(&api, &api_user_confirm_essence_accepted,
-                            &api_user_confirm_essence_rejected,
-                            &api_user_confirm_essence_timeout, api.bip32_path);
+        flow_start_user_confirm_transaction(&api,
+                                            &api_user_confirm_essence_accepted,
+                                            &api_user_confirm_essence_rejected,
+                                            &api_user_confirm_essence_timeout);
+    }
+    else {
+// start flow for blindsigning
+#ifdef APP_DEBUG
+        if (api.non_interactive_mode) {
+            api.data.type = USER_CONFIRMED_ESSENCE;
 
+            io_send(NULL, 0, SW_OK);
+            return 0;
+        }
+#endif
+
+        api.flow_locked = 1; // mark flow locked
+
+        // we can use the same callbacks
+        flow_start_blindsigning(&api, &api_user_confirm_essence_accepted,
+                                &api_user_confirm_essence_rejected,
+                                &api_user_confirm_essence_timeout);
+    }
     return IO_ASYNCH_REPLY;
-}
-
-// prefered signing methond on the nano-x
-// uses additional memory on in the buffer but only
-// needs a single call to the signing method
-uint32_t api_sign()
-{
-    if (api.data.type != USER_CONFIRMED_ESSENCE) {
-        THROW(SW_COMMAND_NOT_ALLOWED);
-    }
-
-    // was not validated in single sign mode?
-    if (api.essence.single_sign_mode) {
-        THROW(SW_COMMAND_NOT_ALLOWED);
-    }
-
-    // some basic checks - actually data should be 100% validated already
-    if (api.data.length >= API_BUFFER_SIZE_BYTES ||
-        api.essence.length >= API_BUFFER_SIZE_BYTES ||
-        api.data.length < api.essence.length ||
-        api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        api.essence.inputs_count > INPUTS_MAX_COUNT) {
-        THROW(SW_UNKNOWN);
-    }
-
-    uint8_t ret = essence_sign(&api);
-    if (!ret) {
-        THROW(SW_UNKNOWN);
-    }
-
-    api.data.type = SIGNATURES;
-
-    io_send(NULL, 0, SW_OK);
-
-    return 0;
 }
 
 // prefered signing methond on the nano-s
 // it needs as many calls as there are inputs but needs
 // no additional memory in the buffer for signatures
-uint32_t api_sign_single(uint8_t p1)
+uint32_t api_sign(uint8_t p1)
 {
     if (api.data.type != USER_CONFIRMED_ESSENCE) {
-        THROW(SW_COMMAND_NOT_ALLOWED);
-    }
-
-    // this check actually wouldn't be needed because
-    // if validation passed without single-flag, sign_single would be
-    // okay but not the other way around!
-    // but if validation without single-flag passes, you could use the
-    // sign-api-call right away.
-    //
-    // so this check only is here to prevent mixing validation and signing
-    // modes because it doesn't make sense and could lead to client problems.
-
-    // was validated in single sign mode?
-    if (!api.essence.single_sign_mode) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
@@ -504,7 +601,10 @@ uint32_t api_sign_single(uint8_t p1)
         api.essence.length >= API_BUFFER_SIZE_BYTES ||
         api.data.length < api.essence.length ||
         api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        api.essence.inputs_count > INPUTS_MAX_COUNT) {
+        (api.protocol == PROTOCOL_CHRYSALIS &&
+         api.essence.inputs_count > INPUTS_MAX_COUNT_CHRYSALIS) ||
+        (api.protocol == PROTOCOL_STARDUST &&
+         api.essence.inputs_count > INPUTS_MAX_COUNT_STARDUST)) {
         THROW(SW_UNKNOWN);
     }
 
@@ -512,11 +612,18 @@ uint32_t api_sign_single(uint8_t p1)
         THROW(SW_INCORRECT_P1P2);
     }
 
+    // check the buffer size
+    if (IO_APDU_BUFFER_SIZE < sizeof(SIGNATURE_UNLOCK_BLOCK)) {
+        THROW(SW_UNKNOWN);
+    }
+
     uint32_t signature_idx = p1;
 
+    // show "signing ..."
+    flow_signing();
+
     uint8_t *output = io_get_buffer();
-    uint16_t signature_size_bytes = essence_sign_single(
-        &api, output, sizeof(SIGNATURE_UNLOCK_BLOCK), signature_idx);
+    uint16_t signature_size_bytes = sign(&api, output, signature_idx);
 
     if (!signature_size_bytes) {
         THROW(SW_UNKNOWN);
@@ -537,6 +644,7 @@ uint32_t api_sign_single(uint8_t p1)
 uint32_t api_dump_memory(uint8_t pagenr)
 {
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+    // same size and location on Nano X and Nano S+
     if (pagenr >= 30 * 1024 / 128) {
         THROW(SW_INCORRECT_P1P2);
     }
@@ -565,4 +673,3 @@ uint32_t api_set_non_interactive_mode(uint8_t mode)
 }
 
 #endif
-

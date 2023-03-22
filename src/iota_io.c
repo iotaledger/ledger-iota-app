@@ -1,17 +1,14 @@
-#include "iota_io.h"
-#include "api.h"
-#include "macros.h"
-#include "os.h"
-//#include "io_seproxyhal.h"
 #include <string.h>
 
+#include "os.h"
+#include "macros.h"
+
+#include "iota_io.h"
 #include "api.h"
+#include "iota/constants.h"
 
 #include "ui/nano/flow_user_confirm.h"
 
-// gcc doesn't know this and ledger's SDK cannot be compiled with Werror!
-//#pragma GCC diagnostic error "-Werr"
-//#pragma GCC diagnostic error "-Wpedantic"
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
@@ -21,7 +18,7 @@ extern unsigned char G_io_apdu_buffer[IO_APDU_BUFFER_SIZE];
 void io_initialize()
 {
     memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
-    api_initialize();
+    api_initialize(APP_MODE_INIT, 0);
 }
 
 void io_send(const void *ptr, unsigned int length, unsigned short sw)
@@ -67,7 +64,7 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return api_get_app_config(is_locked);
 
     case INS_SET_ACCOUNT:
-        return api_set_account(input_data, len);
+        return api_set_account(p1, input_data, len);
 
     case INS_RESET:
         return api_reset();
@@ -76,7 +73,10 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
         return api_write_data_block(p1, input_data, len);
 
     case INS_PREPARE_SIGNING:
-        return api_prepare_signing(p1, p2, input_data, len);
+        return api_prepare_signing(p2, input_data, len);
+
+    case INS_PREPARE_BLINDSIGNING:
+        return api_prepare_blindsigning();
 
     case INS_GENERATE_ADDRESS:
         return api_generate_address(p1, input_data, len);
@@ -87,20 +87,17 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
     case INS_CLEAR_DATA_BUFFER:
         return api_clear_data_buffer();
 
-    case INS_SIGN:
-        return api_sign();
-
     case INS_USER_CONFIRM_ESSENCE:
         return api_user_confirm_essence();
 
     case INS_SIGN_SINGLE:
-        return api_sign_single(p1);
+        return api_sign(p1);
 
     case INS_READ_DATA_BLOCK:
         return api_read_data_block(p1);
 
     case INS_SHOW_FLOW:
-        return api_show_flow(p1);
+        return api_show_flow();
 
 #ifdef APP_DEBUG
     case INS_DUMP_MEMORY:

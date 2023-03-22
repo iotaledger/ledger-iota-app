@@ -8,19 +8,20 @@
         {
             "name": "GDB",
             "type": "gdb",
-            "request": "launch",
+            "request": "attach",
+            "target": "127.0.0.1:1234",
+            "remote": true,
+            "executable": "",
             "cwd": "${workspaceRoot}",
-            "target": "${workspaceRoot}/bin/app.elf",
             "gdbpath": "gdb-multiarch",
+            "stopAtConnect": true,
             "autorun": [
-                "target remote 127.0.0.1:1234",
-                "source \"${workspaceRoot}/tools/gdbinit\"",
+                //"source \"${workspaceRoot}/tools/gdbinit\"",
                 "set architecture arm",
                 "handle SIGILL nostop pass noprint",
                 //"add-symbol-file \"/home/thomas/git/ledger/speculos/tools/../build/src/launcher\" 0x000101c0",
                 "add-symbol-file \"${workspaceRoot}/bin/app.elf\" 0x40000000",
                 "b *0x40000000",
-                "show"
             ]
         },
    ]

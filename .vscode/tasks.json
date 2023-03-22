@@ -4,8 +4,8 @@
     "version": "2.0.0",
     "options": {
         "env": {
-          "CLANGPATH": "${HOME}/programme/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/",
-          "GCCPATH": "${HOME}/programme/gcc-arm-none-eabi-5_4-2016q3/bin/",
+          //"CLANGPATH": "${HOME}/programme/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/",
+          //"GCCPATH": "${HOME}/programme/gcc-arm-none-eabi-5_4-2016q3/bin/",
           //"BOLOS_SDK": "${workspaceRoot}/dev/sdk/nanos-secure-sdk"
         }
      },
@@ -13,48 +13,20 @@
         {
             "label": "Build IOTA App for Nano S (Speculos)",
             "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk; export SPECULOS=1; make clean && make"
-        },
-        {
-            "label": "Build IOTA App for Nano X (Speculos)",
-            "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanox-secure-sdk; export SPECULOS=1; make clean && make"
-        },
-        {
-            "label": "Build IOTA App for Nano S (Debug)",
-            "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk; export DEBUG=1; make clean && make"
-        },
-        {
-            "label": "Build IOTA App for Nano X (Debug)",
-            "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanox-secure-sdk; export DEBUG=1; make clean && make"
-        },
-        {
-            "label": "Debug IOTA App for Nano S (Speculos)",
-            "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk;export SPECULOS=1; make clean && make; python3 ./dev/speculos/speculos.py --ontop -d ./bin/app.elf -m nanos"
-        },
-        {
-            "label": "Debug IOTA App for Nano X (Speculos)",
-            "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanox-secure-sdk;export SPECULOS=1; make clean && make; python3 ./dev/speculos/speculos.py --ontop -d ./bin/app.elf -m nanox"
-        },
-        {
-            "label": "Load IOTA App onto Nano S (Debug)",
-            "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk; export DEBUG=1; make clean && make && make load"
+            "command": "${workspaceRoot}/build.sh -m nanos",
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
             "label": "Run IOTA App for Nano S (Speculos)",
             "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanos-secure-sdk;export SPECULOS=1; make clean && make; python3 ./dev/speculos/speculos.py --ontop ./bin/app.elf -m nanos"
+            "command": "${workspaceRoot}/build.sh -m nanos -s"
         },
         {
-            "label": "Run IOTA App for Nano X (Speculos)",
+            "label": "Debug IOTA App for Nano S (Speculos)",
             "type": "shell",
-            "command": "export BOLOS_SDK=${workspaceRoot}/dev/sdk/nanox-secure-sdk;export SPECULOS=1; make clean && make; python3 ./dev/speculos/speculos.py --ontop ./bin/app.elf -m nanox"
-        },
-
+            "command": "${workspaceRoot}/build.sh -m nanos -s -g"
+        }
     ]
 }

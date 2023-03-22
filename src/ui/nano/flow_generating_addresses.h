@@ -4,11 +4,6 @@
  *      Author: thomas
  */
 
-#ifndef SRC_UI_NANO_FLOW_GENERATING_ADDRESSES_H_
-#define SRC_UI_NANO_FLOW_GENERATING_ADDRESSES_H_
-
+#pragma once
 
 void flow_generating_addresses(void);
-
-
-#endif
