@@ -145,4 +145,4 @@ include $(BOLOS_SDK)/Makefile.rules
 dep/%.d: %.c Makefile
 
 listvariants:
-	@echo VARIANTS COIN iota shimmer
+	@echo VARIANTS CHAIN iota shimmer
