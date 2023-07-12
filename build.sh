@@ -226,7 +226,6 @@ docker run \
         -p 1234:1234 \
         -e SPECULOS_APPNAME="$APPNAME:$APPVERSION" \
         --rm \
-        -it \
         speculos \
             --apdu-port 9999 \
             --display headless \
