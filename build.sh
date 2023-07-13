@@ -29,15 +29,16 @@ function error {
 
 function usage {
     echo "usage: $0 [-h|--help] [-d|--debug] [-m|--model (nanos*|nanox|nanosplus)] [-l|--load] [-s|--speculos] [-c|--cxlib 1.0.2]"
-    echo "-d|--debug:    build app with DEBUG=1"
-    echo "-m|--model:    nanos (default), nanox, nanosplus"
-    echo "-l|--load:     load app to device"
-    echo "-p|--pull:     force pull docker images before using them"
-    echo "-s|--speculos: run app after building with the speculos simulator"
-    echo "-c|--cxlib:    don't autodetect cx-lib version (for speculos)"
-    echo "-g|--gdb:      start speculos with -d (waiting for gdb debugger)"
-    echo "-a|--analyze   run static code analysis"
-    echo "-v|--variant   build for 'iota' or 'shimmer'"
+    echo "-d|--debug:      build app with DEBUG=1"
+    echo "-b|--background: start simulator in background (detached)"
+    echo "-m|--model:      nanos (default), nanox, nanosplus"
+    echo "-l|--load:       load app to device"
+    echo "-p|--pull:       force pull docker images before using them"
+    echo "-s|--speculos:   run app after building with the speculos simulator"
+    echo "-c|--cxlib:      don't autodetect cx-lib version (for speculos)"
+    echo "-g|--gdb:        start speculos with -d (waiting for gdb debugger)"
+    echo "-a|--analyze     run static code analysis"
+    echo "-v|--variant     build for 'iota' or 'shimmer'"
     exit 1
 }
 
@@ -77,6 +78,7 @@ load=0
 speculos=0
 debug=0
 gdb=0
+background=0
 analysis=0
 pull=0
 cxlib=""
@@ -103,6 +105,9 @@ do
         ;;
     "-d" | "--debug")
         debug=1
+        ;;
+    "-b" | "--background")
+        background=1
         ;;
     "-g" | "--gdb")
         gdb=1
@@ -219,14 +224,16 @@ docker run \
 
     (( $gdb )) && extra_args="-d "
 
+    (( $background )) && docker_extra_args="-d "
+
     docker run \
         -v "$rpath:/speculos/apps" \
         -p 9999:9999 \
         -p 5000:5000 \
         -p 1234:1234 \
         -e SPECULOS_APPNAME="$APPNAME:$APPVERSION" \
+        $docker_extra_args \
         --rm \
-        -it \
         speculos \
             --apdu-port 9999 \
             --display headless \
