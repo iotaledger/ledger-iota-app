@@ -19,7 +19,7 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-#include "debugprintf.h"
+//#include "debugprintf.h"
 
 uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
                                   uint32_t bech32_max_length, const char *hrp,
@@ -76,9 +76,14 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     addr[0] = ADDRESS_TYPE_ED25519;
 
     cx_blake2b_t blake2b;
-    cx_blake2b_init_no_throw(&blake2b, BLAKE2B_SIZE_BYTES * 8);
-    cx_hash_no_throw(&blake2b.header, CX_LAST, pubkey_bytes, PUBKEY_SIZE_BYTES, &addr[1],
-            ADDRESS_SIZE_BYTES);
 
-    return 1;
+    cx_err_t err;
+    err = cx_blake2b_init_no_throw(&blake2b, BLAKE2B_SIZE_BYTES * 8);
+    if (err != CX_OK) {
+        return 0;
+    }
+
+    err = cx_hash_no_throw(&blake2b.header, CX_LAST, pubkey_bytes,
+                           PUBKEY_SIZE_BYTES, &addr[1], ADDRESS_SIZE_BYTES);
+    return err == CX_OK;
 }

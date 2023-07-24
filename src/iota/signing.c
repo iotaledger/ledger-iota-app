@@ -13,7 +13,6 @@
 #include "iota/ed25519.h"
 #endif
 
-
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
@@ -30,22 +29,17 @@ static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
     bip32_signing_path[BIP32_ADDRESS_INDEX] = input_bip32_index->bip32_index;
     bip32_signing_path[BIP32_CHANGE_INDEX] = input_bip32_index->bip32_change;
 
-    uint32_t signature_length = 0;
-
     uint8_t ret = 0;
     // create key pair and convert pub key to bytes
     ret = ed25519_get_key_pair(bip32_signing_path, BIP32_PATH_LEN, &pk, &pub);
     ret = ret && ed25519_sign(&pk, essence_hash, BLAKE2B_SIZE_BYTES,
-                              pBlock->signature, &signature_length);
+                              pBlock->signature);
 
     // always delete from stack
     explicit_bzero(&pk, sizeof(pk));
 
     // ed25519_get_key_pair and ed25519_sign must succeed
     MUST(ret);
-
-    // length of signature must not be 0
-    MUST(signature_length);
 
     MUST(ed25519_public_key_to_bytes(&pub, pBlock->public_key));
 
