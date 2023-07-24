@@ -260,8 +260,8 @@ static void essence_hash(API_CTX *api)
     // Block below cannot be fuzzed without going through crypto APIs
 #ifndef FUZZING
     cx_blake2b_t blake2b;
-    cx_blake2b_init(&blake2b, BLAKE2B_SIZE_BYTES * 8);
-    cx_hash(&blake2b.header, CX_LAST, api->data.buffer, api->essence.length,
+    cx_blake2b_init_no_throw(&blake2b, BLAKE2B_SIZE_BYTES * 8);
+    cx_hash_no_throw(&blake2b.header, CX_LAST, api->data.buffer, api->essence.length,
             api->essence.hash, ADDRESS_SIZE_BYTES);
 #else
     (void)api;
