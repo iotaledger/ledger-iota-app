@@ -19,8 +19,6 @@
 #include "iota/constants.h"
 #include "ui_common.h"
 
-extern API_CTX api;
-
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
 
@@ -418,7 +416,7 @@ static void cb_address_preinit()
 
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
-    address_encode_bech32(&api, address_with_type_ptr, flow_data.scratch[0],
+    address_encode_bech32(flow_data.api, address_with_type_ptr, flow_data.scratch[0],
                           sizeof(flow_data.scratch[0]));
 }
 

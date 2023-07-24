@@ -8,7 +8,6 @@
 #include "abstraction.h"
 
 extern flowdata_t flow_data;
-extern API_CTX api;
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
@@ -98,8 +97,8 @@ static void cb_address_preinit()
 
     // generate bech32 address including the address_type
     // we only have a single address in the buffer starting at index 0
-    address_encode_bech32(&api, flow_data.api->data.buffer,
-                          flow_data.scratch[0], sizeof(flow_data.scratch[0]));
+    address_encode_bech32(flow_data.api, flow_data.api->data.buffer, flow_data.scratch[0],
+                          sizeof(flow_data.scratch[0]));
 }
 
 static void cb_bip32_preinit()
