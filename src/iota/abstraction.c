@@ -130,8 +130,8 @@ uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
 
     switch (api->coin) {
     case COIN_IOTA: {
+        // IOTA + Chrysalis uses metric units
         if (api->protocol == PROTOCOL_CHRYSALIS) {
-            // IOTA + Chrysalis is the last protocol that uses metric units
             // show IOTA in full or short mode
             if (full) { // full
                 // max supply is 2779530283277761 - this fits nicely in one line
@@ -142,7 +142,8 @@ uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
             else { // short
                 format_value_short(dst, dst_len, amount);
             }
-        } else {
+        }
+        else {
             format_value_full_decimals(dst, dst_len, amount);
         }
         break;
