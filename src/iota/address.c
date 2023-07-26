@@ -67,7 +67,7 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     // convert Ledger pubkey to pubkey bytes
     uint8_t pubkey_bytes[PUBKEY_SIZE_BYTES];
 
-	MUST(ed25519_public_key_to_bytes(&pub, pubkey_bytes));
+    MUST(ed25519_public_key_to_bytes(&pub, pubkey_bytes));
 
     //	debug_print_hex(pubkey_bytes, 32, 16);
 
@@ -79,7 +79,8 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     MUST(cx_blake2b_init_no_throw(&blake2b, BLAKE2B_SIZE_BYTES * 8) == CX_OK);
 
     MUST(cx_hash_no_throw(&blake2b.header, CX_LAST, pubkey_bytes,
-                           PUBKEY_SIZE_BYTES, &addr[1], ADDRESS_SIZE_BYTES) == CX_OK);
+                          PUBKEY_SIZE_BYTES, &addr[1],
+                          ADDRESS_SIZE_BYTES) == CX_OK);
 
     return 1;
 }

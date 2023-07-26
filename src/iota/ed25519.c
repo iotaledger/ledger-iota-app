@@ -72,8 +72,8 @@ uint8_t ed25519_public_key_to_bytes(cx_ecfp_public_key_t *pub, uint8_t *output)
 uint8_t ed25519_sign(cx_ecfp_private_key_t *privateKey, const uint8_t *msg,
                      uint32_t msg_length, unsigned char *output)
 {
-    MUST(cx_eddsa_sign_no_throw(privateKey, CX_SHA512, msg, msg_length,
-                                  output, CX_SHA512_SIZE) == CX_OK);
+    MUST(cx_eddsa_sign_no_throw(privateKey, CX_SHA512, msg, msg_length, output,
+                                CX_SHA512_SIZE) == CX_OK);
 
-	return 1;
+    return 1;
 }
