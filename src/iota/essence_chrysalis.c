@@ -28,7 +28,6 @@
 #pragma GCC diagnostic error "-Wextra"
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
-
 static inline uint8_t get_uint32(const uint8_t *data, uint32_t *idx,
                                  uint32_t *v)
 {
@@ -284,17 +283,19 @@ static uint8_t essence_verify_remainder_address(
     return 1;
 }
 
-static void essence_hash(API_CTX *api)
+static uint8_t essence_hash(API_CTX *api)
 {
     // Block below cannot be fuzzed without going through crypto APIs
 #ifndef FUZZING
     cx_blake2b_t blake2b;
-    cx_blake2b_init(&blake2b, BLAKE2B_SIZE_BYTES * 8);
-    cx_hash(&blake2b.header, CX_LAST, api->data.buffer, api->essence.length,
-            api->essence.hash, ADDRESS_SIZE_BYTES);
+    MUST(cx_blake2b_init_no_throw(&blake2b, BLAKE2B_SIZE_BYTES * 8) == CX_OK);
+    MUST(cx_hash_no_throw(&blake2b.header, CX_LAST, api->data.buffer,
+                          api->essence.length, api->essence.hash,
+                          ADDRESS_SIZE_BYTES) == CX_OK);
 #else
     (void)api;
 #endif
+    return 1;
 }
 
 uint8_t essence_parse_and_validate_chryslis(API_CTX *api)
@@ -357,7 +358,7 @@ uint8_t essence_parse_and_validate_chryslis(API_CTX *api)
         api->essence.outputs_count));
 
     // everything fine - calculate the hash
-    essence_hash(api);
+    MUST(essence_hash(api));
 
     // check if it's a sweeping transaction
     if (check_for_internal_transfer(api)) {

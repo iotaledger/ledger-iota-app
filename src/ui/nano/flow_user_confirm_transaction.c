@@ -416,8 +416,8 @@ static void cb_address_preinit()
 
     // generate bech32 address including the address_type
     // since the struct is packed, the address follows directly the address_type
-    address_encode_bech32(address_with_type_ptr, flow_data.scratch[0],
-                          sizeof(flow_data.scratch[0]));
+    address_encode_bech32(flow_data.api, address_with_type_ptr,
+                          flow_data.scratch[0], sizeof(flow_data.scratch[0]));
 }
 
 static void cb_output_preinit()
