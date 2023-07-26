@@ -47,9 +47,9 @@ static size_t str_add_commas(char *dst, const char *src, size_t num_len)
 /** @brief Writes signed integer to string.
  *  @return the number of chars that have been written
  */
-static size_t format_s64(char *s, const size_t n, const uint64_t val)
+static size_t format_u64(char *s, const size_t n, const uint64_t val)
 {
-    // we cannot display the full range of int64 with this function
+    // we cannot display the full range of uint64 with this function
     if (val >= MAX_INT_DEC * MAX_INT_DEC) {
         THROW(INVALID_PARAMETER);
     }
@@ -67,9 +67,10 @@ static size_t format_s64(char *s, const size_t n, const uint64_t val)
 
 void format_value_full(char *s, const unsigned int n, const uint64_t val)
 {
-    char buffer[n];
+    // longest u64 string in buffer can be: "18446744073709551615\0"
+    char buffer[21];
 
-    const size_t num_len = format_s64(buffer, sizeof(buffer), val);
+    const size_t num_len = format_u64(buffer, sizeof(buffer), val);
     const size_t num_len_comma = num_len + (num_len - 1) / 3;
 
     // if the length with commas plus the unit does not fit
@@ -86,9 +87,10 @@ void format_value_full(char *s, const unsigned int n, const uint64_t val)
 void format_value_full_decimals(char *s, const unsigned int n,
                                 const uint64_t val)
 {
-    char buffer[n];
+    // longest u64 string in buffer can be: "18446744073709551615\0"
+    char buffer[21];
 
-    const size_t num_len = format_s64(buffer, sizeof(buffer), val);
+    const size_t num_len = format_u64(buffer, sizeof(buffer), val);
 
     // not enough space
     if (n < num_len + 2) {
