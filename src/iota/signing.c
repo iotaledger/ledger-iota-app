@@ -4,7 +4,7 @@
 #include "os.h"
 #include "cx.h"
 #include "api.h"
-#include "crypto_helpers/crypto_helpers.h"
+#include "lib_standard_app/crypto_helpers.h"
 
 #include "macros.h"
 #include "signing.h"

@@ -14,7 +14,7 @@
 #include "address.h"
 #include "ed25519.h"
 #include "macros.h"
-#include "crypto_helpers/crypto_helpers.h"
+#include "lib_standard_app/crypto_helpers.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
