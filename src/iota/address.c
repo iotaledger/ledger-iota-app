@@ -14,6 +14,7 @@
 #include "address.h"
 #include "ed25519.h"
 #include "macros.h"
+#include "lib_standard_app/crypto_helpers.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
@@ -51,23 +52,16 @@ uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
 uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
                          uint8_t *addr)
 {
-    cx_ecfp_private_key_t pk;
-    cx_ecfp_public_key_t pub;
+    uint8_t raw_pubkey[65];
 
-    uint8_t ret = 0;
-
-    ret = ed25519_get_key_pair(bip32_path, bip32_path_length, &pk, &pub);
-
-    // always delete from stack
-    explicit_bzero(&pk, sizeof(pk));
-
-    // ed25519_get_key_pair must succeed
-    MUST(ret);
+    MUST(bip32_derive_with_seed_get_pubkey_256(
+             HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32_path,
+             bip32_path_length, raw_pubkey, NULL, CX_SHA512, NULL, 0) == CX_OK);
 
     // convert Ledger pubkey to pubkey bytes
     uint8_t pubkey_bytes[PUBKEY_SIZE_BYTES];
 
-    MUST(ed25519_public_key_to_bytes(&pub, pubkey_bytes));
+    MUST(ed25519_public_key_to_bytes(raw_pubkey, pubkey_bytes));
 
     //	debug_print_hex(pubkey_bytes, 32, 16);
 
@@ -81,6 +75,5 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
     MUST(cx_hash_no_throw(&blake2b.header, CX_LAST, pubkey_bytes,
                           PUBKEY_SIZE_BYTES, &addr[1],
                           ADDRESS_SIZE_BYTES) == CX_OK);
-
     return 1;
 }

@@ -127,6 +127,10 @@ include $(BOLOS_SDK)/Makefile.glyphs
 APP_SOURCE_PATH += src
 SDK_SOURCE_PATH += lib_stusb lib_stusb_impl lib_ux
 
+# Allow usage of function from lib_standard_app/crypto_helpers.c
+INCLUDES_PATH  += ${BOLOS_SDK}
+APP_SOURCE_FILES += ${BOLOS_SDK}/lib_standard_app/crypto_helpers.c
+
 ifeq ($(TARGET_NAME),TARGET_NANOX)
     SDK_SOURCE_PATH += lib_blewbxx lib_blewbxx_impl
 endif
