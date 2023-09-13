@@ -54,9 +54,9 @@ uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
 {
     uint8_t raw_pubkey[65];
 
-    MUST(bip32_derive_with_seed_get_pubkey_256(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32_path,
-                                                 bip32_path_length, raw_pubkey,
-                                                 NULL, CX_SHA512, NULL, 0) == CX_OK);
+    MUST(bip32_derive_with_seed_get_pubkey_256(
+             HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32_path,
+             bip32_path_length, raw_pubkey, NULL, CX_SHA512, NULL, 0) == CX_OK);
 
     // convert Ledger pubkey to pubkey bytes
     uint8_t pubkey_bytes[PUBKEY_SIZE_BYTES];
