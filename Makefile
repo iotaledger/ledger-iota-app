@@ -131,17 +131,8 @@ ifeq ($(TARGET_NAME),TARGET_NANOX)
     SDK_SOURCE_PATH += lib_blewbxx lib_blewbxx_impl
 endif
 
-ifeq ($(TARGET_NAME),TARGET_NANOS2)
-# load fails with --apiLevel 1 on nanosplus
-APP_LOAD_PARAMS_NANO2 = $(subst --apiLevel 1,,$(APP_LOAD_PARAMS))
-endif
-
 load: all
-ifeq ($(TARGET_NAME),TARGET_NANOS2)
-	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS_NANO2)
-else
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
-endif
 
 load-offline: all
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS) --offline
