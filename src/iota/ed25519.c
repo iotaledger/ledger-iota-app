@@ -15,7 +15,7 @@
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
 // reversing the public key and changing the last byte
-uint8_t ed25519_public_key_to_bytes(uint8_t raw_pubkey[65], uint8_t output[32])
+uint8_t ed25519_public_key_to_bytes(const uint8_t raw_pubkey[65], uint8_t output[32])
 {
     for (int i = 0; i < 32; i++) {
         output[i] = raw_pubkey[64 - i];
