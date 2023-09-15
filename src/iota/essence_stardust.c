@@ -93,7 +93,7 @@ static uint8_t validate_inputs(const uint8_t *data, uint32_t *idx,
 // --- validate outputs ---
 static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
                                 BASIC_OUTPUT **outputs_ptr,
-                                uint16_t *outputs_count, uint8_t coin_type)
+                                uint16_t *outputs_count)
 {
     // uses safe getter macro that returns an error in case of invalid access
     MUST(get_uint16(data, idx, outputs_count));
@@ -140,11 +140,6 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         MUST(total_amount >= tmp.amount);
 
         *idx = *idx + sizeof(BASIC_OUTPUT);
-    }
-
-    // shimmer has inflation
-    if (coin_type == COIN_IOTA) {
-        MUST(total_amount <= TOTAL_AMOUNT_MAX);
     }
 
     return 1;
@@ -293,7 +288,7 @@ uint8_t essence_parse_and_validate_stardust(API_CTX *api)
 
     MUST(validate_outputs(api->data.buffer, &idx,
                           (BASIC_OUTPUT **)&api->essence.outputs,
-                          &api->essence.outputs_count, api->coin));
+                          &api->essence.outputs_count));
 
     MUST(validate_payload(api->data.buffer, &idx));
 
