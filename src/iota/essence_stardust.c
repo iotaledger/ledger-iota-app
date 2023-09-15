@@ -142,11 +142,6 @@ static uint8_t validate_outputs(const uint8_t *data, uint32_t *idx,
         *idx = *idx + sizeof(BASIC_OUTPUT);
     }
 
-    // shimmer has inflation
-    if (coin_type == COIN_IOTA) {
-        MUST(total_amount <= TOTAL_AMOUNT_MAX);
-    }
-
     return 1;
 }
 
