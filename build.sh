@@ -39,6 +39,7 @@ function usage {
     echo "-g|--gdb:        start speculos with -d (waiting for gdb debugger)"
     echo "-a|--analyze     run static code analysis"
     echo "-v|--variant     build for 'iota' or 'shimmer'"
+    echo "-n|--nobuild     don't build the app new"
     exit 1
 }
 
@@ -83,6 +84,7 @@ analysis=0
 pull=0
 cxlib=""
 variant=""
+nobuild=0
 while (( $# ))
 do
     case "$1" in
@@ -121,6 +123,9 @@ do
         ;;
     "-p" | "--pull")
         pull=1
+        ;;
+    "-n" | "--nobuild")
+        nobuild=1
         ;;
     *)
         error "unknown parameter: $1"
@@ -187,11 +192,13 @@ cmd="make clean && $build_flags make "
     cmd+="&& $build_flags make load"
 }
 
-docker run \
-    $extra_args \
-    --rm -v "$rpath:/app" \
-    ledger-app-builder \
-        bash -c "$cmd" || error "building failed"
+(( !nobuild )) && {
+    docker run \
+        $extra_args \
+        --rm -v "$rpath:/app" \
+        ledger-app-builder \
+            bash -c "$cmd" || error "building failed"
+}
 
 (( $load )) && {
     # we are finished
