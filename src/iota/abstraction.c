@@ -101,8 +101,7 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     return 1;
 }
 
-uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
-                   uint8_t full)
+uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len)
 {
     uint64_t amount;
 
