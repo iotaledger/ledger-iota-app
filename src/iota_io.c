@@ -81,6 +81,9 @@ unsigned int iota_dispatch(const uint8_t ins, const uint8_t p1,
     case INS_GENERATE_ADDRESS:
         return api_generate_address(p1, input_data, len);
 
+    case INS_GENERATE_PUBLIC_KEY:
+        return api_generate_public_key(p1, input_data, len);
+
     case INS_GET_DATA_BUFFER_STATE:
         return api_get_data_buffer_state();
 

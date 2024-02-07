@@ -115,6 +115,9 @@
 #define API_GENERATE_ADDRESSES_MAX_COUNT                                       \
     (API_BUFFER_SIZE_BYTES / ADDRESS_WITH_TYPE_SIZE_BYTES)
 
+#define API_GENERATE_PUBLIC_KEYS_MAX_COUNT                                       \
+    (API_BUFFER_SIZE_BYTES / PUBKEY_SIZE_BYTES)
+
 // very coarse estimation how many inputs the essence could have
 // we can safely assume that we need at least 32 bytes per input
 // this allows us to safe 100+ bytes in the essence struct
