@@ -148,7 +148,8 @@ uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
 
 uint32_t api_read_data_block(uint8_t block_number)
 {
-    if (api.data.type != GENERATED_ADDRESSES && api.data.type != SIGNATURES) {
+    if (api.data.type != GENERATED_ADDRESSES &&
+        api.data.type != GENERATED_PUBLIC_KEYS && api.data.type != SIGNATURES) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
@@ -383,7 +384,7 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
 }
 
 uint32_t api_generate_public_key(uint8_t show_on_screen, const uint8_t *data,
-                              uint32_t len)
+                                 uint32_t len)
 {
     // maybe we need it ...
     UNUSED(show_on_screen);
@@ -445,9 +446,9 @@ uint32_t api_generate_public_key(uint8_t show_on_screen, const uint8_t *data,
     memset(api.data.buffer, 0, API_BUFFER_SIZE_BYTES);
     for (uint32_t i = 0; i < req.count; i++) {
         // with address_type
-        uint8_t ret = public_key_generate(
-            api.bip32_path, BIP32_PATH_LEN,
-            &api.data.buffer[i * PUBKEY_SIZE_BYTES]);
+        uint8_t ret =
+            public_key_generate(api.bip32_path, BIP32_PATH_LEN,
+                                &api.data.buffer[i * PUBKEY_SIZE_BYTES]);
 
         if (!ret) {
             THROW(SW_UNKNOWN);
