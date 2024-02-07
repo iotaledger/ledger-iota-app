@@ -39,8 +39,8 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
 
     // app-modes
     // IOTA App
-    // 0x00: (107a) IOTA + Chrysalis (default, backwards compatible)
-    // 0x80:    (1) IOTA + Chrysalis Testnet
+    // 0x00: unused (formerly IOTA + Chrysalis)
+    // 0x80: unused (formerly IOTA + Chrysalis Testnet)
     // 0x01: (107a) IOTA + Stardust
     // 0x81:    (1) IOTA + Stardust Testnet
 
@@ -52,12 +52,6 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
 
     switch (app_mode & 0x7f) {
 #if defined(APP_IOTA)
-    case APP_MODE_IOTA_CHRYSALIS:
-        // iota
-        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
-        api.protocol = PROTOCOL_CHRYSALIS;
-        api.coin = COIN_IOTA;
-        break;
     case APP_MODE_IOTA_STARDUST:
         // iota
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
@@ -422,9 +416,7 @@ uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
             THROW(SW_COMMAND_INVALID_DATA);
         }
 
-        if ((api.protocol == PROTOCOL_CHRYSALIS &&
-             req.remainder_index >= OUTPUTS_MAX_COUNT_CHRYSALIS) ||
-            (api.protocol == PROTOCOL_STARDUST &&
+        if ((api.protocol == PROTOCOL_STARDUST &&
              req.remainder_index >= OUTPUTS_MAX_COUNT_STARDUST)) {
             THROW(SW_COMMAND_INVALID_DATA);
         }
@@ -537,8 +529,6 @@ uint32_t api_user_confirm_essence()
             api.essence.length >= API_BUFFER_SIZE_BYTES ||
             api.data.length < api.essence.length ||
             api.essence.inputs_count < INPUTS_MIN_COUNT ||
-            (api.protocol == PROTOCOL_CHRYSALIS &&
-             api.essence.inputs_count > INPUTS_MAX_COUNT_CHRYSALIS) ||
             (api.protocol == PROTOCOL_STARDUST &&
              api.essence.inputs_count > INPUTS_MAX_COUNT_STARDUST)) {
             THROW(SW_UNKNOWN);
@@ -601,8 +591,6 @@ uint32_t api_sign(uint8_t p1)
         api.essence.length >= API_BUFFER_SIZE_BYTES ||
         api.data.length < api.essence.length ||
         api.essence.inputs_count < INPUTS_MIN_COUNT ||
-        (api.protocol == PROTOCOL_CHRYSALIS &&
-         api.essence.inputs_count > INPUTS_MAX_COUNT_CHRYSALIS) ||
         (api.protocol == PROTOCOL_STARDUST &&
          api.essence.inputs_count > INPUTS_MAX_COUNT_STARDUST)) {
         THROW(SW_UNKNOWN);
