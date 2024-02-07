@@ -9,6 +9,7 @@
 #include "iota_io.h"
 
 #include "iota/address.h"
+#include "iota/public_key.h"
 
 #define IO_STRUCT struct __attribute__((packed, may_alias))
 
@@ -19,6 +20,7 @@ typedef enum {
     USER_CONFIRMED_ESSENCE = 3,
     SIGNATURES = 4,
     LOCKED = 5,
+    GENERATED_PUBLIC_KEYS = 6,
 } DATA_TYPE;
 
 typedef enum {
@@ -118,6 +120,14 @@ typedef IO_STRUCT
     uint32_t count;
 }
 API_GENERATE_ADDRESS_REQUEST;
+
+typedef IO_STRUCT
+{
+    uint32_t bip32_index;
+    uint32_t bip32_change;
+    uint32_t count;
+}
+API_GENERATE_PUBLIC_KEYS_REQUEST;
 
 
 typedef IO_STRUCT
@@ -283,6 +293,9 @@ uint32_t api_sign(uint8_t p1);
 
 uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
                               uint32_t len);
+
+uint32_t api_generate_public_key(uint8_t show_on_screen, const uint8_t *data,
+                                 uint32_t len);
 
 #ifdef APP_DEBUG
 uint32_t api_dump_memory(uint8_t pagenr);

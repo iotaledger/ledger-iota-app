@@ -21,6 +21,7 @@
 #include "ui/nano/flow_user_confirm_new_address.h"
 #include "ui/nano/flow_user_confirm_blindsigning.h"
 #include "ui/nano/flow_generating_addresses.h"
+#include "ui/nano/flow_generating_public_keys.h"
 #include "ui/nano/flow_signing.h"
 
 #pragma GCC diagnostic error "-Wall"
@@ -379,6 +380,87 @@ uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
     flow_start_new_address(&api, api_generate_address_accepted,
                            api_generate_address_timeout);
     return IO_ASYNCH_REPLY;
+}
+
+uint32_t api_generate_public_key(uint8_t show_on_screen, const uint8_t *data,
+                              uint32_t len)
+{
+    // maybe we need it ...
+    UNUSED(show_on_screen);
+
+    // don't allow command if an interactive flow already is running
+    if (api.flow_locked) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
+    // was account selected?
+    if (!(api.bip32_path[BIP32_ACCOUNT_INDEX] & 0x80000000)) {
+        THROW(SW_ACCOUNT_NOT_VALID);
+    }
+
+    // if buffer contains data, throw exception
+    if (api.data.type != EMPTY) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
+    // disable external read and write access before doing anything else
+    api.data.type = LOCKED;
+
+    if (len != sizeof(API_GENERATE_PUBLIC_KEYS_REQUEST)) {
+        THROW(SW_INCORRECT_LENGTH);
+    }
+
+    API_GENERATE_PUBLIC_KEYS_REQUEST req;
+    memcpy(&req, data, sizeof(req));
+
+    // check if too many public keys to generate
+    if (req.count > API_GENERATE_PUBLIC_KEYS_MAX_COUNT) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
+    // check if MSBs set
+    if (!(req.bip32_index & 0x80000000) || !(req.bip32_change & 0x80000000)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
+    // bip32 change can be 0x80000000 or 0x80000001
+    if (req.bip32_change & 0x7ffffffe) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
+    // check if there would be an overflow when generating public keys
+    if (!((req.bip32_index + req.count) & 0x80000000)) {
+        THROW(SW_COMMAND_INVALID_DATA);
+    }
+
+    // show "generating public keys ..."
+    if (!show_on_screen) {
+        flow_generating_public_keys();
+    }
+
+    api.bip32_path[BIP32_ADDRESS_INDEX] = req.bip32_index;
+    api.bip32_path[BIP32_CHANGE_INDEX] = req.bip32_change;
+
+    // wipe all data before buffer is used again
+    memset(api.data.buffer, 0, API_BUFFER_SIZE_BYTES);
+    for (uint32_t i = 0; i < req.count; i++) {
+        // with address_type
+        uint8_t ret = public_key_generate(
+            api.bip32_path, BIP32_PATH_LEN,
+            &api.data.buffer[i * PUBKEY_SIZE_BYTES]);
+
+        if (!ret) {
+            THROW(SW_UNKNOWN);
+        }
+        // generate next address
+        api.bip32_path[BIP32_ADDRESS_INDEX]++;
+    }
+
+    api.data.length = req.count * PUBKEY_SIZE_BYTES;
+
+    api.data.type = GENERATED_PUBLIC_KEYS;
+    io_send(NULL, 0, SW_OK);
+    return 0;
 }
 
 uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
