@@ -154,7 +154,7 @@ uint32_t api_write_data_block(uint8_t block_number, const uint8_t *input_data,
 
 uint32_t api_read_data_block(uint8_t block_number)
 {
-    if (api.data.type != GENERATED_ADDRESSES && api.data.type != SIGNATURES) {
+    if (api.data.type != GENERATED_ADDRESSES && api.data.type != SIGNATURES && api.data.type != GENERATED_PUBLIC_KEYS) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
