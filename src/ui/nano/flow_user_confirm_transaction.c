@@ -52,8 +52,6 @@
 
 extern flowdata_t flow_data;
 
-static void cb_value_toggle();
-
 static void cb_accept();
 static void cb_reject();
 static void cb_continue_claiming();
@@ -69,18 +67,11 @@ static void cb_back();
 static void cb_next_dataset();
 static void cb_prev_dataset();
 
-static void ui_confirm_output_value_toggle();
-
 static void get_read_index();
 
 
 //------------------------------------------------------------------------
 // clang-format off
-
-UX_FLOW_CALL(
-        ux_flow_datasets_value_toggle,
-        cb_value_toggle()
-)
 
 // review output [...]
 UX_STEP_NOCB_INIT(
@@ -92,17 +83,10 @@ UX_STEP_NOCB_INIT(
     }
 );
 
-UX_FLOW_CALL(
-        ux_flow_confirm_output_value_toggle,
-        ui_confirm_output_value_toggle()
-)
-
-UX_STEP_TIMEOUT_INIT(
+UX_STEP_NOCB_INIT(
     ux_step_amount,
     bn,
     cb_amount_preinit(),
-    2500,
-    ux_flow_confirm_output_value_toggle,
     {
         (const char*) flow_data.scratch[1], (const char*) flow_data.scratch[0]
 
@@ -310,9 +294,6 @@ static void cb_next_dataset()
     }
     get_read_index();
 
-    // reset toggle flag
-    flow_data.amount_toggle = 0;
-
     ux_flow_init(0, ux_flow_base, &ux_step_review);
 }
 
@@ -325,9 +306,6 @@ static void cb_prev_dataset()
     }
     get_read_index();
 
-    // reset toggle flag
-    flow_data.amount_toggle = 0;
-
     if (flow_data.flow_outputs_index_current ==
         flow_data.num_non_remainder_outputs - 1) {
         ux_flow_init(0, ux_flow_has_accept_reject, &ux_step_reject);
@@ -335,13 +313,6 @@ static void cb_prev_dataset()
     else {
         ux_flow_init(0, ux_flow_base, &ux_step_amount);
     }
-}
-
-// gets called by a timer to toggle the short and full view
-static void ui_confirm_output_value_toggle()
-{
-    flow_data.amount_toggle = 1 - flow_data.amount_toggle;
-    ux_flow_init(0, ux_flow_base, &ux_step_amount);
 }
 
 static void cb_back()
@@ -378,8 +349,7 @@ static void cb_amount_preinit()
     memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
     MUST_THROW(get_amount(flow_data.api, flow_data.read_index,
-                          flow_data.scratch[0], sizeof(flow_data.scratch[0]),
-                          flow_data.amount_toggle));
+                          flow_data.scratch[0], sizeof(flow_data.scratch[0])));
 
     // copy header after writing amount
     if (flow_data.api->coin == COIN_SHIMMER) {
@@ -457,14 +427,6 @@ static void get_read_index()
         flow_data.read_index++;
     }
 }
-
-// gets called by a timer to toggle the short and full view
-static void cb_value_toggle()
-{
-    flow_data.amount_toggle = 1 - flow_data.amount_toggle;
-    ux_flow_init(0, ux_flow_base, &ux_step_amount);
-}
-
 
 void flow_start_user_confirm_transaction(const API_CTX *api,
                                          accept_cb_t accept_cb,

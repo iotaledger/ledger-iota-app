@@ -6,7 +6,6 @@
 
 #include "os.h"
 
-#include "essence_chrysalis.h"
 #include "essence_stardust.h"
 #include "abstraction.h"
 #include "ui_common.h"
@@ -33,13 +32,6 @@ const uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
         ret = &tmp[index].address_type;
         break;
     }
-    case PROTOCOL_CHRYSALIS: {
-        SIG_LOCKED_SINGLE_OUTPUT *tmp =
-            (SIG_LOCKED_SINGLE_OUTPUT *)api->essence.outputs;
-        // address follows the address_type in a pact struct
-        ret = &tmp[index].address_type;
-        break;
-    }
     default:
         THROW(SW_UNKNOWN);
         break;
@@ -56,12 +48,6 @@ uint64_t get_output_amount(const API_CTX *api, uint8_t index)
     switch (api->protocol) {
     case PROTOCOL_STARDUST: {
         BASIC_OUTPUT *tmp = (BASIC_OUTPUT *)api->essence.outputs;
-        memcpy(&amount, &tmp[index].amount, sizeof(uint64_t));
-        break;
-    }
-    case PROTOCOL_CHRYSALIS: {
-        SIG_LOCKED_SINGLE_OUTPUT *tmp =
-            (SIG_LOCKED_SINGLE_OUTPUT *)api->essence.outputs;
         memcpy(&amount, &tmp[index].amount, sizeof(uint64_t));
         break;
     }
@@ -108,10 +94,6 @@ uint8_t essence_parse_and_validate(API_CTX *api)
         MUST(essence_parse_and_validate_stardust(api));
         break;
     }
-    case PROTOCOL_CHRYSALIS: {
-        MUST(essence_parse_and_validate_chryslis(api));
-        break;
-    }
     default:
         THROW(SW_UNKNOWN);
         break;
@@ -119,8 +101,7 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     return 1;
 }
 
-uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
-                   uint8_t full)
+uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len)
 {
     uint64_t amount;
 
@@ -129,22 +110,7 @@ uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len,
 
     switch (api->coin) {
     case COIN_IOTA: {
-        // IOTA + Chrysalis uses metric units
-        if (api->protocol == PROTOCOL_CHRYSALIS) {
-            // show IOTA in full or short mode
-            if (full) { // full
-                // max supply is 2779530283277761 - this fits nicely in one line
-                // on the Ledger nano s always cut after the 16th char to not
-                // make a page with a single 'i'.
-                format_value_full(dst, dst_len, amount);
-            }
-            else { // short
-                format_value_short(dst, dst_len, amount);
-            }
-        }
-        else {
-            format_value_full_decimals(dst, dst_len, amount);
-        }
+        format_value_full_decimals(dst, dst_len, amount);
         break;
     }
     case COIN_SHIMMER: {
