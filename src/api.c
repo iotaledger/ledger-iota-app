@@ -256,7 +256,7 @@ uint32_t api_set_account(uint8_t app_mode, const uint8_t *data, uint32_t len)
         THROW(SW_INCORRECT_LENGTH);
     }
 
-    if ((app_mode & 0x7f) > APP_MODE_SHIMMER) {
+    if ((app_mode & 0x7f) > APP_MODE_SHIMMER_NOVA) {
         THROW(SW_INCORRECT_P1P2);
     }
 
@@ -554,9 +554,8 @@ uint32_t api_prepare_blindsigning(uint8_t num_hashes)
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
-    // blindsigning only allowed with stardust protocol but not SMR claiming
-    if (api.protocol != PROTOCOL_STARDUST ||
-        api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
+    // blindsigning not allowed on shimmer claiming
+    if (api.app_mode == APP_MODE_SHIMMER_CLAIMING) {
         THROW(SW_COMMAND_NOT_ALLOWED);
     }
 
@@ -572,7 +571,8 @@ uint32_t api_prepare_blindsigning(uint8_t num_hashes)
     api.essence.blindsigning = 1;
 
     // multiple of 32byte chunks
-    uint16_t signing_input_len = (uint16_t)num_hashes << 5;
+    // value of 0 is the same as 1 for compatibility
+    uint16_t signing_input_len = (uint16_t) (!num_hashes ? 1 : num_hashes) << 5;
 
     // we allow to prepare without blindsigning enabled but the user will only
     // get an error message that blindsigning is not enabled on the Nano when
