@@ -14,3 +14,4 @@ uint8_t address_encode_bech32(const API_CTX *api, const uint8_t *addr_with_type,
 uint8_t essence_parse_and_validate(API_CTX *api);
 
 uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len);
+

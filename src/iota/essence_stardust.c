@@ -257,8 +257,10 @@ static uint8_t essence_hash(API_CTX *api)
     cx_blake2b_t blake2b;
     MUST(cx_blake2b_init_no_throw(&blake2b, BLAKE2B_SIZE_BYTES * 8) == CX_OK);
     MUST(cx_hash_no_throw(&blake2b.header, CX_LAST, api->data.buffer,
-                          api->essence.length, api->essence.hash,
-                          ADDRESS_SIZE_BYTES) == CX_OK);
+                          api->essence.length, api->essence.signing_input,
+                          BLAKE2B_SIZE_BYTES) == CX_OK);
+
+    api->essence.signing_input_len = BLAKE2B_SIZE_BYTES;
 #else
     (void)api;
 #endif

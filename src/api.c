@@ -14,7 +14,7 @@
 #include "abstraction.h"
 
 #include "iota/constants.h"
-#include "iota/blindsigning_stardust.h"
+#include "iota/blindsigning.h"
 #include "iota/signing.h"
 
 #include "ui/nano/flow_user_confirm_transaction.h"
@@ -44,12 +44,16 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
     // 0x80: unused (formerly IOTA + Chrysalis Testnet)
     // 0x01: (107a) IOTA + Stardust
     // 0x81:    (1) IOTA + Stardust Testnet
+    // 0x04: (107a) IOTA + Nova
+    // 0x84:    (1) IOTA + Nova Testnet
 
     // Shimmer App
     // 0x02: (107a) Shimmer Claiming (from IOTA)
     // 0x82:    (1) Shimmer Claiming (from IOTA) (Testnet)
     // 0x03: (107b) Shimmer (default)
     // 0x83:    (1) Shimmer Testnet
+    // 0x05: (107a) Shimmer + Nova
+    // 0x85:    (1) Shimmer + Nova Testnet
 
     switch (app_mode & 0x7f) {
 #if defined(APP_IOTA)
@@ -57,6 +61,12 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
         // iota
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
         api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_IOTA;
+        break;
+    case APP_MODE_IOTA_NOVA:
+        // iota
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_IOTA;
+        api.protocol = PROTOCOL_NOVA;
         api.coin = COIN_IOTA;
         break;
 #elif defined(APP_SHIMMER)
@@ -70,6 +80,12 @@ void api_initialize(APP_MODE_TYPE app_mode, uint32_t account_index)
         // shimmer
         api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
         api.protocol = PROTOCOL_STARDUST;
+        api.coin = COIN_SHIMMER;
+        break;
+    case APP_MODE_SHIMMER_NOVA:
+        // shimmer
+        api.bip32_path[BIP32_COIN_INDEX] = BIP32_COIN_SHIMMER;
+        api.protocol = PROTOCOL_NOVA;
         api.coin = COIN_SHIMMER;
         break;
 #else
@@ -389,6 +405,11 @@ uint32_t api_generate_public_key(uint8_t show_on_screen, const uint8_t *data,
     // maybe we need it ...
     UNUSED(show_on_screen);
 
+    // only allow in nova protocol
+    if (api.protocol != PROTOCOL_NOVA) {
+        THROW(SW_COMMAND_NOT_ALLOWED);
+    }
+
     // don't allow command if an interactive flow already is running
     if (api.flow_locked) {
         THROW(SW_COMMAND_NOT_ALLOWED);
@@ -526,7 +547,7 @@ uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
     return 0;
 }
 
-uint32_t api_prepare_blindsigning()
+uint32_t api_prepare_blindsigning(uint8_t num_hashes)
 {
     // when calling validation the buffer still is marked as empty
     if (api.data.type != EMPTY) {
@@ -550,13 +571,25 @@ uint32_t api_prepare_blindsigning()
     // set flag for blindsigning
     api.essence.blindsigning = 1;
 
+    // multiple of 32byte chunks
+    uint16_t signing_input_len = (uint16_t)num_hashes << 5;
+
+    if ((api.protocol == PROTOCOL_STARDUST &&
+         signing_input_len != BLAKE2B_SIZE_BYTES) ||
+        (api.protocol == PROTOCOL_NOVA &&
+         (signing_input_len != SIGNING_INPUT_NOVE_32BYTE ||
+          signing_input_len != SIGNING_INPUT_NOVE_64BYTE))) {
+            THROW(SW_INCORRECT_P1P2);
+    }
+
+
     // we allow to prepare without blindsigning enabled but the user will only
     // get an error message that blindsigning is not enabled on the Nano when
     // trying to sign what is the most consistent behaviour because the outcome
     // is the same as rejecting the signing (the flow only has a reject button
     // in this case and accepting is not possible) and we don't have to cope
     // with additional errors.
-    if (!parse_and_validate_blindsigning(&api)) {
+    if (!parse_and_validate_blindsigning(&api, signing_input_len)) {
         THROW(SW_COMMAND_INVALID_DATA);
     }
 

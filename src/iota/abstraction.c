@@ -32,6 +32,10 @@ const uint8_t *get_output_address_ptr(const API_CTX *api, uint8_t index)
         ret = &tmp[index].address_type;
         break;
     }
+    // not supported yet
+    case PROTOCOL_NOVA: {
+        THROW(SW_UNKNOWN);
+    }
     default:
         THROW(SW_UNKNOWN);
         break;
@@ -51,6 +55,10 @@ uint64_t get_output_amount(const API_CTX *api, uint8_t index)
         memcpy(&amount, &tmp[index].amount, sizeof(uint64_t));
         break;
     }
+    // not supported yet
+    case PROTOCOL_NOVA: {
+        THROW(SW_UNKNOWN);
+    }
     default:
         THROW(SW_UNKNOWN);
         break;
@@ -61,28 +69,26 @@ uint64_t get_output_amount(const API_CTX *api, uint8_t index)
 uint8_t address_encode_bech32(const API_CTX *api, const uint8_t *addr_with_type,
                               char *bech32, uint32_t bech32_max_length)
 {
+    const char *hrp;
+
     switch (api->coin) {
     case COIN_IOTA: {
-        MUST(address_encode_bech32_hrp(
-            addr_with_type, bech32, bech32_max_length,
-            (api->app_mode & 0x80) ? COIN_HRP_IOTA_TESTNET : COIN_HRP_IOTA,
-            strlen(COIN_HRP_IOTA))); // strlen valid because HRP has the same
-                                     // length in testnet
+        hrp = (api->app_mode & 0x80) ? COIN_HRP_IOTA_TESTNET : COIN_HRP_IOTA;
         break;
     }
     case COIN_SHIMMER: {
-        MUST(address_encode_bech32_hrp(
-            addr_with_type, bech32, bech32_max_length,
-            (api->app_mode & 0x80) ? COIN_HRP_SHIMMER_TESTNET
-                                   : COIN_HRP_SHIMMER,
-            strlen(COIN_HRP_SHIMMER))); // strlen valid because HRP has the same
-                                        // length in testnet
+        hrp = (api->app_mode & 0x80) ? COIN_HRP_SHIMMER_TESTNET
+                                     : COIN_HRP_SHIMMER;
         break;
     }
     default:
         THROW(SW_UNKNOWN);
         break;
     }
+
+    MUST(address_encode_bech32_hrp(addr_with_type, bech32, bech32_max_length,
+                                   hrp, strlen(hrp)));
+
     return 1;
 }
 
@@ -93,6 +99,10 @@ uint8_t essence_parse_and_validate(API_CTX *api)
     case PROTOCOL_STARDUST: {
         MUST(essence_parse_and_validate_stardust(api));
         break;
+    }
+    // not supported yet
+    case PROTOCOL_NOVA: {
+        THROW(SW_UNKNOWN);
     }
     default:
         THROW(SW_UNKNOWN);
@@ -108,17 +118,8 @@ uint8_t get_amount(const API_CTX *api, int index, char *dst, size_t dst_len)
     // amount > 0 enforced by validation
     MUST(amount = get_output_amount(api, index));
 
-    switch (api->coin) {
-    case COIN_IOTA: {
-        format_value_full_decimals(dst, dst_len, amount);
-        break;
-    }
-    case COIN_SHIMMER: {
-        format_value_full_decimals(dst, dst_len, amount);
-        break;
-    }
-    default:
-        THROW(SW_UNKNOWN);
-    }
+    format_value_full_decimals(dst, dst_len, amount);
+
     return 1;
 }
+

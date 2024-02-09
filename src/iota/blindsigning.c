@@ -13,7 +13,7 @@
 #include "api.h"
 
 #include "macros.h"
-#include "blindsigning_stardust.h"
+#include "blindsigning.h"
 
 #pragma GCC diagnostic error "-Wall"
 #pragma GCC diagnostic error "-Wextra"
@@ -32,16 +32,18 @@ static inline uint8_t get_uint16(const uint8_t *data, uint32_t *idx,
 
 // validate essence hash
 static uint8_t
-validate_essence_hash(const uint8_t *data, uint32_t *idx,
-                      uint8_t essence_hash[ESSENCE_HASH_SIZE_BYTES])
+validate_signing_input(const uint8_t *data, uint32_t *idx,
+                       uint8_t signing_input[SIGNING_INPUT_MAX_BYTES],
+                       uint16_t signing_input_len)
 {
-    MUST(*idx + ESSENCE_HASH_SIZE_BYTES < API_BUFFER_SIZE_BYTES);
+    MUST(*idx + signing_input_len < API_BUFFER_SIZE_BYTES);
 
     // not much we can validate here since an hash are arbitrary bytes
     // copy from buffer to essence
-    memcpy(essence_hash, &data[*idx], ESSENCE_HASH_SIZE_BYTES);
+    memcpy(signing_input, &data[*idx], signing_input_len);
 
-    *idx = *idx + ESSENCE_HASH_SIZE_BYTES;
+
+    *idx = *idx + signing_input_len;
     return 1;
 }
 
@@ -69,12 +71,19 @@ validate_inputs_bip32(const uint8_t *data, uint32_t *idx, uint16_t inputs_count,
 }
 
 
-uint8_t parse_and_validate_blindsigning(API_CTX *api)
+uint8_t parse_and_validate_blindsigning(API_CTX *api,
+                                                 uint16_t signing_input_len)
 {
     uint32_t idx = 0;
 
+    // validate signing input length
+    MUST(signing_input_len == ESSENCE_HASH_SIZE_BYTES);
+
+    api->essence.signing_input_len = signing_input_len;
+
     // parse data
-    MUST(validate_essence_hash(api->data.buffer, &idx, api->essence.hash));
+    MUST(validate_signing_input(api->data.buffer, &idx,
+                                api->essence.signing_input, signing_input_len));
 
     // save essence length
     api->essence.length = idx;

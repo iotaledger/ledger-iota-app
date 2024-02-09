@@ -26,10 +26,12 @@ typedef enum {
 typedef enum {
     APP_MODE_IOTA_STARDUST = 1,
     APP_MODE_SHIMMER_CLAIMING = 2,
-    APP_MODE_SHIMMER = 3
+    APP_MODE_SHIMMER = 3,
+    APP_MODE_IOTA_NOVA = 4,
+    APP_MODE_SHIMMER_NOVA = 5,
 } APP_MODE_TYPE;
 
-typedef enum { PROTOCOL_STARDUST = 1 } PROTOCOL_TYPE;
+typedef enum { PROTOCOL_STARDUST = 1, PROTOCOL_NOVA = 2 } PROTOCOL_TYPE;
 
 typedef enum { COIN_IOTA = 0, COIN_SHIMMER = 1 } COIN_TYPE;
 
@@ -203,8 +205,9 @@ typedef struct {
     // flag that signals that it's a sweeping transaction
     uint8_t is_internal_transfer;
 
-    // hash of the essence
-    uint8_t hash[BLAKE2B_SIZE_BYTES];
+    // signing input (hash(s))
+    uint8_t signing_input[SIGNING_INPUT_MAX_BYTES];
+    uint16_t signing_input_len;
 } ESSENCE;
 
 typedef struct {
@@ -285,7 +288,7 @@ uint32_t api_clear_data_buffer(void);
 uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
                              uint32_t len);
 
-uint32_t api_prepare_blindsigning(void);
+uint32_t api_prepare_blindsigning(uint8_t num_hashes);
 
 uint32_t api_user_confirm_essence(void);
 

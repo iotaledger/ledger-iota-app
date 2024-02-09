@@ -19,7 +19,8 @@
 #pragma GCC diagnostic error "-Wmissing-prototypes"
 
 static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
-                               const uint8_t *essence_hash,
+                               const uint8_t *signing_input,
+                               uint16_t signing_input_len,
                                uint32_t *bip32_signing_path,
                                API_INPUT_BIP32_INDEX *input_bip32_index)
 {
@@ -32,7 +33,7 @@ static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
 
     MUST(bip32_derive_with_seed_eddsa_sign_hash_256(
              HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32_signing_path,
-             BIP32_PATH_LEN, CX_SHA512, essence_hash, BLAKE2B_SIZE_BYTES,
+             BIP32_PATH_LEN, CX_SHA512, signing_input, signing_input_len,
              pBlock->signature, &signature_length, NULL, 0) == CX_OK);
 
     MUST(signature_length == SIGNATURE_SIZE_BYTES);
@@ -51,14 +52,15 @@ static uint16_t sign_signature(SIGNATURE_BLOCK *pBlock,
 }
 
 static uint16_t sign_signature_unlock_block(
-    SIGNATURE_UNLOCK_BLOCK *pBlock, const uint8_t *essence_hash,
-    uint32_t *bip32_signing_path, API_INPUT_BIP32_INDEX *input_bip32_index)
+    SIGNATURE_UNLOCK_BLOCK *pBlock, const uint8_t *signing_input,
+    uint16_t signing_input_len, uint32_t *bip32_signing_path,
+    API_INPUT_BIP32_INDEX *input_bip32_index)
 {
     pBlock->signature_type = SIGNATURE_TYPE_ED25519; // ED25519
     pBlock->unlock_type = UNLOCK_TYPE_SIGNATURE;     // signature
 
-    MUST(sign_signature(&pBlock->signature, essence_hash, bip32_signing_path,
-                        input_bip32_index));
+    MUST(sign_signature(&pBlock->signature, signing_input, signing_input_len,
+                        bip32_signing_path, input_bip32_index));
 
     return (uint16_t)sizeof(SIGNATURE_UNLOCK_BLOCK);
 }
@@ -115,8 +117,9 @@ uint16_t sign(API_CTX *api, uint8_t *output, uint32_t signature_index)
     // 0xff if not a reference index block
     if (reference_index == 0xff) {
         signature_size = sign_signature_unlock_block(
-            (SIGNATURE_UNLOCK_BLOCK *)output, api->essence.hash,
-            api->bip32_path, &input_bip32_index);
+            (SIGNATURE_UNLOCK_BLOCK *)output, api->essence.signing_input,
+            api->essence.signing_input_len, api->bip32_path,
+            &input_bip32_index);
     }
     else {
         signature_size = sign_reference_unlock_block(
