@@ -574,15 +574,6 @@ uint32_t api_prepare_blindsigning(uint8_t num_hashes)
     // multiple of 32byte chunks
     uint16_t signing_input_len = (uint16_t)num_hashes << 5;
 
-    if ((api.protocol == PROTOCOL_STARDUST &&
-         signing_input_len != BLAKE2B_SIZE_BYTES) ||
-        (api.protocol == PROTOCOL_NOVA &&
-         (signing_input_len != SIGNING_INPUT_NOVE_32BYTE ||
-          signing_input_len != SIGNING_INPUT_NOVE_64BYTE))) {
-            THROW(SW_INCORRECT_P1P2);
-    }
-
-
     // we allow to prepare without blindsigning enabled but the user will only
     // get an error message that blindsigning is not enabled on the Nano when
     // trying to sign what is the most consistent behaviour because the outcome

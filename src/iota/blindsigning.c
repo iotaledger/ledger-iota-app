@@ -72,12 +72,15 @@ validate_inputs_bip32(const uint8_t *data, uint32_t *idx, uint16_t inputs_count,
 
 
 uint8_t parse_and_validate_blindsigning(API_CTX *api,
-                                                 uint16_t signing_input_len)
+                                        uint16_t signing_input_len)
 {
     uint32_t idx = 0;
 
-    // validate signing input length
-    MUST(signing_input_len == ESSENCE_HASH_SIZE_BYTES);
+    MUST((api.protocol == PROTOCOL_STARDUST &&
+          signing_input_len == BLAKE2B_SIZE_BYTES) ||
+         (api.protocol == PROTOCOL_NOVA &&
+          (signing_input_len == SIGNING_INPUT_NOVA_32BYTE ||
+           signing_input_len == SIGNING_INPUT_NOVA_64BYTE)));
 
     api->essence.signing_input_len = signing_input_len;
 
