@@ -76,9 +76,9 @@ uint8_t parse_and_validate_blindsigning(API_CTX *api,
 {
     uint32_t idx = 0;
 
-    MUST((api.protocol == PROTOCOL_STARDUST &&
+    MUST((api->protocol == PROTOCOL_STARDUST &&
           signing_input_len == BLAKE2B_SIZE_BYTES) ||
-         (api.protocol == PROTOCOL_NOVA &&
+         (api->protocol == PROTOCOL_NOVA &&
           (signing_input_len == SIGNING_INPUT_NOVA_32BYTE ||
            signing_input_len == SIGNING_INPUT_NOVA_64BYTE)));
 
