@@ -90,12 +90,14 @@ void cb_hash_preinit()
     // generate hash
     memset(flow_data.scratch[0], 0, sizeof(flow_data.scratch[0]));
 
-    const char *src = (const char *)flow_data.api->essence.hash;
+    const char *src = (const char *)flow_data.api->essence.signing_input;
     char *dst = flow_data.scratch[0];
+
+    uint8_t len = flow_data.api->essence.signing_input_len;
 
     *dst++ = '0';
     *dst++ = 'x';
-    for (uint8_t i = 0; i < 32; i++) {
+    for (uint8_t i = 0; i < len; i++) {
         *dst++ = hex[*src >> 4];
         *dst++ = hex[*src++ & 0x0f];
     }

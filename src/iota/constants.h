@@ -69,6 +69,10 @@
 #define BLAKE2B_SIZE_BYTES 32
 #define ESSENCE_HASH_SIZE_BYTES 32
 
+#define SIGNING_INPUT_MAX_BYTES 64
+#define SIGNING_INPUT_NOVA_32BYTE 32
+#define SIGNING_INPUT_NOVA_64BYTE 64
+
 // address type of ED25519 addresses
 #define ADDRESS_TYPE_ED25519 0
 
@@ -110,6 +114,9 @@
 // API-constants
 #define API_GENERATE_ADDRESSES_MAX_COUNT                                       \
     (API_BUFFER_SIZE_BYTES / ADDRESS_WITH_TYPE_SIZE_BYTES)
+
+#define API_GENERATE_PUBLIC_KEYS_MAX_COUNT                                     \
+    (API_BUFFER_SIZE_BYTES / PUBKEY_SIZE_BYTES)
 
 // very coarse estimation how many inputs the essence could have
 // we can safely assume that we need at least 32 bytes per input

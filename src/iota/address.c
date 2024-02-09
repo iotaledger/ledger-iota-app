@@ -12,6 +12,7 @@
 #include "api.h"
 #include "bech32.h"
 #include "address.h"
+#include "public_key.h"
 #include "ed25519.h"
 #include "macros.h"
 #include "lib_standard_app/crypto_helpers.h"
@@ -52,18 +53,8 @@ uint8_t address_encode_bech32_hrp(const uint8_t *addr_with_type, char *bech32,
 uint8_t address_generate(uint32_t *bip32_path, uint32_t bip32_path_length,
                          uint8_t *addr)
 {
-    uint8_t raw_pubkey[65];
-
-    MUST(bip32_derive_with_seed_get_pubkey_256(
-             HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32_path,
-             bip32_path_length, raw_pubkey, NULL, CX_SHA512, NULL, 0) == CX_OK);
-
-    // convert Ledger pubkey to pubkey bytes
     uint8_t pubkey_bytes[PUBKEY_SIZE_BYTES];
-
-    MUST(ed25519_public_key_to_bytes(raw_pubkey, pubkey_bytes));
-
-    //	debug_print_hex(pubkey_bytes, 32, 16);
+    MUST(public_key_generate(bip32_path, bip32_path_length, pubkey_bytes));
 
     // set ed25519 address_type
     addr[0] = ADDRESS_TYPE_ED25519;

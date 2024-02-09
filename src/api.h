@@ -9,6 +9,7 @@
 #include "iota_io.h"
 
 #include "iota/address.h"
+#include "iota/public_key.h"
 
 #define IO_STRUCT struct __attribute__((packed, may_alias))
 
@@ -19,15 +20,18 @@ typedef enum {
     USER_CONFIRMED_ESSENCE = 3,
     SIGNATURES = 4,
     LOCKED = 5,
+    GENERATED_PUBLIC_KEYS = 6,
 } DATA_TYPE;
 
 typedef enum {
     APP_MODE_IOTA_STARDUST = 1,
     APP_MODE_SHIMMER_CLAIMING = 2,
-    APP_MODE_SHIMMER = 3
+    APP_MODE_SHIMMER = 3,
+    APP_MODE_IOTA_NOVA = 4,
+    APP_MODE_SHIMMER_NOVA = 5,
 } APP_MODE_TYPE;
 
-typedef enum { PROTOCOL_STARDUST = 1 } PROTOCOL_TYPE;
+typedef enum { PROTOCOL_STARDUST = 1, PROTOCOL_NOVA = 2 } PROTOCOL_TYPE;
 
 typedef enum { COIN_IOTA = 0, COIN_SHIMMER = 1 } COIN_TYPE;
 
@@ -119,6 +123,14 @@ typedef IO_STRUCT
 }
 API_GENERATE_ADDRESS_REQUEST;
 
+typedef IO_STRUCT
+{
+    uint32_t bip32_index;
+    uint32_t bip32_change;
+    uint32_t count;
+}
+API_GENERATE_PUBLIC_KEYS_REQUEST;
+
 
 typedef IO_STRUCT
 {
@@ -193,8 +205,9 @@ typedef struct {
     // flag that signals that it's a sweeping transaction
     uint8_t is_internal_transfer;
 
-    // hash of the essence
-    uint8_t hash[BLAKE2B_SIZE_BYTES];
+    // signing input (hash(s))
+    uint8_t signing_input[SIGNING_INPUT_MAX_BYTES];
+    uint16_t signing_input_len;
 } ESSENCE;
 
 typedef struct {
@@ -275,7 +288,7 @@ uint32_t api_clear_data_buffer(void);
 uint32_t api_prepare_signing(uint8_t has_remainder, const uint8_t *data,
                              uint32_t len);
 
-uint32_t api_prepare_blindsigning(void);
+uint32_t api_prepare_blindsigning(uint8_t num_hashes);
 
 uint32_t api_user_confirm_essence(void);
 
@@ -283,6 +296,9 @@ uint32_t api_sign(uint8_t p1);
 
 uint32_t api_generate_address(uint8_t show_on_screen, const uint8_t *data,
                               uint32_t len);
+
+uint32_t api_generate_public_key(uint8_t show_on_screen, const uint8_t *data,
+                                 uint32_t len);
 
 #ifdef APP_DEBUG
 uint32_t api_dump_memory(uint8_t pagenr);
